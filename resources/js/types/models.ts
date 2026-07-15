@@ -52,8 +52,15 @@ export interface Task {
     priority: string;
     due_date: string | null;
     completed_at: string | null;
+    checklist_id: number | null;
     assignee_id: number | null;
     assignee?: OccasionMember | null;
+}
+
+export interface Checklist {
+    id: number;
+    uuid: string;
+    name: string;
 }
 
 export interface Contribution {

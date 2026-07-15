@@ -36,6 +36,12 @@ class PlanningServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::PlanningReopenTask) ?? false;
         });
 
+        // Checklist creation isn't tied to an existing Checklist instance,
+        // same reasoning as create-task.
+        Gate::define('manage-checklist', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::PlanningManageChecklist) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 

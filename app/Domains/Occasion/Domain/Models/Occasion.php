@@ -10,6 +10,7 @@ use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
+use App\Domains\Planning\Domain\Models\Checklist;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
@@ -68,6 +69,11 @@ class Occasion extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(Checklist::class);
     }
 
     public function invitations(): HasMany

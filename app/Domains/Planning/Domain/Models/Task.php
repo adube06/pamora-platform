@@ -25,6 +25,7 @@ class Task extends Model
 
     protected $fillable = [
         'occasion_id',
+        'checklist_id',
         'title',
         'description',
         'status',
@@ -53,6 +54,11 @@ class Task extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(OccasionMember::class, 'assignee_id');
+    }
+
+    public function checklist(): BelongsTo
+    {
+        return $this->belongsTo(Checklist::class);
     }
 
     public function creator(): BelongsTo

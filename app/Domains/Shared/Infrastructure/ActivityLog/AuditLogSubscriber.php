@@ -10,6 +10,7 @@ use App\Domains\Identity\Domain\Events\UserSignedIn;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
+use App\Domains\Planning\Domain\Events\ChecklistCreated;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
@@ -133,6 +134,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleChecklistCreated(ChecklistCreated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->checklist->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Checklist',
+            'subject_id' => $event->checklist->id,
+            'action' => 'planning.checklist_created',
+            'description' => "{$event->actor->name} created checklist \"{$event->checklist->name}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -182,6 +195,7 @@ class AuditLogSubscriber
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
         $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
+        $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

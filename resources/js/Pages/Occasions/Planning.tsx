@@ -8,15 +8,17 @@ import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Occasion, OccasionMember, Task } from '@/types/models';
+import type { Checklist, Occasion, OccasionMember, Task } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     tasks: Task[];
+    checklists: Checklist[];
     members: OccasionMember[];
     canCreateTask: boolean;
     canCompleteTask: boolean;
     canReopenTask: boolean;
+    canManageChecklist: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -88,27 +90,110 @@ function TaskStatusAction({ task, canCompleteTask, canReopenTask }: { task: Task
     );
 }
 
-export default function Planning({ occasion, tasks, members, canCreateTask, canCompleteTask, canReopenTask }: Props) {
-    const [showForm, setShowForm] = useState(false);
+function TaskList({
+    tasks,
+    members,
+    canCompleteTask,
+    canReopenTask,
+}: {
+    tasks: Task[];
+    members: OccasionMember[];
+    canCompleteTask: boolean;
+    canReopenTask: boolean;
+}) {
+    return (
+        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+            {tasks.map((task) => (
+                <li key={task.id} className="flex items-center justify-between px-4 py-3">
+                    <div>
+                        <p className="text-sm font-medium text-text-primary">{task.title}</p>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
+                            <span>{STATUS_LABELS[task.status]}</span>
+                            <Badge variant={PRIORITY_VARIANTS[task.priority] ?? 'neutral'}>{task.priority}</Badge>
+                            {task.due_date && <span>Due {task.due_date}</span>}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <AssignSelect task={task} members={members} />
+                        <TaskStatusAction task={task} canCompleteTask={canCompleteTask} canReopenTask={canReopenTask} />
+                    </div>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+export default function Planning({
+    occasion,
+    tasks,
+    checklists,
+    members,
+    canCreateTask,
+    canCompleteTask,
+    canReopenTask,
+    canManageChecklist,
+}: Props) {
+    const [showTaskForm, setShowTaskForm] = useState(false);
+    const [showChecklistForm, setShowChecklistForm] = useState(false);
+
+    const ungroupedTasks = tasks.filter((task) => task.checklist_id === null);
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="planning">
             <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium text-text-primary">Tasks</h2>
-                {canCreateTask && (
-                    <Button size="sm" onClick={() => setShowForm((v) => !v)}>
-                        {showForm ? 'Cancel' : 'New Task'}
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    {canManageChecklist && (
+                        <Button variant="ghost" size="sm" onClick={() => setShowChecklistForm((v) => !v)}>
+                            {showChecklistForm ? 'Cancel' : 'New Checklist'}
+                        </Button>
+                    )}
+                    {canCreateTask && (
+                        <Button size="sm" onClick={() => setShowTaskForm((v) => !v)}>
+                            {showTaskForm ? 'Cancel' : 'New Task'}
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            {showForm && (
+            {showChecklistForm && (
+                <Card className="mt-4 max-w-md">
+                    <Form
+                        action={route('occasions.checklists.store', occasion.slug)}
+                        method="post"
+                        resetOnSuccess
+                        onSuccess={() => setShowChecklistForm(false)}
+                        className="space-y-3"
+                    >
+                        {({ errors, processing }) => (
+                            <>
+                                <FormField label="Checklist Name" htmlFor="checklist_name" required error={errors.name}>
+                                    <Input
+                                        id="checklist_name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Catering"
+                                        invalid={!!errors.name}
+                                    />
+                                </FormField>
+
+                                <Button type="submit" loading={processing}>
+                                    {processing ? 'Creating…' : 'Create Checklist'}
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </Card>
+            )}
+
+            {showTaskForm && (
                 <Card className="mt-4 max-w-md">
                     <Form
                         action={route('occasions.tasks.store', occasion.slug)}
                         method="post"
                         resetOnSuccess
-                        onSuccess={() => setShowForm(false)}
+                        onSuccess={() => setShowTaskForm(false)}
                         className="space-y-3"
                     >
                         {({ errors, processing }) => (
@@ -125,6 +210,19 @@ export default function Planning({ occasion, tasks, members, canCreateTask, canC
                                         <option value="low">Low</option>
                                     </Select>
                                 </FormField>
+
+                                {checklists.length > 0 && (
+                                    <FormField label="Checklist (optional)" htmlFor="checklist_id" error={errors.checklist_id}>
+                                        <Select id="checklist_id" name="checklist_id" defaultValue="" invalid={!!errors.checklist_id}>
+                                            <option value="">None</option>
+                                            {checklists.map((checklist) => (
+                                                <option key={checklist.id} value={checklist.id}>
+                                                    {checklist.name}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </FormField>
+                                )}
 
                                 <FormField label="Due date" htmlFor="due_date">
                                     <Input id="due_date" name="due_date" type="date" />
@@ -144,24 +242,41 @@ export default function Planning({ occasion, tasks, members, canCreateTask, canC
                     <EmptyState title="No tasks yet" description="Tasks you create will show up here." />
                 </div>
             ) : (
-                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
-                    {tasks.map((task) => (
-                        <li key={task.id} className="flex items-center justify-between px-4 py-3">
-                            <div>
-                                <p className="text-sm font-medium text-text-primary">{task.title}</p>
-                                <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
-                                    <span>{STATUS_LABELS[task.status]}</span>
-                                    <Badge variant={PRIORITY_VARIANTS[task.priority] ?? 'neutral'}>{task.priority}</Badge>
-                                    {task.due_date && <span>Due {task.due_date}</span>}
-                                </div>
+                <div className="mt-4 space-y-6">
+                    {checklists.map((checklist) => {
+                        const checklistTasks = tasks.filter((task) => task.checklist_id === checklist.id);
+
+                        if (checklistTasks.length === 0) {
+                            return null;
+                        }
+
+                        return (
+                            <div key={checklist.id}>
+                                <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">{checklist.name}</h3>
+                                <TaskList
+                                    tasks={checklistTasks}
+                                    members={members}
+                                    canCompleteTask={canCompleteTask}
+                                    canReopenTask={canReopenTask}
+                                />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <AssignSelect task={task} members={members} />
-                                <TaskStatusAction task={task} canCompleteTask={canCompleteTask} canReopenTask={canReopenTask} />
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                        );
+                    })}
+
+                    {ungroupedTasks.length > 0 && (
+                        <div>
+                            {checklists.length > 0 && (
+                                <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">Ungrouped</h3>
+                            )}
+                            <TaskList
+                                tasks={ungroupedTasks}
+                                members={members}
+                                canCompleteTask={canCompleteTask}
+                                canReopenTask={canReopenTask}
+                            />
+                        </div>
+                    )}
+                </div>
             )}
         </OccasionWorkspaceLayout>
     );
