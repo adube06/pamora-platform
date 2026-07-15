@@ -5,9 +5,9 @@ namespace App\Domains\Shared\Domain\Enums;
 /**
  * Canonical permission strings, matching pamora-foundation's
  * 02-product/09-permission-catalog.md exactly. Only the domains
- * implemented so far (Occasion, People, Planning) have cases —
- * add more as their owning domain is implemented, using the exact
- * string already reserved in the Permission Catalog.
+ * implemented so far (Occasion, People, Planning, Finance) have
+ * cases — add more as their owning domain is implemented, using the
+ * exact string already reserved in the Permission Catalog.
  */
 enum Permission: string
 {
@@ -30,6 +30,9 @@ enum Permission: string
     case PlanningAssignTask = 'planning.assign_task';
     case PlanningCompleteTask = 'planning.complete_task';
 
+    // Finance
+    case FinanceRecordContribution = 'finance.record_contribution';
+
     /**
      * The full set of permissions granted to a Host on Occasion creation.
      *
@@ -51,6 +54,7 @@ enum Permission: string
             self::PlanningEditTask->value,
             self::PlanningAssignTask->value,
             self::PlanningCompleteTask->value,
+            self::FinanceRecordContribution->value,
         ];
     }
 }

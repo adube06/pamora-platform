@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -73,4 +74,29 @@ it('logs an entry when a task is created and when it is assigned', function () {
     $this->actingAs($host)->post("/tasks/{$task->uuid}/assign", ['assignee_id' => $assignee->id]);
 
     expect(ActivityLog::where('action', 'planning.task_assigned')->where('subject_id', $task->id)->count())->toBe(1);
+});
+
+it('logs an entry when a contribution is recorded', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/contributions", [
+        'contributor_name' => 'Amina Hassan',
+        'amount' => 50000,
+        'method' => 'cash',
+        'contributed_at' => now()->toDateString(),
+    ]);
+
+    $contribution = Contribution::firstWhere('contributor_name', 'Amina Hassan');
+
+    $log = ActivityLog::where('action', 'finance.contribution_received')
+        ->where('subject_id', $contribution->id)
+        ->first();
+
+    expect($log)->not->toBeNull()
+        // Guards against the currency being blank in the description because
+        // the in-memory model wasn't refreshed after relying on the DB-level
+        // default (currency is not a validated input field this slice).
+        ->and($log->description)->toContain('TZS');
 });

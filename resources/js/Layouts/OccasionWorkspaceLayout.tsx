@@ -5,13 +5,14 @@ import type { Occasion } from '@/types/models';
 
 interface Props extends PropsWithChildren {
     occasion: Occasion;
-    active: 'overview' | 'committee' | 'planning';
+    active: 'overview' | 'committee' | 'planning' | 'finance';
 }
 
 const tabs = [
     { key: 'overview', label: 'Overview', routeName: 'occasions.show' },
     { key: 'committee', label: 'Committee', routeName: 'occasions.committee' },
     { key: 'planning', label: 'Planning', routeName: 'occasions.planning' },
+    { key: 'finance', label: 'Finance', routeName: 'occasions.finance' },
 ] as const;
 
 export default function OccasionWorkspaceLayout({ occasion, active, children }: Props) {

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Occasion\Domain\Models;
 
+use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
@@ -69,6 +70,11 @@ class Occasion extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    public function contributions(): HasMany
+    {
+        return $this->hasMany(Contribution::class);
     }
 
     public function memberFor(User $user): ?OccasionMember

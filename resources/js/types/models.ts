@@ -54,3 +54,20 @@ export interface Task {
     assignee_id: number | null;
     assignee?: OccasionMember | null;
 }
+
+export interface Contribution {
+    id: number;
+    uuid: string;
+    contributor_name: string;
+    contributor_phone: string | null;
+    amount: string;
+    currency: string;
+    method: string;
+    message: string | null;
+    contributed_at: string;
+}
+
+export interface ContributionSummary {
+    total_received: string;
+    contribution_count: number;
+}

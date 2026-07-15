@@ -2,6 +2,7 @@
 
 namespace App\Domains\Shared\Infrastructure\ActivityLog;
 
+use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
@@ -117,6 +118,19 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleContributionReceived(ContributionReceived $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->contribution->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Contribution',
+            'subject_id' => $event->contribution->id,
+            'action' => 'finance.contribution_received',
+            'description' => "{$event->actor->name} recorded a contribution of {$event->contribution->amount} {$event->contribution->currency} from {$event->contribution->contributor_name}.",
+            'metadata' => ['method' => $event->contribution->method->value],
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
@@ -127,5 +141,6 @@ class AuditLogSubscriber
         $events->listen(TaskCreated::class, [self::class, 'handleTaskCreated']);
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
+        $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
     }
 }
