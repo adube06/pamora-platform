@@ -18,11 +18,35 @@ interface PageProps {
         success?: string;
         error?: string;
     };
+    unreadNotificationsCount: number;
     [key: string]: unknown;
 }
 
+function NotificationBell({ count }: { count: number }) {
+    return (
+        <Link
+            href={route('notifications.index')}
+            aria-label={count > 0 ? `Notifications (${count} unread)` : 'Notifications'}
+            className="relative inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary hover:bg-background hover:text-text-primary"
+        >
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                <path
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                />
+            </svg>
+            {count > 0 && (
+                <span className="absolute top-0.5 right-0.5 inline-flex h-2 w-2 rounded-full bg-error" />
+            )}
+        </Link>
+    );
+}
+
 export default function AppLayout({ children }: PropsWithChildren) {
-    const { auth, flash } = usePage<PageProps>().props;
+    const { auth, flash, unreadNotificationsCount } = usePage<PageProps>().props;
 
     return (
         <div className="min-h-screen bg-background">
@@ -34,6 +58,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
                     </Link>
 
                     <div className="flex items-center gap-3">
+                        {auth.user && <NotificationBell count={unreadNotificationsCount} />}
                         <ThemeToggle />
                         {auth.user && (
                             <nav className="flex items-center gap-4 text-sm text-text-secondary">

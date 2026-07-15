@@ -83,6 +83,16 @@ export interface TimelineEvent {
     scheduled_at: string;
 }
 
+export interface Notification {
+    id: number;
+    uuid: string;
+    type: string;
+    title: string;
+    body: string;
+    read_at: string | null;
+    created_at: string;
+}
+
 export interface Announcement {
     id: number;
     uuid: string;
