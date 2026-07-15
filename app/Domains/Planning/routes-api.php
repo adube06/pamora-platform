@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Planning\Presentation\Http\Controllers\Api\ChecklistController;
+use App\Domains\Planning\Presentation\Http\Controllers\Api\MilestoneController;
 use App\Domains\Planning\Presentation\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,4 +13,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/reopen', [TaskController::class, 'reopen']);
     Route::get('/occasions/{occasion}/checklists', [ChecklistController::class, 'index']);
     Route::post('/occasions/{occasion}/checklists', [ChecklistController::class, 'store']);
+    Route::get('/occasions/{occasion}/milestones', [MilestoneController::class, 'index']);
+    Route::post('/occasions/{occasion}/milestones', [MilestoneController::class, 'store']);
 });

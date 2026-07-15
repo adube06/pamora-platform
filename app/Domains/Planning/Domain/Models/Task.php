@@ -12,6 +12,7 @@ use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
@@ -59,6 +60,11 @@ class Task extends Model
     public function checklist(): BelongsTo
     {
         return $this->belongsTo(Checklist::class);
+    }
+
+    public function milestones(): BelongsToMany
+    {
+        return $this->belongsToMany(Milestone::class);
     }
 
     public function creator(): BelongsTo

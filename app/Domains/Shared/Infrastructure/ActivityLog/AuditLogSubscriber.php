@@ -11,6 +11,7 @@ use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\ChecklistCreated;
+use App\Domains\Planning\Domain\Events\MilestoneCompleted;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
@@ -146,6 +147,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleMilestoneCompleted(MilestoneCompleted $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->milestone->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Milestone',
+            'subject_id' => $event->milestone->id,
+            'action' => 'planning.milestone_completed',
+            'description' => "{$event->actor->name} completed the task that achieved milestone \"{$event->milestone->name}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -196,6 +209,7 @@ class AuditLogSubscriber
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
         $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
         $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
+        $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

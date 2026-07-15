@@ -63,6 +63,19 @@ export interface Checklist {
     name: string;
 }
 
+export interface MilestoneTask {
+    id: string;
+    title: string;
+    status: string;
+}
+
+export interface Milestone {
+    id: string;
+    name: string;
+    is_achieved: boolean;
+    tasks: MilestoneTask[];
+}
+
 export interface Contribution {
     id: number;
     uuid: string;

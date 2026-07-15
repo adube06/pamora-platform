@@ -8,17 +8,19 @@ import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Checklist, Occasion, OccasionMember, Task } from '@/types/models';
+import type { Checklist, Milestone, Occasion, OccasionMember, Task } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     tasks: Task[];
     checklists: Checklist[];
+    milestones: Milestone[];
     members: OccasionMember[];
     canCreateTask: boolean;
     canCompleteTask: boolean;
     canReopenTask: boolean;
     canManageChecklist: boolean;
+    canManageMilestone: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -127,20 +129,104 @@ export default function Planning({
     occasion,
     tasks,
     checklists,
+    milestones,
     members,
     canCreateTask,
     canCompleteTask,
     canReopenTask,
     canManageChecklist,
+    canManageMilestone,
 }: Props) {
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [showChecklistForm, setShowChecklistForm] = useState(false);
+    const [showMilestoneForm, setShowMilestoneForm] = useState(false);
 
     const ungroupedTasks = tasks.filter((task) => task.checklist_id === null);
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="planning">
             <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-text-primary">Milestones</h2>
+                {canManageMilestone && (
+                    <Button variant="ghost" size="sm" onClick={() => setShowMilestoneForm((v) => !v)}>
+                        {showMilestoneForm ? 'Cancel' : 'New Milestone'}
+                    </Button>
+                )}
+            </div>
+
+            {showMilestoneForm && (
+                <Card className="mt-4 max-w-md">
+                    <Form
+                        action={route('occasions.milestones.store', occasion.slug)}
+                        method="post"
+                        resetOnSuccess
+                        onSuccess={() => setShowMilestoneForm(false)}
+                        className="space-y-3"
+                    >
+                        {({ errors, processing }) => (
+                            <>
+                                <FormField label="Milestone Name" htmlFor="milestone_name" required error={errors.name}>
+                                    <Input
+                                        id="milestone_name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Venue Confirmed"
+                                        invalid={!!errors.name}
+                                    />
+                                </FormField>
+
+                                {tasks.length > 0 && (
+                                    <FormField label="Depends on Tasks" htmlFor="task_ids">
+                                        <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+                                            {tasks.map((task) => (
+                                                <label key={task.id} className="flex items-center gap-2 text-sm text-text-primary">
+                                                    <input type="checkbox" name="task_ids[]" value={task.id} className="rounded" />
+                                                    {task.title}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </FormField>
+                                )}
+
+                                <Button type="submit" loading={processing}>
+                                    {processing ? 'Creating…' : 'Create Milestone'}
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </Card>
+            )}
+
+            {milestones.length === 0 ? (
+                <div className="mt-4">
+                    <EmptyState title="No milestones yet" description="Milestones summarize progress across related Tasks." />
+                </div>
+            ) : (
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {milestones.map((milestone) => (
+                        <Card key={milestone.id}>
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-text-primary">{milestone.name}</p>
+                                <Badge variant={milestone.is_achieved ? 'success' : 'neutral'}>
+                                    {milestone.is_achieved ? 'Achieved' : 'Pending'}
+                                </Badge>
+                            </div>
+                            {milestone.tasks.length > 0 && (
+                                <ul className="mt-2 space-y-0.5 text-xs text-text-secondary">
+                                    {milestone.tasks.map((task) => (
+                                        <li key={task.id}>
+                                            {task.status === 'completed' ? '✓' : '○'} {task.title}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
                 <h2 className="text-sm font-medium text-text-primary">Tasks</h2>
                 <div className="flex gap-2">
                     {canManageChecklist && (

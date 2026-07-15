@@ -65,6 +65,7 @@ enum Role: string
                 Permission::PlanningCompleteTask->value,
                 Permission::PlanningReopenTask->value,
                 Permission::PlanningManageChecklist->value,
+                Permission::PlanningManageMilestone->value,
             ],
 
             self::Treasurer => [
@@ -82,6 +83,7 @@ enum Role: string
                 Permission::PlanningCreateTask->value,
                 Permission::PlanningEditTask->value,
                 Permission::PlanningManageChecklist->value,
+                Permission::PlanningManageMilestone->value,
             ],
 
             self::Coordinator => [
