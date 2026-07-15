@@ -2,7 +2,9 @@
 
 namespace App\Domains\Shared\Infrastructure\ActivityLog;
 
+use App\Domains\Finance\Domain\Events\BudgetCreated;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Finance\Domain\Events\ExpenseRecorded;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
@@ -131,6 +133,31 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleBudgetCreated(BudgetCreated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->budget->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Budget',
+            'subject_id' => $event->budget->id,
+            'action' => 'finance.budget_created',
+            'description' => "{$event->actor->name} created a Budget of {$event->budget->planned_amount} {$event->budget->currency}.",
+        ]);
+    }
+
+    public function handleExpenseRecorded(ExpenseRecorded $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->expense->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Expense',
+            'subject_id' => $event->expense->id,
+            'action' => 'finance.expense_recorded',
+            'description' => "{$event->actor->name} recorded an expense of {$event->expense->amount} {$event->expense->currency}.",
+            'metadata' => ['budget_category_id' => $event->expense->budget_category_id],
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
@@ -142,5 +169,7 @@ class AuditLogSubscriber
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
+        $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
+        $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);
     }
 }

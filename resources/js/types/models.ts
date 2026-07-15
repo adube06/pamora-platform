@@ -67,7 +67,40 @@ export interface Contribution {
     contributed_at: string;
 }
 
-export interface ContributionSummary {
+export interface BudgetCategory {
+    id: number;
+    uuid: string;
+    name: string;
+}
+
+export interface Budget {
+    id: number;
+    uuid: string;
+    name: string;
+    currency: string;
+    planned_amount: string;
+    status: string;
+    categories: BudgetCategory[];
+}
+
+export interface Expense {
+    id: number;
+    uuid: string;
+    amount: string;
+    currency: string;
+    description: string | null;
+    spent_at: string;
+    budget_category_id: number;
+    category?: BudgetCategory;
+}
+
+export interface BudgetSummary {
     total_received: string;
     contribution_count: number;
+    planned_amount?: string | null;
+    total_expense?: string;
+    remaining_budget?: string | null;
+    funding_progress?: number | null;
+    spending_progress?: number | null;
+    health?: string | null;
 }

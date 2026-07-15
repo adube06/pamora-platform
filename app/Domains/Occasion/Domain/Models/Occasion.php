@@ -2,7 +2,9 @@
 
 namespace App\Domains\Occasion\Domain\Models;
 
+use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\Contribution;
+use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Occasion extends Model
@@ -75,6 +78,16 @@ class Occasion extends Model
     public function contributions(): HasMany
     {
         return $this->hasMany(Contribution::class);
+    }
+
+    public function budget(): HasOne
+    {
+        return $this->hasOne(Budget::class);
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
     }
 
     public function memberFor(User $user): ?OccasionMember

@@ -22,6 +22,21 @@ class FinanceServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::FinanceRecordContribution) ?? false;
         });
 
+        // Budget visibility is permission-gated in the Permission Catalog
+        // (unlike Contributions, which use the transparency default above),
+        // so view-budget checks a real permission rather than membership.
+        Gate::define('view-budget', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::FinanceViewBudget) ?? false;
+        });
+
+        Gate::define('edit-budget', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::FinanceEditBudget) ?? false;
+        });
+
+        Gate::define('record-expense', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::FinanceRecordExpense) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 

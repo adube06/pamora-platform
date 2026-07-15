@@ -69,7 +69,10 @@ enum Role: string
                 Permission::PlanningCreateTask->value,
                 Permission::PlanningEditTask->value,
                 Permission::PlanningCompleteTask->value,
+                Permission::FinanceViewBudget->value,
+                Permission::FinanceEditBudget->value,
                 Permission::FinanceRecordContribution->value,
+                Permission::FinanceRecordExpense->value,
             ],
 
             self::Secretary => [

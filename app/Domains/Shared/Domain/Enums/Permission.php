@@ -31,7 +31,10 @@ enum Permission: string
     case PlanningCompleteTask = 'planning.complete_task';
 
     // Finance
+    case FinanceViewBudget = 'finance.view_budget';
+    case FinanceEditBudget = 'finance.edit_budget';
     case FinanceRecordContribution = 'finance.record_contribution';
+    case FinanceRecordExpense = 'finance.record_expense';
 
     /**
      * The full set of permissions granted to a Host on Occasion creation.
@@ -54,7 +57,10 @@ enum Permission: string
             self::PlanningEditTask->value,
             self::PlanningAssignTask->value,
             self::PlanningCompleteTask->value,
+            self::FinanceViewBudget->value,
+            self::FinanceEditBudget->value,
             self::FinanceRecordContribution->value,
+            self::FinanceRecordExpense->value,
         ];
     }
 }

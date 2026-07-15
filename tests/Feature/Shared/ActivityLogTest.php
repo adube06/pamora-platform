@@ -1,6 +1,9 @@
 <?php
 
+use App\Domains\Finance\Domain\Models\Budget;
+use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
+use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -99,4 +102,41 @@ it('logs an entry when a contribution is recorded', function () {
         // the in-memory model wasn't refreshed after relying on the DB-level
         // default (currency is not a validated input field this slice).
         ->and($log->description)->toContain('TZS');
+});
+
+it('logs an entry when a budget is created and when an expense is recorded', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/budget", [
+        'name' => 'Wedding Budget',
+        'planned_amount' => 500000,
+    ]);
+
+    $budget = Budget::firstWhere('name', 'Wedding Budget');
+
+    $budgetLog = ActivityLog::where('action', 'finance.budget_created')
+        ->where('subject_id', $budget->id)
+        ->first();
+
+    expect($budgetLog)->not->toBeNull()
+        ->and($budgetLog->description)->toContain('TZS');
+
+    $category = BudgetCategory::firstWhere('budget_id', $budget->id);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/expenses", [
+        'budget_category_id' => $category->id,
+        'amount' => 75000,
+        'spent_at' => now()->toDateString(),
+    ]);
+
+    $expense = Expense::firstWhere('budget_category_id', $category->id);
+
+    $expenseLog = ActivityLog::where('action', 'finance.expense_recorded')
+        ->where('subject_id', $expense->id)
+        ->first();
+
+    expect($expenseLog)->not->toBeNull()
+        ->and($expenseLog->description)->toContain('TZS');
 });
