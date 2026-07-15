@@ -1,4 +1,5 @@
 import Card from '@/Components/Card';
+import ReadinessRing from '@/Components/ReadinessRing';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import type { Occasion, OccasionMember, Readiness } from '@/types/models';
 
@@ -23,9 +24,9 @@ export default function Show({ occasion, member, readiness }: Props) {
                 {readiness.score === null ? (
                     <p className="mt-1 text-sm text-text-secondary">Not enough data yet.</p>
                 ) : (
-                    <>
-                        <p className="mt-1 text-3xl font-semibold text-text-primary">{readiness.score}%</p>
-                        <ul className="mt-2 space-y-1">
+                    <div className="mt-2 flex items-center gap-6">
+                        <ReadinessRing score={readiness.score} />
+                        <ul className="flex-1 space-y-1">
                             {readiness.signals.map((signal) => (
                                 <li key={signal.key} className="flex items-center justify-between text-xs text-text-secondary">
                                     <span>{signal.label}</span>
@@ -33,7 +34,7 @@ export default function Show({ occasion, member, readiness }: Props) {
                                 </li>
                             ))}
                         </ul>
-                    </>
+                    </div>
                 )}
             </Card>
 

@@ -1,6 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import Alert from '@/Components/Alert';
+import BrandMark from '@/Components/BrandMark';
+import ThemeToggle from '@/Components/ThemeToggle';
 
 interface AuthUser {
     id: number;
@@ -24,20 +26,24 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-border bg-surface">
+            <header className="sticky top-0 z-10 border-b border-border bg-surface">
                 <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-                    <Link href={route('occasions.index')} className="font-semibold text-text-primary">
+                    <Link href={route('occasions.index')} className="flex items-center gap-2 font-semibold text-text-primary">
+                        <BrandMark />
                         Pamora
                     </Link>
 
-                    {auth.user && (
-                        <nav className="flex items-center gap-4 text-sm text-text-secondary">
-                            <span>{auth.user.name}</span>
-                            <Link href={route('logout')} method="post" as="button" className="hover:text-text-primary">
-                                Log out
-                            </Link>
-                        </nav>
-                    )}
+                    <div className="flex items-center gap-3">
+                        <ThemeToggle />
+                        {auth.user && (
+                            <nav className="flex items-center gap-4 text-sm text-text-secondary">
+                                <span>{auth.user.name}</span>
+                                <Link href={route('logout')} method="post" as="button" className="hover:text-text-primary">
+                                    Log out
+                                </Link>
+                            </nav>
+                        )}
+                    </div>
                 </div>
             </header>
 

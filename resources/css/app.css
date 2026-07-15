@@ -54,6 +54,48 @@
 }
 
 /*
+ * Explicit theme classes, set on <html> by the inline script in
+ * app.blade.php and toggled by ThemeToggle. A class selector on :root has
+ * higher specificity than the bare :root inside the media query above, so
+ * an explicit choice always wins over the OS preference; no class present
+ * (the user never touched the toggle) falls back to the media query as
+ * before — nothing regresses for anyone who doesn't use the toggle.
+ */
+:root.dark {
+    --color-primary: #6366f1;
+    --color-primary-hover: #818cf8;
+    --color-secondary: #2dd4bf;
+    --color-secondary-hover: #5eead4;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+    --color-info: #60a5fa;
+    --color-surface: #18181b;
+    --color-background: #09090b;
+    --color-border: #27272a;
+    --color-text-primary: #f4f4f5;
+    --color-text-secondary: #a1a1aa;
+    --color-disabled: #52525b;
+}
+
+:root.light {
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
+    --color-secondary: #0d9488;
+    --color-secondary-hover: #0f766e;
+    --color-success: #16a34a;
+    --color-warning: #d97706;
+    --color-error: #dc2626;
+    --color-info: #2563eb;
+    --color-surface: #ffffff;
+    --color-background: #f9fafb;
+    --color-border: #e5e7eb;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-disabled: #9ca3af;
+}
+
+/*
  * Defensive baseline: every page gets correct theme-aware colors even if a
  * page's own wrapper forgets to set bg-background explicitly (this is
  * exactly the bug that made Login/Register render invisible dark-mode text
