@@ -63,12 +63,14 @@ enum Role: string
                 Permission::PlanningEditTask->value,
                 Permission::PlanningAssignTask->value,
                 Permission::PlanningCompleteTask->value,
+                Permission::PlanningReopenTask->value,
             ],
 
             self::Treasurer => [
                 Permission::PlanningCreateTask->value,
                 Permission::PlanningEditTask->value,
                 Permission::PlanningCompleteTask->value,
+                Permission::PlanningReopenTask->value,
                 Permission::FinanceViewBudget->value,
                 Permission::FinanceEditBudget->value,
                 Permission::FinanceRecordContribution->value,
@@ -84,10 +86,12 @@ enum Role: string
                 Permission::PlanningCreateTask->value,
                 Permission::PlanningAssignTask->value,
                 Permission::PlanningCompleteTask->value,
+                Permission::PlanningReopenTask->value,
             ],
 
             self::Member => [
                 Permission::PlanningCompleteTask->value,
+                Permission::PlanningReopenTask->value,
             ],
 
             // View-only by design — no permissions.

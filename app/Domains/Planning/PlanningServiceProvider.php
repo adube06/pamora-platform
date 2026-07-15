@@ -24,6 +24,18 @@ class PlanningServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::PlanningCreateTask) ?? false;
         });
 
+        // Occasion-scoped, used only as a UI hint on the Planning index page
+        // (whether to render a Complete/Reopen button at all) — the real
+        // enforcement on the mutating endpoints is TaskPolicy::complete()/
+        // reopen(), same split as create-task vs StoreTaskRequest.
+        Gate::define('complete-task', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::PlanningCompleteTask) ?? false;
+        });
+
+        Gate::define('reopen-task', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::PlanningReopenTask) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 

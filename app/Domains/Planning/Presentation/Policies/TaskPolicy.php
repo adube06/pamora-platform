@@ -22,4 +22,14 @@ class TaskPolicy
     {
         return $task->occasion->memberFor($user)?->hasPermission(Permission::PlanningAssignTask) ?? false;
     }
+
+    public function complete(User $user, Task $task): bool
+    {
+        return $task->occasion->memberFor($user)?->hasPermission(Permission::PlanningCompleteTask) ?? false;
+    }
+
+    public function reopen(User $user, Task $task): bool
+    {
+        return $task->occasion->memberFor($user)?->hasPermission(Permission::PlanningReopenTask) ?? false;
+    }
 }

@@ -5,9 +5,13 @@ namespace App\Domains\Planning\Presentation\Http\Controllers\Api;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Application\Services\AssignTaskService;
+use App\Domains\Planning\Application\Services\CompleteTaskService;
 use App\Domains\Planning\Application\Services\CreateTaskService;
+use App\Domains\Planning\Application\Services\ReopenTaskService;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Presentation\Http\Requests\AssignTaskRequest;
+use App\Domains\Planning\Presentation\Http\Requests\CompleteTaskRequest;
+use App\Domains\Planning\Presentation\Http\Requests\ReopenTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\StoreTaskRequest;
 use App\Domains\Planning\Presentation\Http\Resources\TaskResource;
 use Illuminate\Http\JsonResponse;
@@ -40,6 +44,26 @@ class TaskController
         $assignee = OccasionMember::findOrFail($request->validated('assignee_id'));
 
         $task = $service->handle($task, $assignee, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new TaskResource($task),
+        ]);
+    }
+
+    public function complete(CompleteTaskRequest $request, Task $task, CompleteTaskService $service): JsonResponse
+    {
+        $task = $service->handle($task, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new TaskResource($task),
+        ]);
+    }
+
+    public function reopen(ReopenTaskRequest $request, Task $task, ReopenTaskService $service): JsonResponse
+    {
+        $task = $service->handle($task, $request->user());
 
         return response()->json([
             'success' => true,

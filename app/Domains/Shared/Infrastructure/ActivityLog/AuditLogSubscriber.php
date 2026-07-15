@@ -13,6 +13,7 @@ use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
+use App\Domains\Planning\Domain\Events\TaskReopened;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -120,6 +121,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleTaskReopened(TaskReopened $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->task->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Task',
+            'subject_id' => $event->task->id,
+            'action' => 'planning.task_reopened',
+            'description' => "{$event->actor->name} reopened task \"{$event->task->title}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -168,6 +181,7 @@ class AuditLogSubscriber
         $events->listen(TaskCreated::class, [self::class, 'handleTaskCreated']);
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
+        $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

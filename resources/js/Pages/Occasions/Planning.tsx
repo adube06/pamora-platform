@@ -15,6 +15,8 @@ interface Props {
     tasks: Task[];
     members: OccasionMember[];
     canCreateTask: boolean;
+    canCompleteTask: boolean;
+    canReopenTask: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -55,7 +57,38 @@ function AssignSelect({ task, members }: { task: Task; members: OccasionMember[]
     );
 }
 
-export default function Planning({ occasion, tasks, members, canCreateTask }: Props) {
+function TaskStatusAction({ task, canCompleteTask, canReopenTask }: { task: Task; canCompleteTask: boolean; canReopenTask: boolean }) {
+    const { post, processing } = useForm({});
+
+    if (task.status === 'completed') {
+        if (!canReopenTask) {
+            return null;
+        }
+
+        return (
+            <Button
+                variant="ghost"
+                size="sm"
+                loading={processing}
+                onClick={() => post(route('tasks.reopen', task.uuid), { preserveScroll: true })}
+            >
+                Reopen
+            </Button>
+        );
+    }
+
+    if (task.status === 'cancelled' || !canCompleteTask) {
+        return null;
+    }
+
+    return (
+        <Button size="sm" loading={processing} onClick={() => post(route('tasks.complete', task.uuid), { preserveScroll: true })}>
+            Complete
+        </Button>
+    );
+}
+
+export default function Planning({ occasion, tasks, members, canCreateTask, canCompleteTask, canReopenTask }: Props) {
     const [showForm, setShowForm] = useState(false);
 
     return (
@@ -122,7 +155,10 @@ export default function Planning({ occasion, tasks, members, canCreateTask }: Pr
                                     {task.due_date && <span>Due {task.due_date}</span>}
                                 </div>
                             </div>
-                            <AssignSelect task={task} members={members} />
+                            <div className="flex items-center gap-2">
+                                <AssignSelect task={task} members={members} />
+                                <TaskStatusAction task={task} canCompleteTask={canCompleteTask} canReopenTask={canReopenTask} />
+                            </div>
                         </li>
                     ))}
                 </ul>

@@ -21,6 +21,8 @@ class PlanningController
             'tasks' => $occasion->tasks()->with('assignee.user:id,name')->latest()->get(),
             'members' => $occasion->members()->with('user:id,name')->get(),
             'canCreateTask' => $request->user()->can('create-task', $occasion),
+            'canCompleteTask' => $request->user()->can('complete-task', $occasion),
+            'canReopenTask' => $request->user()->can('reopen-task', $occasion),
         ]);
     }
 

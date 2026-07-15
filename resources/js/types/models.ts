@@ -51,6 +51,7 @@ export interface Task {
     status: string;
     priority: string;
     due_date: string | null;
+    completed_at: string | null;
     assignee_id: number | null;
     assignee?: OccasionMember | null;
 }
