@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Domains\People\Presentation\Http\Controllers;
+
+use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\People\Application\Services\InviteMemberService;
+use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class CommitteeController
+{
+    public function index(Request $request, Occasion $occasion): Response
+    {
+        $request->user()->can('view', $occasion) || abort(403);
+
+        return Inertia::render('Occasions/Committee', [
+            'occasion' => $occasion,
+            'members' => $occasion->members()->with('user:id,name,email')->get(),
+            'pendingInvitations' => $occasion->invitations()->where('status', InvitationStatus::Pending)->get(),
+            'canInvite' => $request->user()->can('invite-member', $occasion),
+        ]);
+    }
+
+    public function store(InviteMemberRequest $request, Occasion $occasion, InviteMemberService $service): RedirectResponse
+    {
+        $service->handle($occasion, $request->validated(), $request->user());
+
+        return back()->with('success', 'Invitation sent.');
+    }
+}
