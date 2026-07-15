@@ -2,6 +2,7 @@
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -23,7 +24,8 @@ it('creates a pending invitation, not a membership, when a host invites someone'
 
     $response = $this->actingAs($host)->post("/occasions/{$occasion->slug}/committee/invitations", [
         'email' => 'treasurer@example.com',
-        'responsibilities' => ['treasurer'],
+        'role' => 'treasurer',
+        'notes' => 'Handles the wedding fund',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -32,7 +34,19 @@ it('creates a pending invitation, not a membership, when a host invites someone'
 
     expect($invitation)->not->toBeNull()
         ->and($invitation->status)->toBe(InvitationStatus::Pending)
+        ->and($invitation->role)->toBe(Role::Treasurer)
         ->and(OccasionMember::where('occasion_id', $occasion->id)->where('user_id', '!=', $host->id)->exists())->toBeFalse();
+});
+
+it('rejects an invitation with an invalid role', function () {
+    [$occasion, $host] = occasionWithHost();
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/committee/invitations", [
+            'email' => 'someone@example.com',
+            'role' => 'host',
+        ])
+        ->assertSessionHasErrors('role');
 });
 
 it('prevents a member without people.invite_member from inviting anyone', function () {

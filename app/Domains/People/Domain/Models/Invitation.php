@@ -4,6 +4,7 @@ namespace App\Domains\People\Domain\Models;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
 use Database\Factories\InvitationFactory;
@@ -26,8 +27,8 @@ class Invitation extends Model
         'invited_by',
         'email',
         'status',
-        'responsibilities',
-        'permissions',
+        'role',
+        'notes',
         'token',
         'expires_at',
         'accepted_at',
@@ -37,8 +38,7 @@ class Invitation extends Model
     {
         return [
             'status' => InvitationStatus::class,
-            'responsibilities' => 'array',
-            'permissions' => 'array',
+            'role' => Role::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];

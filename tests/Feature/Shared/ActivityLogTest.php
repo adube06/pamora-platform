@@ -41,6 +41,7 @@ it('logs an entry when a member is invited and when they accept', function () {
 
     $this->actingAs($host)->post("/occasions/{$occasion->slug}/committee/invitations", [
         'email' => 'invitee@example.com',
+        'role' => 'member',
     ]);
 
     expect(ActivityLog::where('action', 'people.member_invited')->count())->toBe(1);

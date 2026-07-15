@@ -5,6 +5,7 @@ namespace App\Domains\People\Presentation\Http\Controllers;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Application\Services\InviteMemberService;
 use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ class CommitteeController
             'members' => $occasion->members()->with('user:id,name,email')->get(),
             'pendingInvitations' => $occasion->invitations()->where('status', InvitationStatus::Pending)->get(),
             'canInvite' => $request->user()->can('invite-member', $occasion),
+            'roles' => collect(Role::cases())
+                ->reject(fn (Role $role) => $role === Role::Host)
+                ->map(fn (Role $role) => ['value' => $role->value, 'label' => $role->label()])
+                ->values(),
         ]);
     }
 

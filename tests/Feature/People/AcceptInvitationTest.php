@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -10,11 +11,11 @@ use App\Models\User;
  * business" means: verify that accepting an Invitation creates an
  * OccasionMember — not that a controller called a particular method.
  */
-it('creates an OccasionMember when an invitation is accepted', function () {
+it('creates an OccasionMember with the role and resolved permissions from the invitation', function () {
     $invitation = Invitation::factory()->create([
         'email' => 'treasurer@example.com',
-        'responsibilities' => ['treasurer'],
-        'permissions' => ['finance.record_contribution'],
+        'role' => Role::Treasurer,
+        'notes' => 'Handles the wedding fund',
     ]);
 
     $user = User::factory()->create(['email' => 'treasurer@example.com']);
@@ -26,8 +27,9 @@ it('creates an OccasionMember when an invitation is accepted', function () {
     $member = OccasionMember::firstWhere(['occasion_id' => $invitation->occasion_id, 'user_id' => $user->id]);
 
     expect($member)->not->toBeNull()
-        ->and($member->responsibilities)->toBe(['treasurer'])
-        ->and($member->permissions)->toBe(['finance.record_contribution']);
+        ->and($member->role)->toBe(Role::Treasurer)
+        ->and($member->notes)->toBe('Handles the wedding fund')
+        ->and($member->permissions)->toBe(Role::Treasurer->permissions());
 
     expect($invitation->fresh()->status)->toBe(InvitationStatus::Accepted);
 });

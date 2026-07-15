@@ -4,6 +4,7 @@ namespace App\Domains\People\Domain\Models;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\OccasionMemberStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Domains\Shared\Domain\Enums\Permission;
@@ -29,7 +30,8 @@ class OccasionMember extends Model
         'user_id',
         'invitation_id',
         'status',
-        'responsibilities',
+        'role',
+        'notes',
         'permissions',
     ];
 
@@ -37,7 +39,7 @@ class OccasionMember extends Model
     {
         return [
             'status' => OccasionMemberStatus::class,
-            'responsibilities' => 'array',
+            'role' => Role::class,
             'permissions' => 'array',
         ];
     }

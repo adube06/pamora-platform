@@ -2,10 +2,9 @@
 
 namespace App\Domains\People\Presentation\Http\Requests;
 
-use App\Domains\People\Domain\Enums\Responsibility;
-use App\Domains\Shared\Domain\Enums\Permission;
+use App\Domains\People\Domain\Enums\Role;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Rule;
 
 class InviteMemberRequest extends FormRequest
 {
@@ -21,10 +20,21 @@ class InviteMemberRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            'responsibilities' => ['sometimes', 'array'],
-            'responsibilities.*' => [new Enum(Responsibility::class)],
-            'permissions' => ['sometimes', 'array'],
-            'permissions.*' => [new Enum(Permission::class)],
+            // Host is assigned automatically on Occasion creation
+            // (CreateHostMembershipService) — it is never an invitable Role.
+            'role' => ['required', Rule::in($this->invitableRoles())],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function invitableRoles(): array
+    {
+        return array_map(
+            fn (Role $role) => $role->value,
+            array_filter(Role::cases(), fn (Role $role) => $role !== Role::Host)
+        );
     }
 }

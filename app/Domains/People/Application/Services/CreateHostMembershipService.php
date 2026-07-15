@@ -4,9 +4,9 @@ namespace App\Domains\People\Application\Services;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\OccasionMemberStatus;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\People\Domain\Models\OccasionMember;
-use App\Domains\Shared\Domain\Enums\Permission;
 use App\Models\User;
 
 /**
@@ -23,8 +23,8 @@ class CreateHostMembershipService
             'user_id' => $host->id,
             'invitation_id' => null,
             'status' => OccasionMemberStatus::Active,
-            'responsibilities' => [],
-            'permissions' => Permission::hostDefaults(),
+            'role' => Role::Host,
+            'permissions' => Role::Host->permissions(),
         ]);
 
         MemberJoined::dispatch($member);

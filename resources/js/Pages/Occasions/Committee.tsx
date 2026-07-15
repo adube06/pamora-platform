@@ -1,23 +1,20 @@
 import { Form } from '@inertiajs/react';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Invitation, Occasion, OccasionMember } from '@/types/models';
+import type { Invitation, Occasion, OccasionMember, RoleOption } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     members: OccasionMember[];
     pendingInvitations: Invitation[];
     canInvite: boolean;
+    roles: RoleOption[];
 }
 
-const RESPONSIBILITIES = [
-    { value: 'chairperson', label: 'Chairperson' },
-    { value: 'treasurer', label: 'Treasurer' },
-    { value: 'secretary', label: 'Secretary' },
-    { value: 'logistics_lead', label: 'Logistics Lead' },
-    { value: 'food_coordinator', label: 'Food Coordinator' },
-];
+function roleLabel(roles: RoleOption[], value: string): string {
+    return roles.find((r) => r.value === value)?.label ?? value;
+}
 
-export default function Committee({ occasion, members, pendingInvitations, canInvite }: Props) {
+export default function Committee({ occasion, members, pendingInvitations, canInvite, roles }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="committee">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -29,9 +26,10 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                                 <div>
                                     <p className="text-sm font-medium text-gray-900">{member.user?.name}</p>
                                     <p className="text-xs text-gray-500">{member.user?.email}</p>
+                                    {member.notes && <p className="mt-0.5 text-xs text-gray-400">{member.notes}</p>}
                                 </div>
-                                <span className="text-xs text-gray-500">
-                                    {member.responsibilities.length > 0 ? member.responsibilities.join(', ') : 'Host'}
+                                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                    {member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}
                                 </span>
                             </li>
                         ))}
@@ -43,7 +41,10 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                             <ul className="mt-3 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
                                 {pendingInvitations.map((invitation) => (
                                     <li key={invitation.id} className="flex items-center justify-between px-4 py-3">
-                                        <p className="text-sm text-gray-900">{invitation.email}</p>
+                                        <div>
+                                            <p className="text-sm text-gray-900">{invitation.email}</p>
+                                            <p className="text-xs text-gray-500">{roleLabel(roles, invitation.role)}</p>
+                                        </div>
                                         <span className="text-xs text-gray-500">
                                             Expires {new Date(invitation.expires_at).toLocaleDateString()}
                                         </span>
@@ -79,17 +80,44 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                                     </div>
 
-                                    <fieldset>
-                                        <legend className="text-sm font-medium text-gray-700">Responsibilities</legend>
-                                        <div className="mt-1 space-y-1">
-                                            {RESPONSIBILITIES.map((r) => (
-                                                <label key={r.value} className="flex items-center gap-2 text-sm text-gray-700">
-                                                    <input type="checkbox" name="responsibilities[]" value={r.value} />
-                                                    {r.label}
-                                                </label>
+                                    <div>
+                                        <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                                            Role
+                                        </label>
+                                        <select
+                                            id="role"
+                                            name="role"
+                                            required
+                                            defaultValue=""
+                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                        >
+                                            <option value="" disabled>
+                                                Select a role
+                                            </option>
+                                            {roles.map((role) => (
+                                                <option key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </option>
                                             ))}
-                                        </div>
-                                    </fieldset>
+                                        </select>
+                                        {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            The Role determines what this member can do — see the Committee Role guide.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                                            Notes (optional)
+                                        </label>
+                                        <textarea
+                                            id="notes"
+                                            name="notes"
+                                            rows={2}
+                                            placeholder="e.g. helping with catering"
+                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                        />
+                                    </div>
 
                                     <button
                                         type="submit"

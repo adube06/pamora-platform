@@ -18,7 +18,8 @@ export interface OccasionMember {
     occasion_id: number;
     user_id: number;
     status: string;
-    responsibilities: string[];
+    role: string;
+    notes: string | null;
     permissions: string[];
     user?: {
         id: number;
@@ -32,8 +33,14 @@ export interface Invitation {
     uuid: string;
     email: string;
     status: string;
-    responsibilities: string[];
+    role: string;
+    notes: string | null;
     expires_at: string;
+}
+
+export interface RoleOption {
+    value: string;
+    label: string;
 }
 
 export interface Task {

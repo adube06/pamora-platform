@@ -33,8 +33,12 @@ class AcceptInvitationService
                 'user_id' => $user->id,
                 'invitation_id' => $invitation->id,
                 'status' => OccasionMemberStatus::Active,
-                'responsibilities' => $invitation->responsibilities,
-                'permissions' => $invitation->permissions,
+                'role' => $invitation->role,
+                'notes' => $invitation->notes,
+                // Resolved fresh from the Role at acceptance time, not
+                // copied from a stored value — permissions are always
+                // derived, never an independent source of truth.
+                'permissions' => $invitation->role->permissions(),
             ]);
 
             $invitation->update([

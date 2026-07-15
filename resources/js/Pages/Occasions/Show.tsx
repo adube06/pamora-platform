@@ -6,6 +6,13 @@ interface Props {
     member: OccasionMember;
 }
 
+function formatRole(role: string): string {
+    return role
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 export default function Show({ occasion, member }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="overview">
@@ -24,9 +31,7 @@ export default function Show({ occasion, member }: Props) {
                 </div>
                 <div>
                     <dt className="text-sm font-medium text-gray-500">Your role</dt>
-                    <dd className="text-sm text-gray-900">
-                        {member.responsibilities.length > 0 ? member.responsibilities.join(', ') : 'Host'}
-                    </dd>
+                    <dd className="text-sm text-gray-900">{formatRole(member.role)}</dd>
                 </div>
             </dl>
 
