@@ -28,7 +28,7 @@ export default function Alert({ variant = 'info', className, children }: Props) 
     return (
         <div
             role={variant === 'error' ? 'alert' : 'status'}
-            className={cn('flex items-start gap-2 rounded-md px-4 py-2 text-sm', VARIANT_CLASSES[variant], className)}
+            className={cn('flex items-start gap-2 rounded-lg px-4 py-2 text-sm', VARIANT_CLASSES[variant], className)}
         >
             <span aria-hidden="true" className="mt-0.5 font-bold">
                 {VARIANT_ICONS[variant]}

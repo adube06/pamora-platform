@@ -28,7 +28,7 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 <div className="lg:col-span-2">
                     <h2 className="text-sm font-medium text-text-primary">Members</h2>
-                    <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-surface">
+                    <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface">
                         {members.map((member) => (
                             <li key={member.id} className="flex items-center justify-between px-4 py-3">
                                 <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                     {pendingInvitations.length > 0 && (
                         <>
                             <h2 className="mt-6 text-sm font-medium text-text-primary">Pending invitations</h2>
-                            <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-surface">
+                            <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface">
                                 {pendingInvitations.map((invitation) => (
                                     <li key={invitation.id} className="flex items-center justify-between px-4 py-3">
                                         <div>

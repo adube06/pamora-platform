@@ -24,7 +24,7 @@ export default function Index({ occasions }: Props) {
                 <h1 className="text-lg font-semibold text-text-primary">My Occasions</h1>
                 <Link
                     href={route('occasions.create')}
-                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
                 >
                     Create Occasion
                 </Link>
@@ -35,14 +35,14 @@ export default function Index({ occasions }: Props) {
                     <EmptyState title="You don't have any Occasions yet" description="Create your first one to start planning.">
                         <Link
                             href={route('occasions.create')}
-                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+                            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
                         >
                             Create Occasion
                         </Link>
                     </EmptyState>
                 </div>
             ) : (
-                <ul className="mt-6 divide-y divide-border rounded-md border border-border bg-surface">
+                <ul className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
                     {occasions.map((occasion) => (
                         <li key={occasion.id}>
                             <Link

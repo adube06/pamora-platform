@@ -52,3 +52,14 @@
         --color-disabled: #52525b;
     }
 }
+
+/*
+ * Defensive baseline: every page gets correct theme-aware colors even if a
+ * page's own wrapper forgets to set bg-background explicitly (this is
+ * exactly the bug that made Login/Register render invisible dark-mode text
+ * on a white page — the outer <body> never picked up a background at all).
+ */
+body {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+}

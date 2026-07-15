@@ -9,7 +9,7 @@ interface Props extends PropsWithChildren {
 }
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-    neutral: 'bg-background text-text-secondary',
+    neutral: 'bg-text-secondary/10 text-text-secondary',
     success: 'bg-success/10 text-success',
     warning: 'bg-warning/10 text-warning',
     error: 'bg-error/10 text-error',

@@ -29,7 +29,7 @@ export default function Button({ variant = 'primary', size = 'md', loading = fal
             disabled={disabled || loading}
             aria-busy={loading}
             className={cn(
-                'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50',
+                'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50',
                 VARIANT_CLASSES[variant],
                 SIZE_CLASSES[size],
                 className,

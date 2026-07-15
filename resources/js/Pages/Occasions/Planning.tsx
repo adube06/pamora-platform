@@ -111,7 +111,7 @@ export default function Planning({ occasion, tasks, members, canCreateTask }: Pr
                     <EmptyState title="No tasks yet" description="Tasks you create will show up here." />
                 </div>
             ) : (
-                <ul className="mt-4 divide-y divide-border rounded-md border border-border bg-surface">
+                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
                     {tasks.map((task) => (
                         <li key={task.id} className="flex items-center justify-between px-4 py-3">
                             <div>

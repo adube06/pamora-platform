@@ -9,6 +9,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
+import { formatCurrency } from '@/lib/currency';
 import type { Budget, BudgetSummary, Contribution, Expense, Occasion } from '@/types/models';
 
 interface Props {
@@ -78,27 +79,27 @@ export default function Finance({
                                 <Card>
                                     <p className="text-xs text-text-secondary">Planned</p>
                                     <p className="mt-1 text-xl font-semibold text-text-primary">
-                                        {summary.planned_amount} {budget.currency}
+                                        {formatCurrency(summary.planned_amount ?? 0)} {budget.currency}
                                     </p>
                                 </Card>
                                 <Card>
                                     <p className="text-xs text-text-secondary">Received</p>
                                     <p className="mt-1 text-xl font-semibold text-text-primary">
-                                        {summary.total_received} {budget.currency}
+                                        {formatCurrency(summary.total_received)} {budget.currency}
                                     </p>
                                     <p className="text-xs text-text-secondary">{summary.funding_progress}% funded</p>
                                 </Card>
                                 <Card>
                                     <p className="text-xs text-text-secondary">Spent</p>
                                     <p className="mt-1 text-xl font-semibold text-text-primary">
-                                        {summary.total_expense} {budget.currency}
+                                        {formatCurrency(summary.total_expense ?? 0)} {budget.currency}
                                     </p>
                                     <p className="text-xs text-text-secondary">{summary.spending_progress}% spent</p>
                                 </Card>
                                 <Card>
                                     <p className="text-xs text-text-secondary">Remaining</p>
                                     <p className="mt-1 text-xl font-semibold text-text-primary">
-                                        {summary.remaining_budget} {budget.currency}
+                                        {formatCurrency(summary.remaining_budget ?? 0)} {budget.currency}
                                     </p>
                                 </Card>
                             </div>
@@ -171,7 +172,7 @@ export default function Finance({
                                     <EmptyState title="No expenses recorded yet" />
                                 </div>
                             ) : (
-                                <ul className="mt-4 divide-y divide-border rounded-md border border-border bg-surface">
+                                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
                                     {expenses.map((expense) => (
                                         <li key={expense.id} className="flex items-center justify-between px-4 py-3">
                                             <div>
@@ -184,7 +185,7 @@ export default function Finance({
                                                 </p>
                                             </div>
                                             <p className="text-sm font-semibold text-text-primary">
-                                                {expense.amount} {expense.currency}
+                                                {formatCurrency(expense.amount)} {expense.currency}
                                             </p>
                                         </li>
                                     ))}
@@ -257,7 +258,7 @@ export default function Finance({
             </div>
 
             <p className="mt-1 text-xs text-text-secondary">
-                {summary.total_received} TZS received from {summary.contribution_count} contribution
+                {formatCurrency(summary.total_received)} TZS received from {summary.contribution_count} contribution
                 {summary.contribution_count === 1 ? '' : 's'}.
             </p>
 
@@ -329,7 +330,7 @@ export default function Finance({
                     <EmptyState title="No contributions recorded yet" />
                 </div>
             ) : (
-                <ul className="mt-4 divide-y divide-border rounded-md border border-border bg-surface">
+                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
                     {contributions.map((contribution) => (
                         <li key={contribution.id} className="flex items-center justify-between px-4 py-3">
                             <div>
@@ -340,7 +341,7 @@ export default function Finance({
                                 </p>
                             </div>
                             <p className="text-sm font-semibold text-text-primary">
-                                {contribution.amount} {contribution.currency}
+                                {formatCurrency(contribution.amount)} {contribution.currency}
                             </p>
                         </li>
                     ))}

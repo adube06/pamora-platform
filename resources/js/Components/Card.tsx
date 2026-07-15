@@ -9,7 +9,7 @@ interface Props extends PropsWithChildren {
 
 export default function Card({ title, description, className, children }: Props) {
     return (
-        <div className={cn('rounded-md border border-border bg-surface p-4', className)}>
+        <div className={cn('rounded-lg border border-border bg-surface p-4 shadow-sm', className)}>
             {title && <h3 className="text-sm font-medium text-text-primary">{title}</h3>}
             {description && <p className="mt-1 text-xs text-text-secondary">{description}</p>}
             {(title || description) && children ? <div className="mt-3">{children}</div> : children}
