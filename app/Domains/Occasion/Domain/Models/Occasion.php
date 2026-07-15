@@ -13,6 +13,7 @@ use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\Checklist;
 use App\Domains\Planning\Domain\Models\Milestone;
 use App\Domains\Planning\Domain\Models\Task;
+use App\Domains\Planning\Domain\Models\TimelineEvent;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
 use Database\Factories\OccasionFactory;
@@ -80,6 +81,11 @@ class Occasion extends Model
     public function milestones(): HasMany
     {
         return $this->hasMany(Milestone::class);
+    }
+
+    public function timelineEvents(): HasMany
+    {
+        return $this->hasMany(TimelineEvent::class);
     }
 
     public function invitations(): HasMany

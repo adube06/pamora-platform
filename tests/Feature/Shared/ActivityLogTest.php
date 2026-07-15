@@ -9,6 +9,7 @@ use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\Checklist;
 use App\Domains\Planning\Domain\Models\Task;
+use App\Domains\Planning\Domain\Models\TimelineEvent;
 use App\Domains\Shared\Infrastructure\ActivityLog\ActivityLog;
 use App\Models\User;
 
@@ -105,6 +106,21 @@ it('logs an entry when a checklist is created', function () {
     $checklist = Checklist::firstWhere('name', 'Catering');
 
     expect(ActivityLog::where('action', 'planning.checklist_created')->where('subject_id', $checklist->id)->count())->toBe(1);
+});
+
+it('logs an entry when a timeline event is scheduled', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/timeline-events", [
+        'name' => 'Committee Meeting',
+        'scheduled_at' => now()->addWeek()->toDateTimeString(),
+    ]);
+
+    $timelineEvent = TimelineEvent::firstWhere('name', 'Committee Meeting');
+
+    expect(ActivityLog::where('action', 'planning.timeline_event_scheduled')->where('subject_id', $timelineEvent->id)->count())->toBe(1);
 });
 
 it('logs an entry when a contribution is recorded', function () {

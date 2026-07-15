@@ -16,6 +16,7 @@ use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
 use App\Domains\Planning\Domain\Events\TaskReopened;
+use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -159,6 +160,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleTimelineEventScheduled(TimelineEventScheduled $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->timelineEvent->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'TimelineEvent',
+            'subject_id' => $event->timelineEvent->id,
+            'action' => 'planning.timeline_event_scheduled',
+            'description' => "{$event->actor->name} scheduled \"{$event->timelineEvent->name}\" on the timeline.",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -210,6 +223,7 @@ class AuditLogSubscriber
         $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
         $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
+        $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

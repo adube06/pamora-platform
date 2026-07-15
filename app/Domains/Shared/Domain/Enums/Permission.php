@@ -32,6 +32,7 @@ enum Permission: string
     case PlanningReopenTask = 'planning.reopen_task';
     case PlanningManageChecklist = 'planning.manage_checklist';
     case PlanningManageMilestone = 'planning.manage_milestone';
+    case PlanningManageTimeline = 'planning.manage_timeline';
 
     // Finance
     case FinanceViewBudget = 'finance.view_budget';
@@ -63,6 +64,7 @@ enum Permission: string
             self::PlanningReopenTask->value,
             self::PlanningManageChecklist->value,
             self::PlanningManageMilestone->value,
+            self::PlanningManageTimeline->value,
             self::FinanceViewBudget->value,
             self::FinanceEditBudget->value,
             self::FinanceRecordContribution->value,

@@ -8,19 +8,28 @@ import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Checklist, Milestone, Occasion, OccasionMember, Task } from '@/types/models';
+import type { Checklist, Milestone, Occasion, OccasionMember, Task, TimelineEvent } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     tasks: Task[];
     checklists: Checklist[];
     milestones: Milestone[];
+    timelineEvents: TimelineEvent[];
     members: OccasionMember[];
     canCreateTask: boolean;
     canCompleteTask: boolean;
     canReopenTask: boolean;
     canManageChecklist: boolean;
     canManageMilestone: boolean;
+    canManageTimeline: boolean;
+}
+
+function formatScheduledAt(value: string): string {
+    return new Date(value).toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    });
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -130,16 +139,19 @@ export default function Planning({
     tasks,
     checklists,
     milestones,
+    timelineEvents,
     members,
     canCreateTask,
     canCompleteTask,
     canReopenTask,
     canManageChecklist,
     canManageMilestone,
+    canManageTimeline,
 }: Props) {
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [showChecklistForm, setShowChecklistForm] = useState(false);
     const [showMilestoneForm, setShowMilestoneForm] = useState(false);
+    const [showTimelineForm, setShowTimelineForm] = useState(false);
 
     const ungroupedTasks = tasks.filter((task) => task.checklist_id === null);
 
@@ -363,6 +375,71 @@ export default function Planning({
                         </div>
                     )}
                 </div>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+                <h2 className="text-sm font-medium text-text-primary">Timeline</h2>
+                {canManageTimeline && (
+                    <Button variant="ghost" size="sm" onClick={() => setShowTimelineForm((v) => !v)}>
+                        {showTimelineForm ? 'Cancel' : 'New Timeline Event'}
+                    </Button>
+                )}
+            </div>
+
+            {showTimelineForm && (
+                <Card className="mt-4 max-w-md">
+                    <Form
+                        action={route('occasions.timeline-events.store', occasion.slug)}
+                        method="post"
+                        resetOnSuccess
+                        onSuccess={() => setShowTimelineForm(false)}
+                        className="space-y-3"
+                    >
+                        {({ errors, processing }) => (
+                            <>
+                                <FormField label="Event Name" htmlFor="timeline_name" required error={errors.name}>
+                                    <Input
+                                        id="timeline_name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Committee Meeting"
+                                        invalid={!!errors.name}
+                                    />
+                                </FormField>
+
+                                <FormField label="Date & Time" htmlFor="scheduled_at" required error={errors.scheduled_at}>
+                                    <Input
+                                        id="scheduled_at"
+                                        name="scheduled_at"
+                                        type="datetime-local"
+                                        required
+                                        invalid={!!errors.scheduled_at}
+                                    />
+                                </FormField>
+
+                                <Button type="submit" loading={processing}>
+                                    {processing ? 'Scheduling…' : 'Schedule Event'}
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </Card>
+            )}
+
+            {timelineEvents.length === 0 ? (
+                <div className="mt-4">
+                    <EmptyState title="No timeline events yet" description="Scheduled activities will show up here, soonest first." />
+                </div>
+            ) : (
+                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
+                    {timelineEvents.map((event) => (
+                        <li key={event.id} className="flex items-center justify-between px-4 py-3">
+                            <p className="text-sm font-medium text-text-primary">{event.name}</p>
+                            <p className="text-xs text-text-secondary">{formatScheduledAt(event.scheduled_at)}</p>
+                        </li>
+                    ))}
+                </ul>
             )}
         </OccasionWorkspaceLayout>
     );

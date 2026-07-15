@@ -31,12 +31,14 @@ class PlanningController
             // extra data key ({"data": [...]}) instead of a bare array.
             'milestones' => $occasion->milestones()->with('tasks:id,uuid,title,status')->latest()->get()
                 ->map(fn ($milestone) => (new MilestoneResource($milestone))->resolve()),
+            'timelineEvents' => $occasion->timelineEvents()->orderBy('scheduled_at')->get(),
             'members' => $occasion->members()->with('user:id,name')->get(),
             'canCreateTask' => $request->user()->can('create-task', $occasion),
             'canCompleteTask' => $request->user()->can('complete-task', $occasion),
             'canReopenTask' => $request->user()->can('reopen-task', $occasion),
             'canManageChecklist' => $request->user()->can('manage-checklist', $occasion),
             'canManageMilestone' => $request->user()->can('manage-milestone', $occasion),
+            'canManageTimeline' => $request->user()->can('manage-timeline', $occasion),
         ]);
     }
 

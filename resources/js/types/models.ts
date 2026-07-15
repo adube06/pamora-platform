@@ -76,6 +76,13 @@ export interface Milestone {
     tasks: MilestoneTask[];
 }
 
+export interface TimelineEvent {
+    id: number;
+    uuid: string;
+    name: string;
+    scheduled_at: string;
+}
+
 export interface Contribution {
     id: number;
     uuid: string;

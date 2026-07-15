@@ -49,6 +49,10 @@ class PlanningServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::PlanningManageMilestone) ?? false;
         });
 
+        Gate::define('manage-timeline', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::PlanningManageTimeline) ?? false;
+        });
+
         // BR-017 achievement detection — Planning's own internal
         // cross-cutting concern, same Event::listen pattern Shared uses
         // for audit logging (ADR-006), not logic inlined into
