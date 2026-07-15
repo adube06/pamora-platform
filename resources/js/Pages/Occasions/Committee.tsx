@@ -1,4 +1,12 @@
 import { Form } from '@inertiajs/react';
+import Alert from '@/Components/Alert';
+import Avatar from '@/Components/Avatar';
+import Badge from '@/Components/Badge';
+import Button from '@/Components/Button';
+import FormField from '@/Components/FormField';
+import Input from '@/Components/Input';
+import Select from '@/Components/Select';
+import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import type { Invitation, Occasion, OccasionMember, RoleOption } from '@/types/models';
 
@@ -19,33 +27,34 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
         <OccasionWorkspaceLayout occasion={occasion} active="committee">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 <div className="lg:col-span-2">
-                    <h2 className="text-sm font-medium text-gray-900">Members</h2>
-                    <ul className="mt-3 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+                    <h2 className="text-sm font-medium text-text-primary">Members</h2>
+                    <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-surface">
                         {members.map((member) => (
                             <li key={member.id} className="flex items-center justify-between px-4 py-3">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">{member.user?.name}</p>
-                                    <p className="text-xs text-gray-500">{member.user?.email}</p>
-                                    {member.notes && <p className="mt-0.5 text-xs text-gray-400">{member.notes}</p>}
+                                <div className="flex items-center gap-3">
+                                    <Avatar name={member.user?.name ?? '?'} />
+                                    <div>
+                                        <p className="text-sm font-medium text-text-primary">{member.user?.name}</p>
+                                        <p className="text-xs text-text-secondary">{member.user?.email}</p>
+                                        {member.notes && <p className="mt-0.5 text-xs text-text-secondary">{member.notes}</p>}
+                                    </div>
                                 </div>
-                                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                                    {member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}
-                                </span>
+                                <Badge>{member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}</Badge>
                             </li>
                         ))}
                     </ul>
 
                     {pendingInvitations.length > 0 && (
                         <>
-                            <h2 className="mt-6 text-sm font-medium text-gray-900">Pending invitations</h2>
-                            <ul className="mt-3 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+                            <h2 className="mt-6 text-sm font-medium text-text-primary">Pending invitations</h2>
+                            <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-surface">
                                 {pendingInvitations.map((invitation) => (
                                     <li key={invitation.id} className="flex items-center justify-between px-4 py-3">
                                         <div>
-                                            <p className="text-sm text-gray-900">{invitation.email}</p>
-                                            <p className="text-xs text-gray-500">{roleLabel(roles, invitation.role)}</p>
+                                            <p className="text-sm text-text-primary">{invitation.email}</p>
+                                            <p className="text-xs text-text-secondary">{roleLabel(roles, invitation.role)}</p>
                                         </div>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-text-secondary">
                                             Expires {new Date(invitation.expires_at).toLocaleDateString()}
                                         </span>
                                     </li>
@@ -57,7 +66,7 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
 
                 {canInvite && (
                     <div>
-                        <h2 className="text-sm font-medium text-gray-900">Invite someone</h2>
+                        <h2 className="text-sm font-medium text-text-primary">Invite someone</h2>
                         <Form
                             action={route('occasions.committee.invite', occasion.slug)}
                             method="post"
@@ -66,31 +75,18 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                         >
                             {({ errors, processing, wasSuccessful }) => (
                                 <>
-                                    <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                            Email
-                                        </label>
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            required
-                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                        />
-                                        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                                    </div>
+                                    <FormField label="Email" htmlFor="email" required error={errors.email}>
+                                        <Input id="email" name="email" type="email" required invalid={!!errors.email} />
+                                    </FormField>
 
-                                    <div>
-                                        <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                                            Role
-                                        </label>
-                                        <select
-                                            id="role"
-                                            name="role"
-                                            required
-                                            defaultValue=""
-                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                        >
+                                    <FormField
+                                        label="Role"
+                                        htmlFor="role"
+                                        required
+                                        error={errors.role}
+                                        helperText="The Role determines what this member can do — see the Committee Role guide."
+                                    >
+                                        <Select id="role" name="role" required defaultValue="" invalid={!!errors.role}>
                                             <option value="" disabled>
                                                 Select a role
                                             </option>
@@ -99,35 +95,18 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                                                     {role.label}
                                                 </option>
                                             ))}
-                                        </select>
-                                        {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            The Role determines what this member can do — see the Committee Role guide.
-                                        </p>
-                                    </div>
+                                        </Select>
+                                    </FormField>
 
-                                    <div>
-                                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                                            Notes (optional)
-                                        </label>
-                                        <textarea
-                                            id="notes"
-                                            name="notes"
-                                            rows={2}
-                                            placeholder="e.g. helping with catering"
-                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                        />
-                                    </div>
+                                    <FormField label="Notes (optional)" htmlFor="notes">
+                                        <Textarea id="notes" name="notes" rows={2} placeholder="e.g. helping with catering" />
+                                    </FormField>
 
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                                    >
+                                    <Button type="submit" loading={processing}>
                                         {processing ? 'Sending…' : 'Send invitation'}
-                                    </button>
+                                    </Button>
 
-                                    {wasSuccessful && <p className="text-sm text-green-700">Invitation sent.</p>}
+                                    {wasSuccessful && <Alert variant="success">Invitation sent.</Alert>}
                                 </>
                             )}
                         </Form>

@@ -21,7 +21,9 @@ class InvitationController
                 'email' => $invitation->email,
                 'status' => $invitation->status->value,
                 'is_pending' => $invitation->isPending(),
-                'responsibilities' => $invitation->responsibilities,
+                'role' => $invitation->role->value,
+                'role_label' => $invitation->role->label(),
+                'notes' => $invitation->notes,
                 'occasion' => [
                     'title' => $invitation->occasion->title,
                     'type' => $invitation->occasion->type->value,

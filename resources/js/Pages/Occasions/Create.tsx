@@ -1,4 +1,9 @@
 import { Form } from '@inertiajs/react';
+import Button from '@/Components/Button';
+import FormField from '@/Components/FormField';
+import Input from '@/Components/Input';
+import Select from '@/Components/Select';
+import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
 
 interface Option {
@@ -14,37 +19,24 @@ interface Props {
 export default function Create({ types, visibilities }: Props) {
     return (
         <AppLayout>
-            <h1 className="text-lg font-semibold text-gray-900">Create an Occasion</h1>
+            <h1 className="text-lg font-semibold text-text-primary">Create an Occasion</h1>
 
             <Form action={route('occasions.store')} method="post" className="mt-6 max-w-lg space-y-4">
                 {({ errors, processing }) => (
                     <>
-                        <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                                Title
-                            </label>
-                            <input
+                        <FormField label="Title" htmlFor="title" required error={errors.title}>
+                            <Input
                                 id="title"
                                 name="title"
                                 type="text"
                                 required
                                 placeholder="Amina & John's Wedding"
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                invalid={!!errors.title}
                             />
-                            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-                        </div>
+                        </FormField>
 
-                        <div>
-                            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                                Type
-                            </label>
-                            <select
-                                id="type"
-                                name="type"
-                                required
-                                defaultValue=""
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            >
+                        <FormField label="Type" htmlFor="type" required error={errors.type}>
+                            <Select id="type" name="type" required defaultValue="" invalid={!!errors.type}>
                                 <option value="" disabled>
                                     Select a type
                                 </option>
@@ -53,72 +45,34 @@ export default function Create({ types, visibilities }: Props) {
                                         {type.label}
                                     </option>
                                 ))}
-                            </select>
-                            {errors.type && <p className="mt-1 text-sm text-red-600">{errors.type}</p>}
-                        </div>
+                            </Select>
+                        </FormField>
 
-                        <div>
-                            <label htmlFor="primary_date" className="block text-sm font-medium text-gray-700">
-                                Date
-                            </label>
-                            <input
-                                id="primary_date"
-                                name="primary_date"
-                                type="date"
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            />
-                            {errors.primary_date && <p className="mt-1 text-sm text-red-600">{errors.primary_date}</p>}
-                        </div>
+                        <FormField label="Date" htmlFor="primary_date" error={errors.primary_date}>
+                            <Input id="primary_date" name="primary_date" type="date" invalid={!!errors.primary_date} />
+                        </FormField>
 
-                        <div>
-                            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                                Location
-                            </label>
-                            <input
-                                id="location"
-                                name="location"
-                                type="text"
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <FormField label="Location" htmlFor="location">
+                            <Input id="location" name="location" type="text" />
+                        </FormField>
 
-                        <div>
-                            <label htmlFor="visibility" className="block text-sm font-medium text-gray-700">
-                                Visibility
-                            </label>
-                            <select
-                                id="visibility"
-                                name="visibility"
-                                defaultValue="private"
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            >
+                        <FormField label="Visibility" htmlFor="visibility">
+                            <Select id="visibility" name="visibility" defaultValue="private">
                                 {visibilities.map((visibility) => (
                                     <option key={visibility.value} value={visibility.value}>
                                         {visibility.label}
                                     </option>
                                 ))}
-                            </select>
-                        </div>
+                            </Select>
+                        </FormField>
 
-                        <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                Description
-                            </label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                rows={3}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <FormField label="Description" htmlFor="description">
+                            <Textarea id="description" name="description" rows={3} />
+                        </FormField>
 
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                        >
+                        <Button type="submit" loading={processing}>
                             {processing ? 'Creating…' : 'Create Occasion'}
-                        </button>
+                        </Button>
                     </>
                 )}
             </Form>

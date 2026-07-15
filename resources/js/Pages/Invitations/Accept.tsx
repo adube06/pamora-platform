@@ -1,11 +1,16 @@
 import { Link, useForm, usePage } from '@inertiajs/react';
+import Alert from '@/Components/Alert';
+import Button from '@/Components/Button';
+import Card from '@/Components/Card';
 
 interface InvitationProps {
     token: string;
     email: string;
     status: string;
     is_pending: boolean;
-    responsibilities: string[];
+    role: string;
+    role_label: string;
+    notes: string | null;
     occasion: {
         title: string;
         type: string;
@@ -37,55 +42,54 @@ export default function Accept({ invitation }: { invitation: InvitationProps }) 
 
     return (
         <div className="mx-auto mt-16 max-w-md text-center">
-            <h1 className="text-xl font-semibold text-gray-900">
-                You&apos;re invited to {invitation.occasion.title}
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
-                {invitation.occasion.type} · Invited as {invitation.responsibilities.length > 0 ? invitation.responsibilities.join(', ') : 'a committee member'}
+            <h1 className="text-xl font-semibold text-text-primary">You&apos;re invited to {invitation.occasion.title}</h1>
+            <p className="mt-2 text-sm text-text-secondary">
+                {invitation.occasion.type} · Invited as {invitation.role_label}
+                {invitation.notes && ` · ${invitation.notes}`}
             </p>
 
             {!invitation.is_pending && (
-                <p className="mt-6 text-sm text-red-600">
+                <Alert variant="error" className="mt-6 justify-center">
                     This invitation is no longer valid. Ask the Host to send a new one.
-                </p>
+                </Alert>
             )}
 
             {invitation.is_pending && !auth.user && (
-                <div className="mt-6 space-y-3">
-                    <p className="text-sm text-gray-600">Create an account or log in with {invitation.email} to accept.</p>
+                <Card className="mt-6 space-y-3">
+                    <p className="text-sm text-text-secondary">Create an account or log in with {invitation.email} to accept.</p>
                     <div className="flex justify-center gap-3">
                         <Link
                             href={route('register', { invitation: invitation.token })}
-                            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
                         >
                             Create account
                         </Link>
                         <Link
                             href={route('login', { invitation: invitation.token })}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700"
+                            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-primary hover:bg-background"
                         >
                             Log in
                         </Link>
                     </div>
-                </div>
+                </Card>
             )}
 
             {invitation.is_pending && auth.user && !emailMatches && (
-                <p className="mt-6 text-sm text-red-600">
+                <Alert variant="error" className="mt-6 justify-center">
                     This invitation was sent to {invitation.email}, but you&apos;re logged in as {auth.user.email}.
-                </p>
+                </Alert>
             )}
 
             {invitation.is_pending && auth.user && emailMatches && (
                 <div className="mt-6">
-                    <button
-                        onClick={accept}
-                        disabled={processing}
-                        className="rounded-md bg-gray-900 px-6 py-2 text-sm font-medium text-white disabled:opacity-50"
-                    >
+                    <Button onClick={accept} loading={processing}>
                         {processing ? 'Joining…' : 'Accept invitation'}
-                    </button>
-                    {invitationError && <p className="mt-2 text-sm text-red-600">{invitationError}</p>}
+                    </Button>
+                    {invitationError && (
+                        <Alert variant="error" className="mt-3 justify-center">
+                            {invitationError}
+                        </Alert>
+                    )}
                 </div>
             )}
         </div>

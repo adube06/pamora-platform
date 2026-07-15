@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import Alert from '@/Components/Alert';
 
 interface AuthUser {
     id: number;
@@ -22,17 +23,17 @@ export default function AppLayout({ children }: PropsWithChildren) {
     const { auth, flash } = usePage<PageProps>().props;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="border-b border-gray-200 bg-white">
+        <div className="min-h-screen bg-background">
+            <header className="border-b border-border bg-surface">
                 <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-                    <Link href={route('occasions.index')} className="font-semibold text-gray-900">
+                    <Link href={route('occasions.index')} className="font-semibold text-text-primary">
                         Pamora
                     </Link>
 
                     {auth.user && (
-                        <nav className="flex items-center gap-4 text-sm text-gray-600">
+                        <nav className="flex items-center gap-4 text-sm text-text-secondary">
                             <span>{auth.user.name}</span>
-                            <Link href={route('logout')} method="post" as="button" className="hover:text-gray-900">
+                            <Link href={route('logout')} method="post" as="button" className="hover:text-text-primary">
                                 Log out
                             </Link>
                         </nav>
@@ -41,13 +42,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
             </header>
 
             {(flash.success || flash.error) && (
-                <div className="mx-auto max-w-5xl px-4 pt-4">
-                    {flash.success && (
-                        <div className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-800">{flash.success}</div>
-                    )}
-                    {flash.error && (
-                        <div className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-800">{flash.error}</div>
-                    )}
+                <div className="mx-auto max-w-5xl space-y-2 px-4 pt-4">
+                    {flash.success && <Alert variant="success">{flash.success}</Alert>}
+                    {flash.error && <Alert variant="error">{flash.error}</Alert>}
                 </div>
             )}
 

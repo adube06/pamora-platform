@@ -1,5 +1,13 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
+import Badge from '@/Components/Badge';
+import Button from '@/Components/Button';
+import Card from '@/Components/Card';
+import EmptyState from '@/Components/EmptyState';
+import FormField from '@/Components/FormField';
+import Input from '@/Components/Input';
+import Select from '@/Components/Select';
+import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import type { Budget, BudgetSummary, Contribution, Expense, Occasion } from '@/types/models';
 
@@ -29,11 +37,11 @@ const HEALTH_LABELS: Record<string, string> = {
     over_budget: 'Over Budget',
 };
 
-const HEALTH_CLASSES: Record<string, string> = {
-    under_budget: 'bg-blue-100 text-blue-800',
-    on_track: 'bg-green-100 text-green-800',
-    at_risk: 'bg-yellow-100 text-yellow-800',
-    over_budget: 'bg-red-100 text-red-800',
+const HEALTH_VARIANTS: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
+    under_budget: 'info',
+    on_track: 'success',
+    at_risk: 'warning',
+    over_budget: 'error',
 };
 
 export default function Finance({
@@ -56,162 +64,126 @@ export default function Finance({
             {canViewBudget && (
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-medium text-gray-900">Budget</h2>
+                        <h2 className="text-sm font-medium text-text-primary">Budget</h2>
                         {budget && summary.health && (
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${HEALTH_CLASSES[summary.health]}`}>
+                            <Badge variant={HEALTH_VARIANTS[summary.health] ?? 'neutral'}>
                                 {HEALTH_LABELS[summary.health] ?? summary.health}
-                            </span>
+                            </Badge>
                         )}
                     </div>
 
                     {budget ? (
                         <>
                             <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                                <div className="rounded-md border border-gray-200 bg-white p-4">
-                                    <p className="text-xs text-gray-500">Planned</p>
-                                    <p className="mt-1 text-xl font-semibold text-gray-900">
+                                <Card>
+                                    <p className="text-xs text-text-secondary">Planned</p>
+                                    <p className="mt-1 text-xl font-semibold text-text-primary">
                                         {summary.planned_amount} {budget.currency}
                                     </p>
-                                </div>
-                                <div className="rounded-md border border-gray-200 bg-white p-4">
-                                    <p className="text-xs text-gray-500">Received</p>
-                                    <p className="mt-1 text-xl font-semibold text-gray-900">
+                                </Card>
+                                <Card>
+                                    <p className="text-xs text-text-secondary">Received</p>
+                                    <p className="mt-1 text-xl font-semibold text-text-primary">
                                         {summary.total_received} {budget.currency}
                                     </p>
-                                    <p className="text-xs text-gray-400">{summary.funding_progress}% funded</p>
-                                </div>
-                                <div className="rounded-md border border-gray-200 bg-white p-4">
-                                    <p className="text-xs text-gray-500">Spent</p>
-                                    <p className="mt-1 text-xl font-semibold text-gray-900">
+                                    <p className="text-xs text-text-secondary">{summary.funding_progress}% funded</p>
+                                </Card>
+                                <Card>
+                                    <p className="text-xs text-text-secondary">Spent</p>
+                                    <p className="mt-1 text-xl font-semibold text-text-primary">
                                         {summary.total_expense} {budget.currency}
                                     </p>
-                                    <p className="text-xs text-gray-400">{summary.spending_progress}% spent</p>
-                                </div>
-                                <div className="rounded-md border border-gray-200 bg-white p-4">
-                                    <p className="text-xs text-gray-500">Remaining</p>
-                                    <p className="mt-1 text-xl font-semibold text-gray-900">
+                                    <p className="text-xs text-text-secondary">{summary.spending_progress}% spent</p>
+                                </Card>
+                                <Card>
+                                    <p className="text-xs text-text-secondary">Remaining</p>
+                                    <p className="mt-1 text-xl font-semibold text-text-primary">
                                         {summary.remaining_budget} {budget.currency}
                                     </p>
-                                </div>
+                                </Card>
                             </div>
 
                             <div className="mt-6 flex items-center justify-between">
-                                <h3 className="text-sm font-medium text-gray-900">Expenses</h3>
+                                <h3 className="text-sm font-medium text-text-primary">Expenses</h3>
                                 {canRecordExpense && (
-                                    <button
-                                        onClick={() => setShowExpenseForm((v) => !v)}
-                                        className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white"
-                                    >
+                                    <Button size="sm" onClick={() => setShowExpenseForm((v) => !v)}>
                                         {showExpenseForm ? 'Cancel' : 'Record Expense'}
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
                             {showExpenseForm && (
-                                <Form
-                                    action={route('occasions.expenses.store', occasion.slug)}
-                                    method="post"
-                                    resetOnSuccess
-                                    onSuccess={() => setShowExpenseForm(false)}
-                                    className="mt-4 max-w-md space-y-3 rounded-md border border-gray-200 bg-white p-4"
-                                >
-                                    {({ errors, processing }) => (
-                                        <>
-                                            <div>
-                                                <label htmlFor="budget_category_id" className="block text-sm font-medium text-gray-700">
-                                                    Category
-                                                </label>
-                                                <select
-                                                    id="budget_category_id"
-                                                    name="budget_category_id"
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                >
-                                                    {budget.categories.map((category) => (
-                                                        <option key={category.id} value={category.id}>
-                                                            {category.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.budget_category_id && (
-                                                    <p className="mt-1 text-sm text-red-600">{errors.budget_category_id}</p>
-                                                )}
-                                            </div>
+                                <Card className="mt-4 max-w-md">
+                                    <Form
+                                        action={route('occasions.expenses.store', occasion.slug)}
+                                        method="post"
+                                        resetOnSuccess
+                                        onSuccess={() => setShowExpenseForm(false)}
+                                        className="space-y-3"
+                                    >
+                                        {({ errors, processing }) => (
+                                            <>
+                                                <FormField label="Category" htmlFor="budget_category_id" error={errors.budget_category_id}>
+                                                    <Select
+                                                        id="budget_category_id"
+                                                        name="budget_category_id"
+                                                        invalid={!!errors.budget_category_id}
+                                                    >
+                                                        {budget.categories.map((category) => (
+                                                            <option key={category.id} value={category.id}>
+                                                                {category.name}
+                                                            </option>
+                                                        ))}
+                                                    </Select>
+                                                </FormField>
 
-                                            <div>
-                                                <label htmlFor="expense_amount" className="block text-sm font-medium text-gray-700">
-                                                    Amount
-                                                </label>
-                                                <input
-                                                    id="expense_amount"
-                                                    name="amount"
-                                                    type="number"
-                                                    min="1"
-                                                    step="0.01"
-                                                    required
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                />
-                                                {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
-                                            </div>
+                                                <FormField label="Amount" htmlFor="expense_amount" required error={errors.amount}>
+                                                    <Input
+                                                        id="expense_amount"
+                                                        name="amount"
+                                                        type="number"
+                                                        min="1"
+                                                        step="0.01"
+                                                        required
+                                                        invalid={!!errors.amount}
+                                                    />
+                                                </FormField>
 
-                                            <div>
-                                                <label htmlFor="spent_at" className="block text-sm font-medium text-gray-700">
-                                                    Date
-                                                </label>
-                                                <input
-                                                    id="spent_at"
-                                                    name="spent_at"
-                                                    type="date"
-                                                    required
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                />
-                                                {errors.spent_at && <p className="mt-1 text-sm text-red-600">{errors.spent_at}</p>}
-                                            </div>
+                                                <FormField label="Date" htmlFor="spent_at" required error={errors.spent_at}>
+                                                    <Input id="spent_at" name="spent_at" type="date" required invalid={!!errors.spent_at} />
+                                                </FormField>
 
-                                            <div>
-                                                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                                    Description (optional)
-                                                </label>
-                                                <textarea
-                                                    id="description"
-                                                    name="description"
-                                                    rows={2}
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                />
-                                                {errors.description && (
-                                                    <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-                                                )}
-                                            </div>
+                                                <FormField label="Description (optional)" htmlFor="description" error={errors.description}>
+                                                    <Textarea id="description" name="description" rows={2} invalid={!!errors.description} />
+                                                </FormField>
 
-                                            <button
-                                                type="submit"
-                                                disabled={processing}
-                                                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                                            >
-                                                {processing ? 'Recording…' : 'Record Expense'}
-                                            </button>
-                                        </>
-                                    )}
-                                </Form>
+                                                <Button type="submit" loading={processing}>
+                                                    {processing ? 'Recording…' : 'Record Expense'}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Form>
+                                </Card>
                             )}
 
                             {expenses.length === 0 ? (
-                                <div className="mt-4 rounded-md border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-                                    No expenses recorded yet.
+                                <div className="mt-4">
+                                    <EmptyState title="No expenses recorded yet" />
                                 </div>
                             ) : (
-                                <ul className="mt-4 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+                                <ul className="mt-4 divide-y divide-border rounded-md border border-border bg-surface">
                                     {expenses.map((expense) => (
                                         <li key={expense.id} className="flex items-center justify-between px-4 py-3">
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">
+                                                <p className="text-sm font-medium text-text-primary">
                                                     {expense.category?.name ?? 'Uncategorized'}
                                                 </p>
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-xs text-text-secondary">
                                                     {expense.spent_at}
                                                     {expense.description && ` · ${expense.description}`}
                                                 </p>
                                             </div>
-                                            <p className="text-sm font-semibold text-gray-900">
+                                            <p className="text-sm font-semibold text-text-primary">
                                                 {expense.amount} {expense.currency}
                                             </p>
                                         </li>
@@ -222,222 +194,152 @@ export default function Finance({
                     ) : canEditBudget ? (
                         <div className="mt-3">
                             {!showBudgetForm ? (
-                                <button
-                                    onClick={() => setShowBudgetForm(true)}
-                                    className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white"
-                                >
+                                <Button size="sm" onClick={() => setShowBudgetForm(true)}>
                                     Create Budget
-                                </button>
+                                </Button>
                             ) : (
-                                <Form
-                                    action={route('occasions.budget.store', occasion.slug)}
-                                    method="post"
-                                    className="max-w-md space-y-3 rounded-md border border-gray-200 bg-white p-4"
-                                >
-                                    {({ errors, processing }) => (
-                                        <>
-                                            <div>
-                                                <label htmlFor="budget_name" className="block text-sm font-medium text-gray-700">
-                                                    Budget Name
-                                                </label>
-                                                <input
-                                                    id="budget_name"
-                                                    name="name"
-                                                    type="text"
-                                                    required
-                                                    defaultValue={`${occasion.title} Budget`}
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                />
-                                                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                                            </div>
+                                <Card className="max-w-md">
+                                    <Form action={route('occasions.budget.store', occasion.slug)} method="post" className="space-y-3">
+                                        {({ errors, processing }) => (
+                                            <>
+                                                <FormField label="Budget Name" htmlFor="budget_name" required error={errors.name}>
+                                                    <Input
+                                                        id="budget_name"
+                                                        name="name"
+                                                        type="text"
+                                                        required
+                                                        defaultValue={`${occasion.title} Budget`}
+                                                        invalid={!!errors.name}
+                                                    />
+                                                </FormField>
 
-                                            <div>
-                                                <label htmlFor="planned_amount" className="block text-sm font-medium text-gray-700">
-                                                    Planned Amount
-                                                </label>
-                                                <input
-                                                    id="planned_amount"
-                                                    name="planned_amount"
-                                                    type="number"
-                                                    min="1"
-                                                    step="0.01"
+                                                <FormField
+                                                    label="Planned Amount"
+                                                    htmlFor="planned_amount"
                                                     required
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                                />
-                                                {errors.planned_amount && (
-                                                    <p className="mt-1 text-sm text-red-600">{errors.planned_amount}</p>
-                                                )}
-                                            </div>
+                                                    error={errors.planned_amount}
+                                                >
+                                                    <Input
+                                                        id="planned_amount"
+                                                        name="planned_amount"
+                                                        type="number"
+                                                        min="1"
+                                                        step="0.01"
+                                                        required
+                                                        invalid={!!errors.planned_amount}
+                                                    />
+                                                </FormField>
 
-                                            <button
-                                                type="submit"
-                                                disabled={processing}
-                                                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                                            >
-                                                {processing ? 'Creating…' : 'Create Budget'}
-                                            </button>
-                                        </>
-                                    )}
-                                </Form>
+                                                <Button type="submit" loading={processing}>
+                                                    {processing ? 'Creating…' : 'Create Budget'}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Form>
+                                </Card>
                             )}
                         </div>
                     ) : (
-                        <div className="mt-3 rounded-md border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-                            No Budget has been created for this Occasion yet.
+                        <div className="mt-3">
+                            <EmptyState title="No Budget has been created for this Occasion yet" />
                         </div>
                     )}
                 </div>
             )}
 
             <div className="flex items-center justify-between">
-                <h2 className="text-sm font-medium text-gray-900">Contributions</h2>
+                <h2 className="text-sm font-medium text-text-primary">Contributions</h2>
                 {canRecordContribution && (
-                    <button
-                        onClick={() => setShowContributionForm((v) => !v)}
-                        className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white"
-                    >
+                    <Button size="sm" onClick={() => setShowContributionForm((v) => !v)}>
                         {showContributionForm ? 'Cancel' : 'Record Contribution'}
-                    </button>
+                    </Button>
                 )}
             </div>
 
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-text-secondary">
                 {summary.total_received} TZS received from {summary.contribution_count} contribution
                 {summary.contribution_count === 1 ? '' : 's'}.
             </p>
 
             {showContributionForm && (
-                <Form
-                    action={route('occasions.contributions.store', occasion.slug)}
-                    method="post"
-                    resetOnSuccess
-                    onSuccess={() => setShowContributionForm(false)}
-                    className="mt-4 max-w-md space-y-3 rounded-md border border-gray-200 bg-white p-4"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <div>
-                                <label htmlFor="contributor_name" className="block text-sm font-medium text-gray-700">
-                                    Contributor Name
-                                </label>
-                                <input
-                                    id="contributor_name"
-                                    name="contributor_name"
-                                    type="text"
-                                    required
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                />
-                                {errors.contributor_name && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.contributor_name}</p>
-                                )}
-                            </div>
+                <Card className="mt-4 max-w-md">
+                    <Form
+                        action={route('occasions.contributions.store', occasion.slug)}
+                        method="post"
+                        resetOnSuccess
+                        onSuccess={() => setShowContributionForm(false)}
+                        className="space-y-3"
+                    >
+                        {({ errors, processing }) => (
+                            <>
+                                <FormField label="Contributor Name" htmlFor="contributor_name" required error={errors.contributor_name}>
+                                    <Input
+                                        id="contributor_name"
+                                        name="contributor_name"
+                                        type="text"
+                                        required
+                                        invalid={!!errors.contributor_name}
+                                    />
+                                </FormField>
 
-                            <div>
-                                <label htmlFor="contributor_phone" className="block text-sm font-medium text-gray-700">
-                                    Phone (optional)
-                                </label>
-                                <input
-                                    id="contributor_phone"
-                                    name="contributor_phone"
-                                    type="text"
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                />
-                                {errors.contributor_phone && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.contributor_phone}</p>
-                                )}
-                            </div>
+                                <FormField label="Phone (optional)" htmlFor="contributor_phone" error={errors.contributor_phone}>
+                                    <Input id="contributor_phone" name="contributor_phone" type="text" invalid={!!errors.contributor_phone} />
+                                </FormField>
 
-                            <div>
-                                <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                                    Amount
-                                </label>
-                                <input
-                                    id="amount"
-                                    name="amount"
-                                    type="number"
-                                    min="1"
-                                    step="0.01"
-                                    required
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                />
-                                {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
-                            </div>
+                                <FormField label="Amount" htmlFor="amount" required error={errors.amount}>
+                                    <Input
+                                        id="amount"
+                                        name="amount"
+                                        type="number"
+                                        min="1"
+                                        step="0.01"
+                                        required
+                                        invalid={!!errors.amount}
+                                    />
+                                </FormField>
 
-                            <div>
-                                <label htmlFor="method" className="block text-sm font-medium text-gray-700">
-                                    Method
-                                </label>
-                                <select
-                                    id="method"
-                                    name="method"
-                                    defaultValue="cash"
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="mobile_money">Mobile Money</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                {errors.method && <p className="mt-1 text-sm text-red-600">{errors.method}</p>}
-                            </div>
+                                <FormField label="Method" htmlFor="method" error={errors.method}>
+                                    <Select id="method" name="method" defaultValue="cash" invalid={!!errors.method}>
+                                        <option value="cash">Cash</option>
+                                        <option value="mobile_money">Mobile Money</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="other">Other</option>
+                                    </Select>
+                                </FormField>
 
-                            <div>
-                                <label htmlFor="contributed_at" className="block text-sm font-medium text-gray-700">
-                                    Date
-                                </label>
-                                <input
-                                    id="contributed_at"
-                                    name="contributed_at"
-                                    type="date"
-                                    required
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                />
-                                {errors.contributed_at && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.contributed_at}</p>
-                                )}
-                            </div>
+                                <FormField label="Date" htmlFor="contributed_at" required error={errors.contributed_at}>
+                                    <Input id="contributed_at" name="contributed_at" type="date" required invalid={!!errors.contributed_at} />
+                                </FormField>
 
-                            <div>
-                                <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                                    Message (optional)
-                                </label>
-                                <textarea
-                                    id="message"
-                                    name="message"
-                                    rows={2}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                />
-                                {errors.message && <p className="mt-1 text-sm text-red-600">{errors.message}</p>}
-                            </div>
+                                <FormField label="Message (optional)" htmlFor="message" error={errors.message}>
+                                    <Textarea id="message" name="message" rows={2} invalid={!!errors.message} />
+                                </FormField>
 
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                            >
-                                {processing ? 'Recording…' : 'Record Contribution'}
-                            </button>
-                        </>
-                    )}
-                </Form>
+                                <Button type="submit" loading={processing}>
+                                    {processing ? 'Recording…' : 'Record Contribution'}
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </Card>
             )}
 
             {contributions.length === 0 ? (
-                <div className="mt-6 rounded-md border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                    No contributions recorded yet.
+                <div className="mt-6">
+                    <EmptyState title="No contributions recorded yet" />
                 </div>
             ) : (
-                <ul className="mt-4 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+                <ul className="mt-4 divide-y divide-border rounded-md border border-border bg-surface">
                     {contributions.map((contribution) => (
                         <li key={contribution.id} className="flex items-center justify-between px-4 py-3">
                             <div>
-                                <p className="text-sm font-medium text-gray-900">{contribution.contributor_name}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm font-medium text-text-primary">{contribution.contributor_name}</p>
+                                <p className="text-xs text-text-secondary">
                                     {METHOD_LABELS[contribution.method] ?? contribution.method} · {contribution.contributed_at}
                                     {contribution.message && ` · "${contribution.message}"`}
                                 </p>
                             </div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-sm font-semibold text-text-primary">
                                 {contribution.amount} {contribution.currency}
                             </p>
                         </li>
