@@ -2,6 +2,7 @@
 
 namespace App\Domains\Shared\Infrastructure\ActivityLog;
 
+use App\Domains\Communication\Domain\Events\AnnouncementPublished;
 use App\Domains\Finance\Domain\Events\BudgetCreated;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
@@ -172,6 +173,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleAnnouncementPublished(AnnouncementPublished $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->announcement->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Announcement',
+            'subject_id' => $event->announcement->id,
+            'action' => 'communication.announcement_published',
+            'description' => "{$event->actor->name} published \"{$event->announcement->title}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -224,6 +237,7 @@ class AuditLogSubscriber
         $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
+        $events->listen(AnnouncementPublished::class, [self::class, 'handleAnnouncementPublished']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

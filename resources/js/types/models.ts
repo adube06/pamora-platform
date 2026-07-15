@@ -83,6 +83,21 @@ export interface TimelineEvent {
     scheduled_at: string;
 }
 
+export interface Announcement {
+    id: number;
+    uuid: string;
+    title: string;
+    message: string;
+    audience: string;
+    status: string;
+    published_at: string;
+    // The eager-loaded `createdBy` relation is snake-cased on serialization
+    // (Eloquent's relationsToArray()), which overwrites the raw created_by
+    // FK column in the JSON — so this key holds the loaded {id, name}, not
+    // an integer.
+    created_by: { id: number; name: string };
+}
+
 export interface Contribution {
     id: number;
     uuid: string;

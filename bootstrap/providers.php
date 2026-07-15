@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Communication\CommunicationServiceProvider;
 use App\Domains\Finance\FinanceServiceProvider;
 use App\Domains\Identity\IdentityServiceProvider;
 use App\Domains\Occasion\OccasionServiceProvider;
@@ -16,4 +17,5 @@ return [
     PeopleServiceProvider::class,
     PlanningServiceProvider::class,
     FinanceServiceProvider::class,
+    CommunicationServiceProvider::class,
 ];

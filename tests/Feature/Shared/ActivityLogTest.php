@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
@@ -121,6 +122,23 @@ it('logs an entry when a timeline event is scheduled', function () {
     $timelineEvent = TimelineEvent::firstWhere('name', 'Committee Meeting');
 
     expect(ActivityLog::where('action', 'planning.timeline_event_scheduled')->where('subject_id', $timelineEvent->id)->count())->toBe(1);
+});
+
+it('logs an entry when an announcement is published', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/announcements", [
+        'title' => 'Venue update',
+        'message' => 'The venue has changed to the community hall.',
+    ]);
+
+    $announcement = Announcement::firstWhere('title', 'Venue update');
+
+    expect(ActivityLog::where('action', 'communication.announcement_published')
+        ->where('subject_id', $announcement->id)
+        ->count())->toBe(1);
 });
 
 it('logs an entry when a contribution is recorded', function () {

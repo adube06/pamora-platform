@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('announcements', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('occasion_id')->constrained('occasions')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('message');
+            $table->string('audience')->default('all_members');
+            $table->string('status')->default('published');
+            $table->dateTime('published_at');
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['occasion_id', 'published_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('announcements');
+    }
+};

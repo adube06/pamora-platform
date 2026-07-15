@@ -6,7 +6,7 @@ import type { Occasion } from '@/types/models';
 
 interface Props extends PropsWithChildren {
     occasion: Occasion;
-    active: 'overview' | 'committee' | 'planning' | 'finance';
+    active: 'overview' | 'committee' | 'planning' | 'finance' | 'communication';
 }
 
 const tabs = [
@@ -14,6 +14,7 @@ const tabs = [
     { key: 'committee', label: 'Committee', routeName: 'occasions.committee' },
     { key: 'planning', label: 'Planning', routeName: 'occasions.planning' },
     { key: 'finance', label: 'Finance', routeName: 'occasions.finance' },
+    { key: 'communication', label: 'Communication', routeName: 'occasions.communication' },
 ] as const;
 
 export default function OccasionWorkspaceLayout({ occasion, active, children }: Props) {

@@ -67,6 +67,7 @@ enum Role: string
                 Permission::PlanningManageChecklist->value,
                 Permission::PlanningManageMilestone->value,
                 Permission::PlanningManageTimeline->value,
+                Permission::CommunicationPublishAnnouncement->value,
             ],
 
             self::Treasurer => [

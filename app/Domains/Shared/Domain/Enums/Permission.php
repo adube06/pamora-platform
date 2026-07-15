@@ -40,6 +40,9 @@ enum Permission: string
     case FinanceRecordContribution = 'finance.record_contribution';
     case FinanceRecordExpense = 'finance.record_expense';
 
+    // Communication
+    case CommunicationPublishAnnouncement = 'communication.publish_announcement';
+
     /**
      * The full set of permissions granted to a Host on Occasion creation.
      *
@@ -69,6 +72,7 @@ enum Permission: string
             self::FinanceEditBudget->value,
             self::FinanceRecordContribution->value,
             self::FinanceRecordExpense->value,
+            self::CommunicationPublishAnnouncement->value,
         ];
     }
 }
