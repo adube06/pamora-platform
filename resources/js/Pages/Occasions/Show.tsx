@@ -1,9 +1,10 @@
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Occasion, OccasionMember } from '@/types/models';
+import type { Occasion, OccasionMember, Readiness } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     member: OccasionMember;
+    readiness: Readiness;
 }
 
 function formatRole(role: string): string {
@@ -13,9 +14,28 @@ function formatRole(role: string): string {
         .join(' ');
 }
 
-export default function Show({ occasion, member }: Props) {
+export default function Show({ occasion, member, readiness }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="overview">
+            <div className="mb-6 max-w-lg rounded-md border border-gray-200 bg-white p-4">
+                <p className="text-xs text-gray-500">Readiness</p>
+                {readiness.score === null ? (
+                    <p className="mt-1 text-sm text-gray-500">Not enough data yet.</p>
+                ) : (
+                    <>
+                        <p className="mt-1 text-3xl font-semibold text-gray-900">{readiness.score}%</p>
+                        <ul className="mt-2 space-y-1">
+                            {readiness.signals.map((signal) => (
+                                <li key={signal.key} className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{signal.label}</span>
+                                    <span className="font-medium text-gray-700">{signal.value}%</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </>
+                )}
+            </div>
+
             <dl className="grid max-w-lg grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <dt className="text-sm font-medium text-gray-500">Date</dt>

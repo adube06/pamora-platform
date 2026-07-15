@@ -104,3 +104,14 @@ export interface BudgetSummary {
     spending_progress?: number | null;
     health?: string | null;
 }
+
+export interface ReadinessSignal {
+    key: string;
+    label: string;
+    value: number;
+}
+
+export interface Readiness {
+    score: number | null;
+    signals: ReadinessSignal[];
+}
