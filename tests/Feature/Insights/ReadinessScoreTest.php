@@ -119,3 +119,52 @@ it('shows the funding signal to the host but hides it from a member without fina
             ->where('readiness.signals', [])
         );
 });
+
+it('shows full financial figures to the host but trims them for a member without finance.view_budget', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    Budget::factory()->create(['occasion_id' => $occasion->id, 'planned_amount' => 100000]);
+    Contribution::factory()->create(['occasion_id' => $occasion->id, 'amount' => 40000]);
+
+    $this->actingAs($host)
+        ->get("/occasions/{$occasion->slug}")
+        ->assertInertia(fn ($page) => $page
+            ->component('Occasions/Show')
+            ->where('canViewBudget', true)
+            ->where('financialSummary.planned_amount', '100000.00')
+            ->where('financialSummary.total_received', '40000')
+        );
+
+    $observer = User::factory()->create();
+    OccasionMember::factory()->create([
+        'occasion_id' => $occasion->id,
+        'user_id' => $observer->id,
+        'permissions' => [],
+    ]);
+
+    $this->actingAs($observer)
+        ->get("/occasions/{$occasion->slug}")
+        ->assertInertia(fn ($page) => $page
+            ->component('Occasions/Show')
+            ->where('canViewBudget', false)
+            ->where('financialSummary.total_received', '40000')
+            ->missing('financialSummary.planned_amount')
+        );
+});
+
+it('includes task progress on the overview page for any member', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    Task::factory()->create(['occasion_id' => $occasion->id, 'status' => TaskStatus::Completed]);
+    Task::factory()->create(['occasion_id' => $occasion->id, 'status' => TaskStatus::Open]);
+
+    $this->actingAs($host)
+        ->get("/occasions/{$occasion->slug}")
+        ->assertInertia(fn ($page) => $page
+            ->component('Occasions/Show')
+            ->where('taskProgress.total', 2)
+            ->where('taskProgress.completion_percentage', 50)
+        );
+});

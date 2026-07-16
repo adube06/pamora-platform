@@ -2,7 +2,9 @@
 
 namespace App\Domains\Occasion\Presentation\Http\Controllers;
 
+use App\Domains\Finance\Application\Services\GetBudgetSummaryService;
 use App\Domains\Insights\Application\Services\GetReadinessScoreService;
+use App\Domains\Insights\Application\Services\GetTaskProgressService;
 use App\Domains\Occasion\Application\Services\CreateOccasionService;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
@@ -10,6 +12,7 @@ use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Occasion\Presentation\Http\Requests\StoreOccasionRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -42,19 +45,29 @@ class OccasionController
         return redirect()->route('occasions.show', $occasion->slug);
     }
 
-    public function show(Request $request, Occasion $occasion, GetReadinessScoreService $readinessService): Response
-    {
+    public function show(
+        Request $request,
+        Occasion $occasion,
+        GetReadinessScoreService $readinessService,
+        GetBudgetSummaryService $budgetSummaryService,
+        GetTaskProgressService $taskProgressService,
+    ): Response {
         $request->user()->can('view', $occasion) || abort(403);
 
-        // Funding progress is withheld from the Readiness signals for
-        // viewers without finance.view_budget, same boundary FinanceController
-        // enforces for Budget figures directly (Slice 002.1 Design Decision 7).
+        // Funding progress is withheld from the Readiness signals (and the
+        // Financial Summary card) for viewers without finance.view_budget,
+        // same boundary FinanceController enforces for Budget figures
+        // directly (Slice 002.1 Design Decision 7).
         $includeFinance = $request->user()->can('view-budget', $occasion);
+        $financialSummary = $budgetSummaryService->handle($occasion);
 
         return Inertia::render('Occasions/Show', [
             'occasion' => $occasion,
             'member' => $occasion->memberFor($request->user()),
             'readiness' => $readinessService->handle($occasion, $includeFinance),
+            'taskProgress' => $taskProgressService->handle($occasion),
+            'financialSummary' => $includeFinance ? $financialSummary : Arr::only($financialSummary, ['total_received', 'contribution_count']),
+            'canViewBudget' => $includeFinance,
         ]);
     }
 }

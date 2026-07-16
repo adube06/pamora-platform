@@ -187,6 +187,16 @@ export interface BudgetSummary {
     health?: string | null;
 }
 
+export interface TaskProgress {
+    total: number;
+    draft: number;
+    open: number;
+    in_progress: number;
+    completed: number;
+    deferred: number;
+    completion_percentage: number | null;
+}
+
 export interface ReadinessSignal {
     key: string;
     label: string;
