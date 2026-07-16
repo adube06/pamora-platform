@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Communication\Domain\Models\Announcement;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -35,6 +36,21 @@ it('prevents a member without communication.publish_announcement from publishing
             'message' => 'This should not be saved.',
         ])
         ->assertForbidden();
+
+    expect(Announcement::where('title', 'Should not be published')->exists())->toBeFalse();
+});
+
+it('rejects publishing an announcement on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/announcements", [
+            'title' => 'Should not be published',
+            'message' => 'This should not be saved.',
+        ])
+        ->assertSessionHasErrors('occasion');
 
     expect(Announcement::where('title', 'Should not be published')->exists())->toBeFalse();
 });

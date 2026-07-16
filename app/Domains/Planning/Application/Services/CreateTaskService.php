@@ -6,15 +6,20 @@ use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Planning\Domain\Enums\TaskStatus;
 use App\Domains\Planning\Domain\Events\TaskCreated;
 use App\Domains\Planning\Domain\Models\Task;
+use App\Domains\Shared\Application\Concerns\GuardsAgainstArchivedOccasion;
 use App\Models\User;
 
 class CreateTaskService
 {
+    use GuardsAgainstArchivedOccasion;
+
     /**
      * @param  array{title: string, description?: string, priority?: string, due_date?: string}  $data
      */
     public function handle(Occasion $occasion, array $data, User $actor): Task
     {
+        $this->ensureOccasionAcceptsActivity($occasion);
+
         $task = Task::create([
             ...$data,
             'occasion_id' => $occasion->id,

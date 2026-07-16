@@ -3,6 +3,7 @@
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -83,4 +84,20 @@ it('rejects a category belonging to a different occasion\'s budget', function ()
     ])->assertSessionHasErrors('budget_category_id');
 
     expect(Expense::where('budget_category_id', $foreignCategory->id)->exists())->toBeFalse();
+});
+
+it('rejects recording an expense on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $budget = Budget::factory()->create(['occasion_id' => $occasion->id]);
+    $category = BudgetCategory::factory()->create(['budget_id' => $budget->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/expenses", [
+        'budget_category_id' => $category->id,
+        'amount' => 5000,
+        'spent_at' => now()->toDateString(),
+    ])->assertSessionHasErrors('occasion');
+
+    expect(Expense::where('budget_category_id', $category->id)->exists())->toBeFalse();
 });

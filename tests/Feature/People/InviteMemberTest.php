@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\InvitationStatus;
 use App\Domains\People\Domain\Enums\Role;
@@ -62,4 +63,16 @@ it('prevents a member without people.invite_member from inviting anyone', functi
     $this->actingAs($guestUser)
         ->post("/occasions/{$occasion->slug}/committee/invitations", ['email' => 'someone@example.com'])
         ->assertForbidden();
+});
+
+it('rejects inviting a member to an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'created_by' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/committee/invitations", ['email' => 'someone@example.com', 'role' => 'treasurer'])
+        ->assertSessionHasErrors('occasion');
+
+    expect(Invitation::where('email', 'someone@example.com')->exists())->toBeFalse();
 });

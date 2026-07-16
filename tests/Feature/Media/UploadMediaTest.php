@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Media\Domain\Models\MediaAsset;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -64,4 +65,20 @@ it('rejects a disallowed file type', function () {
     $this->actingAs($host)
         ->post("/occasions/{$occasion->slug}/media", ['file' => $file])
         ->assertSessionHasErrors('file');
+});
+
+it('rejects uploading media to an archived occasion (BR-009)', function () {
+    Storage::fake('local');
+
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $file = UploadedFile::fake()->image('venue.jpg');
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/media", ['file' => $file])
+        ->assertSessionHasErrors('occasion');
+
+    expect(MediaAsset::where('file_name', 'venue.jpg')->exists())->toBeFalse();
 });

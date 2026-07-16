@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Finance\Domain\Models\Budget;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -75,4 +76,17 @@ it('rejects a second budget for an occasion that already has one', function () {
     ])->assertSessionHasErrors('name');
 
     expect(Budget::where('occasion_id', $occasion->id)->count())->toBe(1);
+});
+
+it('rejects creating a budget on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/budget", [
+        'name' => 'Should not be created',
+        'planned_amount' => 100000,
+    ])->assertSessionHasErrors('occasion');
+
+    expect(Budget::where('name', 'Should not be created')->exists())->toBeFalse();
 });

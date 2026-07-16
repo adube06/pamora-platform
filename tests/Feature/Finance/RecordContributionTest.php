@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Finance\Domain\Models\Contribution;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -78,4 +79,21 @@ it('rejects a contribution with a zero or negative amount', function () {
     ])->assertSessionHasErrors('amount');
 
     expect(Contribution::where('contributor_name', 'Amina Hassan')->exists())->toBeFalse();
+});
+
+it('rejects recording a contribution on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/contributions", [
+            'contributor_name' => 'Should not be created',
+            'amount' => 1000,
+            'method' => 'cash',
+            'contributed_at' => now()->toDateString(),
+        ])
+        ->assertSessionHasErrors('occasion');
+
+    expect(Contribution::where('contributor_name', 'Should not be created')->exists())->toBeFalse();
 });

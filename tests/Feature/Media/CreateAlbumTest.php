@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Media\Domain\Models\Album;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -31,6 +32,18 @@ it('prevents a member without media.upload from creating an album', function () 
     $this->actingAs($observerUser)
         ->post("/occasions/{$occasion->slug}/albums", ['name' => 'Should not be created'])
         ->assertForbidden();
+
+    expect(Album::where('name', 'Should not be created')->exists())->toBeFalse();
+});
+
+it('rejects creating an album on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/albums", ['name' => 'Should not be created'])
+        ->assertSessionHasErrors('occasion');
 
     expect(Album::where('name', 'Should not be created')->exists())->toBeFalse();
 });

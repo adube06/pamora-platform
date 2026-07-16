@@ -6,16 +6,21 @@ use App\Domains\Media\Domain\Enums\MediaType;
 use App\Domains\Media\Domain\Events\MediaUploaded;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\Shared\Application\Concerns\GuardsAgainstArchivedOccasion;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 
 class UploadMediaService
 {
+    use GuardsAgainstArchivedOccasion;
+
     /**
      * @param  array{visibility?: string|null}  $data
      */
     public function handle(Occasion $occasion, UploadedFile $file, array $data, User $actor): MediaAsset
     {
+        $this->ensureOccasionAcceptsActivity($occasion);
+
         $path = $file->store("media/{$occasion->id}", 'local');
 
         $mediaAsset = MediaAsset::create([

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\TimelineEvent;
@@ -35,6 +36,21 @@ it('prevents a member without planning.manage_timeline from scheduling a timelin
             'scheduled_at' => now()->addWeek()->toDateTimeString(),
         ])
         ->assertForbidden();
+
+    expect(TimelineEvent::where('name', 'Should not be created')->exists())->toBeFalse();
+});
+
+it('rejects scheduling a timeline event on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/timeline-events", [
+            'name' => 'Should not be created',
+            'scheduled_at' => now()->addWeek()->toDateTimeString(),
+        ])
+        ->assertSessionHasErrors('occasion');
 
     expect(TimelineEvent::where('name', 'Should not be created')->exists())->toBeFalse();
 });

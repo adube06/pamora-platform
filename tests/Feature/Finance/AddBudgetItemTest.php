@@ -3,6 +3,7 @@
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\BudgetItem;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -68,4 +69,22 @@ it('prevents a member without finance.edit_budget from adding a budget item', fu
         ->assertForbidden();
 
     expect(BudgetItem::where('budget_category_id', $category->id)->exists())->toBeFalse();
+});
+
+it('rejects adding a budget item to an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $budget = Budget::factory()->create(['occasion_id' => $occasion->id]);
+    $category = BudgetCategory::factory()->create(['budget_id' => $budget->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/budget-items", [
+            'budget_category_id' => $category->id,
+            'name' => 'Should not save',
+            'estimated_cost' => 5000,
+        ])
+        ->assertSessionHasErrors('occasion');
+
+    expect(BudgetItem::where('name', 'Should not save')->exists())->toBeFalse();
 });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Communication\Domain\Models\ReminderRule;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\TimelineEvent;
@@ -54,4 +55,20 @@ it('rejects a timeline event that belongs to a different occasion', function () 
             'offset_minutes' => 120,
         ])
         ->assertSessionHasErrors('timeline_event_id');
+});
+
+it('rejects scheduling a reminder rule on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $timelineEvent = TimelineEvent::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/reminder-rules", [
+            'timeline_event_id' => $timelineEvent->id,
+            'offset_minutes' => 120,
+        ])
+        ->assertSessionHasErrors('occasion');
+
+    expect(ReminderRule::where('timeline_event_id', $timelineEvent->id)->exists())->toBeFalse();
 });

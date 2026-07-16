@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -50,4 +51,18 @@ it('prevents a non-member from submitting an rsvp', function () {
     $this->actingAs($outsider)
         ->post("/occasions/{$occasion->slug}/rsvp", ['rsvp_status' => 'attending'])
         ->assertForbidden();
+});
+
+it('rejects submitting an rsvp on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $guestUser = User::factory()->create();
+    $guestMember = OccasionMember::factory()->create(['occasion_id' => $occasion->id, 'user_id' => $guestUser->id]);
+
+    $this->actingAs($guestUser)
+        ->post("/occasions/{$occasion->slug}/rsvp", ['rsvp_status' => 'attending'])
+        ->assertSessionHasErrors('occasion');
+
+    expect($guestMember->fresh()->rsvp_status)->toBeNull();
 });

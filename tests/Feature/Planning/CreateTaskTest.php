@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\Checklist;
@@ -65,6 +66,18 @@ it('rejects a checklist_id belonging to a different occasion', function () {
             'checklist_id' => $foreignChecklist->id,
         ])
         ->assertSessionHasErrors('checklist_id');
+
+    expect(Task::where('title', 'Should not be created')->exists())->toBeFalse();
+});
+
+it('rejects creating a task on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/tasks", ['title' => 'Should not be created'])
+        ->assertSessionHasErrors('occasion');
 
     expect(Task::where('title', 'Should not be created')->exists())->toBeFalse();
 });

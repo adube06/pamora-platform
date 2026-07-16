@@ -5,15 +5,20 @@ namespace App\Domains\Planning\Application\Services;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
 use App\Domains\Planning\Domain\Models\TimelineEvent;
+use App\Domains\Shared\Application\Concerns\GuardsAgainstArchivedOccasion;
 use App\Models\User;
 
 class ScheduleTimelineEventService
 {
+    use GuardsAgainstArchivedOccasion;
+
     /**
      * @param  array{name: string, scheduled_at: string}  $data
      */
     public function handle(Occasion $occasion, array $data, User $actor): TimelineEvent
     {
+        $this->ensureOccasionAcceptsActivity($occasion);
+
         $timelineEvent = TimelineEvent::create([
             ...$data,
             'occasion_id' => $occasion->id,

@@ -2,6 +2,7 @@
 
 use App\Domains\Finance\Domain\Enums\PledgeStatus;
 use App\Domains\Finance\Domain\Models\Pledge;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -85,4 +86,20 @@ it('rejects updating a pledge that belongs to a different occasion', function ()
         ->assertForbidden();
 
     expect($otherPledge->fresh()->status)->toBe(PledgeStatus::Pending);
+});
+
+it('rejects recording a pledge on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)
+        ->post("/occasions/{$occasion->slug}/pledges", [
+            'pledgor_name' => 'Should not save',
+            'amount' => 5000,
+            'pledged_at' => now()->toDateString(),
+        ])
+        ->assertSessionHasErrors('occasion');
+
+    expect(Pledge::where('pledgor_name', 'Should not save')->exists())->toBeFalse();
 });
