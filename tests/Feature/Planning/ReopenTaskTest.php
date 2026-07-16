@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Enums\TaskStatus;
@@ -54,6 +55,23 @@ it('prevents a member without planning.reopen_task from reopening a task', funct
     $this->actingAs($guestUser)
         ->post("/tasks/{$task->uuid}/reopen")
         ->assertForbidden();
+
+    expect($task->fresh()->status)->toBe(TaskStatus::Completed);
+});
+
+it('rejects reopening a task on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create([
+        'occasion_id' => $occasion->id,
+        'status' => TaskStatus::Completed,
+        'completed_at' => now(),
+    ]);
+
+    $this->actingAs($host)
+        ->post("/tasks/{$task->uuid}/reopen")
+        ->assertSessionHasErrors('occasion');
 
     expect($task->fresh()->status)->toBe(TaskStatus::Completed);
 });

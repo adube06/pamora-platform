@@ -103,3 +103,16 @@ it('rejects recording a pledge on an archived occasion (BR-009)', function () {
 
     expect(Pledge::where('pledgor_name', 'Should not save')->exists())->toBeFalse();
 });
+
+it('rejects updating a pledge\'s status on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $pledge = Pledge::factory()->create(['occasion_id' => $occasion->id, 'status' => PledgeStatus::Pending]);
+
+    $this->actingAs($host)
+        ->patch("/occasions/{$occasion->slug}/pledges/{$pledge->uuid}", ['status' => 'confirmed'])
+        ->assertSessionHasErrors('occasion');
+
+    expect($pledge->fresh()->status)->toBe(PledgeStatus::Pending);
+});

@@ -4,6 +4,7 @@ use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -208,6 +209,20 @@ it('prevents a member without media.edit_metadata from moving a media asset', fu
     $this->actingAs($observerUser)
         ->patch("/media/{$mediaAsset->uuid}/move", ['album_id' => $album->id])
         ->assertForbidden();
+
+    expect($mediaAsset->fresh()->attachable_type)->toBe(Occasion::class);
+});
+
+it('rejects moving a media asset on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $album = Album::factory()->create(['occasion_id' => $occasion->id]);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)
+        ->patch("/media/{$mediaAsset->uuid}/move", ['album_id' => $album->id])
+        ->assertSessionHasErrors('occasion');
 
     expect($mediaAsset->fresh()->attachable_type)->toBe(Occasion::class);
 });

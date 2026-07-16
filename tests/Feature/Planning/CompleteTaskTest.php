@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Enums\TaskStatus;
@@ -61,6 +62,19 @@ it('prevents a member without planning.complete_task from completing a task', fu
     $this->actingAs($guestUser)
         ->post("/tasks/{$task->uuid}/complete")
         ->assertForbidden();
+
+    expect($task->fresh()->status)->toBe(TaskStatus::Open);
+});
+
+it('rejects completing a task on an archived occasion (BR-009)', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Archived]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id, 'status' => TaskStatus::Open]);
+
+    $this->actingAs($host)
+        ->post("/tasks/{$task->uuid}/complete")
+        ->assertSessionHasErrors('occasion');
 
     expect($task->fresh()->status)->toBe(TaskStatus::Open);
 });

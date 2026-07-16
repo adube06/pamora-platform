@@ -5,13 +5,18 @@ namespace App\Domains\Planning\Application\Services;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Models\Task;
+use App\Domains\Shared\Application\Concerns\GuardsAgainstArchivedOccasion;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class AssignTaskService
 {
+    use GuardsAgainstArchivedOccasion;
+
     public function handle(Task $task, OccasionMember $assignee, User $actor): Task
     {
+        $this->ensureOccasionAcceptsActivity($task->occasion);
+
         // BR-015: a Task may have zero or one assignee, and the assignee
         // must be a member of the same Occasion as the Task.
         if ($assignee->occasion_id !== $task->occasion_id) {
