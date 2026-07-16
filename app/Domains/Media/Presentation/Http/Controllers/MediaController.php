@@ -27,6 +27,7 @@ class MediaController
             'mediaAssets' => $occasion->media()->with(['uploadedBy:id,name', 'attachable'])->latest()->get()
                 ->map(fn ($mediaAsset) => (new MediaAssetResource($mediaAsset))->resolve()),
             'albums' => $occasion->albums()->withCount('mediaAssets')->latest()->get(),
+            'tasks' => $occasion->tasks()->select('id', 'uuid', 'title')->get(),
             'canUploadMedia' => $request->user()->can('upload-media', $occasion),
             'canEditMediaMetadata' => $occasion->memberFor($request->user())?->hasPermission(Permission::MediaEditMetadata) ?? false,
         ]);

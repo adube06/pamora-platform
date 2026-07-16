@@ -5,6 +5,7 @@ use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
+use App\Domains\Planning\Domain\Models\Task;
 use App\Models\User;
 
 it('lets an authorized member move a media asset into an album', function () {
@@ -55,6 +56,51 @@ it('rejects an album that belongs to a different occasion', function () {
     $this->actingAs($host)
         ->patch("/media/{$mediaAsset->uuid}/move", ['album_id' => $otherOccasionAlbum->id])
         ->assertSessionHasErrors('album_id');
+});
+
+it('lets an authorized member attach a media asset to a task', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id]);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $response = $this->actingAs($host)->patch("/media/{$mediaAsset->uuid}/move", [
+        'task_id' => $task->id,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+
+    $mediaAsset->refresh();
+    expect($mediaAsset->attachable_type)->toBe(Task::class)
+        ->and($mediaAsset->attachable_id)->toBe($task->id);
+});
+
+it('rejects a task that belongs to a different occasion', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+    $otherOccasionTask = Task::factory()->create();
+
+    $this->actingAs($host)
+        ->patch("/media/{$mediaAsset->uuid}/move", ['task_id' => $otherOccasionTask->id])
+        ->assertSessionHasErrors('task_id');
+});
+
+it('rejects a request providing both an album_id and a task_id', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $album = Album::factory()->create(['occasion_id' => $occasion->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id]);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)
+        ->patch("/media/{$mediaAsset->uuid}/move", ['album_id' => $album->id, 'task_id' => $task->id])
+        ->assertSessionHasErrors('album_id');
+
+    expect($mediaAsset->fresh()->attachable_type)->toBe(Occasion::class);
 });
 
 it('prevents a member without media.edit_metadata from moving a media asset', function () {

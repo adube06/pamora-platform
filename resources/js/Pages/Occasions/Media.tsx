@@ -8,12 +8,13 @@ import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Album, MediaAsset, Occasion } from '@/types/models';
+import type { Album, MediaAsset, Occasion, Task } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     mediaAssets: MediaAsset[];
     albums: Album[];
+    tasks: Task[];
     canUploadMedia: boolean;
     canEditMediaMetadata: boolean;
 }
@@ -30,29 +31,71 @@ function formatSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function AlbumSelect({ asset, albums }: { asset: MediaAsset; albums: Album[] }) {
-    const { data, setData, patch, processing } = useForm({
+// Encodes the combined dropdown's value as "album:<id>" / "task:<id>" / ""
+// (Ungrouped) so a single <select> can target either attachable type.
+function encodeTarget(asset: MediaAsset): string {
+    if (asset.album) {
+        return `album:${asset.album.id}`;
+    }
+
+    if (asset.task) {
+        return `task:${asset.task.id}`;
+    }
+
+    return '';
+}
+
+function MoveSelect({ asset, albums, tasks }: { asset: MediaAsset; albums: Album[]; tasks: Task[] }) {
+    const { setData, patch, processing } = useForm({
         album_id: asset.album?.id ?? '',
+        task_id: asset.task?.id ?? '',
     });
 
     function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        setData('album_id', e.target.value);
+        const [kind, id] = e.target.value.split(':');
+        setData({
+            album_id: kind === 'album' ? id : '',
+            task_id: kind === 'task' ? id : '',
+        });
         patch(route('media.move', asset.id), { preserveScroll: true });
     }
 
     return (
-        <Select value={data.album_id} onChange={handleChange} disabled={processing} className="mt-2 px-2 py-1 text-xs">
+        <Select value={encodeTarget(asset)} onChange={handleChange} disabled={processing} className="mt-2 px-2 py-1 text-xs">
             <option value="">Ungrouped</option>
-            {albums.map((album) => (
-                <option key={album.id} value={album.id}>
-                    {album.name}
-                </option>
-            ))}
+            {albums.length > 0 && (
+                <optgroup label="Album">
+                    {albums.map((album) => (
+                        <option key={album.id} value={`album:${album.id}`}>
+                            {album.name}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
+            {tasks.length > 0 && (
+                <optgroup label="Task">
+                    {tasks.map((task) => (
+                        <option key={task.id} value={`task:${task.id}`}>
+                            {task.title}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
         </Select>
     );
 }
 
-function MediaCard({ asset, albums, canEditMediaMetadata }: { asset: MediaAsset; albums: Album[]; canEditMediaMetadata: boolean }) {
+function MediaCard({
+    asset,
+    albums,
+    tasks,
+    canEditMediaMetadata,
+}: {
+    asset: MediaAsset;
+    albums: Album[];
+    tasks: Task[];
+    canEditMediaMetadata: boolean;
+}) {
     return (
         <Card className="h-full">
             <a href={asset.download_url} className="block">
@@ -77,16 +120,18 @@ function MediaCard({ asset, albums, canEditMediaMetadata }: { asset: MediaAsset;
                     Private
                 </Badge>
             )}
-            {canEditMediaMetadata && albums.length > 0 && <AlbumSelect asset={asset} albums={albums} />}
+            {canEditMediaMetadata && (albums.length > 0 || tasks.length > 0) && (
+                <MoveSelect asset={asset} albums={albums} tasks={tasks} />
+            )}
         </Card>
     );
 }
 
-export default function Media({ occasion, mediaAssets, albums, canUploadMedia, canEditMediaMetadata }: Props) {
+export default function Media({ occasion, mediaAssets, albums, tasks, canUploadMedia, canEditMediaMetadata }: Props) {
     const [showUploadForm, setShowUploadForm] = useState(false);
     const [showAlbumForm, setShowAlbumForm] = useState(false);
 
-    const ungroupedAssets = mediaAssets.filter((asset) => asset.album === null);
+    const ungroupedAssets = mediaAssets.filter((asset) => asset.album === null && asset.task === null);
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="media">
@@ -176,18 +221,37 @@ export default function Media({ occasion, mediaAssets, albums, canUploadMedia, c
             ) : (
                 <div className="mt-4 space-y-6">
                     {albums.map((album) => {
-                        const albumAssets = mediaAssets.filter((asset) => asset.album?.id === album.uuid);
+                        const albumAssets = mediaAssets.filter((asset) => asset.album?.id === album.id);
 
                         if (albumAssets.length === 0) {
                             return null;
                         }
 
                         return (
-                            <div key={album.id}>
+                            <div key={`album-${album.id}`}>
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">{album.name}</h3>
                                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                     {albumAssets.map((asset) => (
-                                        <MediaCard key={asset.id} asset={asset} albums={albums} canEditMediaMetadata={canEditMediaMetadata} />
+                                        <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} canEditMediaMetadata={canEditMediaMetadata} />
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {tasks.map((task) => {
+                        const taskAssets = mediaAssets.filter((asset) => asset.task?.id === task.id);
+
+                        if (taskAssets.length === 0) {
+                            return null;
+                        }
+
+                        return (
+                            <div key={`task-${task.id}`}>
+                                <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">Task: {task.title}</h3>
+                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                    {taskAssets.map((asset) => (
+                                        <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} canEditMediaMetadata={canEditMediaMetadata} />
                                     ))}
                                 </div>
                             </div>
@@ -196,12 +260,12 @@ export default function Media({ occasion, mediaAssets, albums, canUploadMedia, c
 
                     {ungroupedAssets.length > 0 && (
                         <div>
-                            {albums.length > 0 && (
+                            {(albums.length > 0 || tasks.length > 0) && (
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">Ungrouped</h3>
                             )}
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                 {ungroupedAssets.map((asset) => (
-                                    <MediaCard key={asset.id} asset={asset} albums={albums} canEditMediaMetadata={canEditMediaMetadata} />
+                                    <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} canEditMediaMetadata={canEditMediaMetadata} />
                                 ))}
                             </div>
                         </div>

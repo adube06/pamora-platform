@@ -134,7 +134,8 @@ export interface MediaAsset {
     visibility: string;
     download_url: string;
     uploaded_by: string;
-    album: { id: string; name: string } | null;
+    album: { id: number; name: string } | null;
+    task: { id: number; title: string } | null;
     created_at: string;
 }
 

@@ -4,6 +4,7 @@ namespace App\Domains\Media\Presentation\Http\Resources;
 
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
+use App\Domains\Planning\Domain\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,8 +26,16 @@ class MediaAssetResource extends JsonResource
             'visibility' => $this->visibility,
             'download_url' => route('media.download', $this->uuid),
             'uploaded_by' => $this->uploadedBy->name,
+            // Numeric id (not uuid) deliberately, matching the
+            // move-media-asset endpoint's album_id/task_id — these
+            // fields exist so the Media page's dropdown can match the
+            // asset's current target against the album/task option
+            // list, both of which are raw models keyed by numeric id.
             'album' => $this->attachable instanceof Album
-                ? ['id' => $this->attachable->uuid, 'name' => $this->attachable->name]
+                ? ['id' => $this->attachable->id, 'name' => $this->attachable->name]
+                : null,
+            'task' => $this->attachable instanceof Task
+                ? ['id' => $this->attachable->id, 'title' => $this->attachable->title]
                 : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];

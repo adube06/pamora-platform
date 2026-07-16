@@ -26,6 +26,7 @@ use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
 use App\Domains\Planning\Domain\Events\TaskReopened;
 use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
+use App\Domains\Planning\Domain\Models\Task;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -267,9 +268,11 @@ class AuditLogSubscriber
 
     public function handleMediaUpdated(MediaUpdated $event): void
     {
-        $destination = $event->mediaAsset->attachable instanceof Album
-            ? "album \"{$event->mediaAsset->attachable->name}\""
-            : 'the Occasion gallery';
+        $destination = match (true) {
+            $event->mediaAsset->attachable instanceof Album => "album \"{$event->mediaAsset->attachable->name}\"",
+            $event->mediaAsset->attachable instanceof Task => "task \"{$event->mediaAsset->attachable->title}\"",
+            default => 'the Occasion gallery',
+        };
 
         ActivityLog::create([
             'occasion_id' => $event->mediaAsset->occasion_id,

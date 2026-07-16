@@ -2,6 +2,7 @@
 
 namespace App\Domains\Planning\Domain\Models;
 
+use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Enums\TaskPriority;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
@@ -70,6 +72,11 @@ class Task extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable');
     }
 
     public function getRouteKeyName(): string

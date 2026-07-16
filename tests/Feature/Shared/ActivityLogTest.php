@@ -234,6 +234,24 @@ it('logs an entry when an album is created and when a media asset is moved', fun
         ->count())->toBe(1);
 });
 
+it('logs an entry naming the task when a media asset is attached to it', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id, 'title' => 'Book DJ']);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->patch("/media/{$mediaAsset->uuid}/move", ['task_id' => $task->id]);
+
+    $log = ActivityLog::where('action', 'media.updated')
+        ->where('subject_id', $mediaAsset->id)
+        ->latest('id')
+        ->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->description)->toContain('Book DJ');
+});
+
 it('logs an entry when a contribution is recorded', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);
