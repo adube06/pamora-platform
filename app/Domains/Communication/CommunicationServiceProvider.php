@@ -5,8 +5,11 @@ namespace App\Domains\Communication;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Communication\Infrastructure\Listeners\NotificationSubscriber;
 use App\Domains\Communication\Presentation\Policies\NotificationPolicy;
+use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
+use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Shared\Domain\Enums\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Event;
@@ -34,6 +37,9 @@ class CommunicationServiceProvider extends ServiceProvider
         // distinct concern from AuditLogSubscriber (recipient-facing,
         // not compliance-facing), even though both react to TaskAssigned.
         Event::listen(TaskAssigned::class, [NotificationSubscriber::class, 'handleTaskAssigned']);
+        Event::listen(TaskCompleted::class, [NotificationSubscriber::class, 'handleTaskCompleted']);
+        Event::listen(ContributionReceived::class, [NotificationSubscriber::class, 'handleContributionReceived']);
+        Event::listen(MemberJoined::class, [NotificationSubscriber::class, 'handleMemberJoined']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
