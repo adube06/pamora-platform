@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
     Route::get('/occasions/{occasion}/committee', [CommitteeController::class, 'index'])->name('occasions.committee');
     Route::post('/occasions/{occasion}/committee/invitations', [CommitteeController::class, 'store'])->name('occasions.committee.invite');
+    Route::delete('/occasion-members/{occasionMember}', [CommitteeController::class, 'destroy'])->name('occasion-members.destroy');
 
     Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
@@ -15,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/occasion-members/{occasionMember}/reopen-rsvp', [RsvpController::class, 'reopen'])->name('occasion-members.reopen-rsvp');
 });
 
-// The invitation landing page must be reachable while logged out, so the
-// invited person can see what they're accepting before registering/logging in.
+// The invitation landing page (and declining it) must be reachable while
+// logged out, so the invited person can respond before registering/logging in.
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invitations/{token}/decline', [InvitationController::class, 'decline'])->name('invitations.decline');

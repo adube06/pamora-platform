@@ -4,9 +4,12 @@ namespace App\Domains\People\Presentation\Http\Controllers;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Application\Services\InviteMemberService;
+use App\Domains\People\Application\Services\RemoveMemberService;
 use App\Domains\People\Domain\Enums\InvitationStatus;
 use App\Domains\People\Domain\Enums\Role;
+use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
+use App\Domains\People\Presentation\Http\Requests\RemoveMemberRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,6 +32,8 @@ class CommitteeController
                 ->values(),
             'myMembership' => $occasion->memberFor($request->user()),
             'canReopenRsvp' => $request->user()->id === $occasion->host_id,
+            'canRemoveMember' => $request->user()->can('remove-member', $occasion),
+            'canTransferOwnership' => $request->user()->can('transferOwnership', $occasion),
         ]);
     }
 
@@ -37,5 +42,12 @@ class CommitteeController
         $service->handle($occasion, $request->validated(), $request->user());
 
         return back()->with('success', 'Invitation sent.');
+    }
+
+    public function destroy(RemoveMemberRequest $request, OccasionMember $occasionMember, RemoveMemberService $service): RedirectResponse
+    {
+        $service->handle($occasionMember, $request->user());
+
+        return back()->with('success', 'Member removed.');
     }
 }

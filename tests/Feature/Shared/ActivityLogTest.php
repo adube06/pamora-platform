@@ -10,6 +10,7 @@ use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Planning\Domain\Models\Checklist;
@@ -116,6 +117,42 @@ it('logs an entry when a member is invited and when they accept', function () {
     // acceptance goes through AcceptInvitationService and dispatches
     // MemberJoined here.
     expect(ActivityLog::where('action', 'people.member_joined')->count())->toBe(1);
+});
+
+it('logs an entry when an invitation is declined', function () {
+    $invitation = Invitation::factory()->create();
+
+    $this->post("/invitations/{$invitation->token}/decline");
+
+    expect(ActivityLog::where('action', 'people.invitation_declined')
+        ->where('subject_id', $invitation->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a member is removed', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $target = OccasionMember::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->delete("/occasion-members/{$target->uuid}");
+
+    expect(ActivityLog::where('action', 'people.member_removed')
+        ->where('subject_id', $target->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when ownership is transferred', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $newHostMember = OccasionMember::factory()->role(Role::Treasurer)->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/transfer-ownership", ['member_uuid' => $newHostMember->uuid]);
+
+    expect(ActivityLog::where('action', 'occasion.ownership_transferred')
+        ->where('occasion_id', $occasion->id)
+        ->count())->toBe(1);
 });
 
 it('logs an entry when a task is created and when it is assigned', function () {

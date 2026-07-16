@@ -27,4 +27,9 @@ class OccasionPolicy
     {
         return $occasion->memberFor($user)?->hasPermission(Permission::OccasionCancel) ?? false;
     }
+
+    public function transferOwnership(User $user, Occasion $occasion): bool
+    {
+        return $occasion->memberFor($user)?->hasPermission(Permission::OccasionTransferOwnership) ?? false;
+    }
 }

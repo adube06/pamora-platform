@@ -3,7 +3,9 @@
 namespace App\Domains\People\Presentation\Http\Controllers;
 
 use App\Domains\People\Application\Services\AcceptInvitationService;
+use App\Domains\People\Application\Services\DeclineInvitationService;
 use App\Domains\People\Domain\Models\Invitation;
+use App\Domains\People\Presentation\Http\Requests\DeclineInvitationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,5 +43,16 @@ class InvitationController
         return redirect()
             ->route('occasions.committee', $invitation->occasion->slug)
             ->with('success', 'You have joined '.$invitation->occasion->title.'.');
+    }
+
+    public function decline(DeclineInvitationRequest $request, string $token, DeclineInvitationService $service): RedirectResponse
+    {
+        $invitation = Invitation::where('token', $token)->firstOrFail();
+
+        $service->handle($invitation);
+
+        return redirect()
+            ->route('invitations.show', $token)
+            ->with('success', 'Invitation declined.');
     }
 }

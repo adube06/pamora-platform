@@ -19,7 +19,11 @@ interface Props {
     roles: RoleOption[];
     myMembership: OccasionMember | null;
     canReopenRsvp: boolean;
+    canRemoveMember: boolean;
+    canTransferOwnership: boolean;
 }
+
+const NON_ORGANIZING_ROLES = ['host', 'guest', 'observer'];
 
 function roleLabel(roles: RoleOption[], value: string): string {
     return roles.find((r) => r.value === value)?.label ?? value;
@@ -48,6 +52,38 @@ function ReopenRsvpButton({ member }: { member: OccasionMember }) {
             onClick={() => post(route('occasion-members.reopen-rsvp', member.uuid), { preserveScroll: true })}
         >
             Reopen
+        </Button>
+    );
+}
+
+function RemoveMemberButton({ member }: { member: OccasionMember }) {
+    const { delete: destroy, processing } = useForm({});
+
+    function remove() {
+        if (window.confirm(`Remove ${member.user?.name} from this Occasion?`)) {
+            destroy(route('occasion-members.destroy', member.uuid), { preserveScroll: true });
+        }
+    }
+
+    return (
+        <Button variant="danger" size="sm" loading={processing} onClick={remove}>
+            Remove
+        </Button>
+    );
+}
+
+function TransferOwnershipButton({ occasion, member }: { occasion: Occasion; member: OccasionMember }) {
+    const { post, processing } = useForm({ member_uuid: member.uuid });
+
+    function transfer() {
+        if (window.confirm(`Make ${member.user?.name} the Host of this Occasion? You will become Chairperson.`)) {
+            post(route('occasions.transfer-ownership', occasion.slug), { preserveScroll: true });
+        }
+    }
+
+    return (
+        <Button variant="ghost" size="sm" loading={processing} onClick={transfer}>
+            Make Host
         </Button>
     );
 }
@@ -102,7 +138,17 @@ function YourRsvpCard({ occasion, myMembership }: { occasion: Occasion; myMember
     );
 }
 
-export default function Committee({ occasion, members, pendingInvitations, canInvite, roles, myMembership, canReopenRsvp }: Props) {
+export default function Committee({
+    occasion,
+    members,
+    pendingInvitations,
+    canInvite,
+    roles,
+    myMembership,
+    canReopenRsvp,
+    canRemoveMember,
+    canTransferOwnership,
+}: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="committee">
             {myMembership && (
@@ -129,6 +175,12 @@ export default function Committee({ occasion, members, pendingInvitations, canIn
                                     <Badge>{member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}</Badge>
                                     <RsvpBadge status={member.rsvp_status} />
                                     {canReopenRsvp && member.rsvp_status && <ReopenRsvpButton member={member} />}
+                                    {canTransferOwnership && member.status === 'active' && !NON_ORGANIZING_ROLES.includes(member.role) && (
+                                        <TransferOwnershipButton occasion={occasion} member={member} />
+                                    )}
+                                    {canRemoveMember && member.role !== 'host' && occasion.status !== 'completed' && (
+                                        <RemoveMemberButton member={member} />
+                                    )}
                                 </div>
                             </li>
                         ))}

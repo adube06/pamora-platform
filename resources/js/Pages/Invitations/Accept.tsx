@@ -28,6 +28,7 @@ interface PageProps {
 export default function Accept({ invitation }: { invitation: InvitationProps }) {
     const { auth } = usePage<PageProps>().props;
     const { post, processing, errors } = useForm({});
+    const decline = useForm({});
 
     // "invitation" is a business-rule validation key returned by
     // AcceptInvitationService (e.g. expired/revoked/wrong-email) — it has
@@ -39,6 +40,12 @@ export default function Accept({ invitation }: { invitation: InvitationProps }) 
 
     function accept() {
         post(route('invitations.accept', invitation.token));
+    }
+
+    function declineInvitation() {
+        if (window.confirm('Decline this invitation?')) {
+            decline.post(route('invitations.decline', invitation.token));
+        }
     }
 
     return (
@@ -84,14 +91,27 @@ export default function Accept({ invitation }: { invitation: InvitationProps }) 
 
                 {invitation.is_pending && auth.user && emailMatches && (
                     <div className="mt-6">
-                        <Button onClick={accept} loading={processing}>
-                            {processing ? 'Joining…' : 'Accept invitation'}
-                        </Button>
+                        <div className="flex justify-center gap-3">
+                            <Button onClick={accept} loading={processing}>
+                                {processing ? 'Joining…' : 'Accept invitation'}
+                            </Button>
+                            <Button variant="ghost" onClick={declineInvitation} loading={decline.processing}>
+                                Decline
+                            </Button>
+                        </div>
                         {invitationError && (
                             <Alert variant="error" className="mt-3 justify-center">
                                 {invitationError}
                             </Alert>
                         )}
+                    </div>
+                )}
+
+                {invitation.is_pending && (!auth.user || !emailMatches) && (
+                    <div className="mt-4">
+                        <Button variant="ghost" size="sm" onClick={declineInvitation} loading={decline.processing}>
+                            Decline invitation
+                        </Button>
                     </div>
                 )}
             </div>

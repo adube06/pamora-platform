@@ -19,9 +19,12 @@ use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Occasion\Domain\Events\OccasionArchived;
 use App\Domains\Occasion\Domain\Events\OccasionCancelled;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
+use App\Domains\Occasion\Domain\Events\OccasionOwnershipTransferred;
 use App\Domains\Occasion\Domain\Events\OccasionUpdated;
+use App\Domains\People\Domain\Events\InvitationDeclined;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
+use App\Domains\People\Domain\Events\MemberRemoved;
 use App\Domains\People\Domain\Events\RsvpReopened;
 use App\Domains\People\Domain\Events\RsvpSubmitted;
 use App\Domains\Planning\Domain\Events\ChecklistCreated;
@@ -111,6 +114,42 @@ class AuditLogSubscriber
             'subject_id' => $event->occasion->id,
             'action' => 'occasion.cancelled',
             'description' => "{$event->actor->name} cancelled \"{$event->occasion->title}\".",
+        ]);
+    }
+
+    public function handleOccasionOwnershipTransferred(OccasionOwnershipTransferred $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->occasion->id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Occasion',
+            'subject_id' => $event->occasion->id,
+            'action' => 'occasion.ownership_transferred',
+            'description' => "{$event->actor->name} transferred ownership of \"{$event->occasion->title}\" from {$event->previousHost->name} to {$event->newHost->name}.",
+        ]);
+    }
+
+    public function handleInvitationDeclined(InvitationDeclined $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->invitation->occasion_id,
+            'user_id' => null,
+            'subject_type' => 'Invitation',
+            'subject_id' => $event->invitation->id,
+            'action' => 'people.invitation_declined',
+            'description' => "{$event->invitation->email} declined the invitation.",
+        ]);
+    }
+
+    public function handleMemberRemoved(MemberRemoved $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->member->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'OccasionMember',
+            'subject_id' => $event->member->id,
+            'action' => 'people.member_removed',
+            'description' => "{$event->actor->name} removed {$event->member->user->name} from the Occasion.",
         ]);
     }
 
@@ -373,6 +412,9 @@ class AuditLogSubscriber
         $events->listen(OccasionUpdated::class, [self::class, 'handleOccasionUpdated']);
         $events->listen(OccasionArchived::class, [self::class, 'handleOccasionArchived']);
         $events->listen(OccasionCancelled::class, [self::class, 'handleOccasionCancelled']);
+        $events->listen(OccasionOwnershipTransferred::class, [self::class, 'handleOccasionOwnershipTransferred']);
+        $events->listen(InvitationDeclined::class, [self::class, 'handleInvitationDeclined']);
+        $events->listen(MemberRemoved::class, [self::class, 'handleMemberRemoved']);
         $events->listen(MemberInvited::class, [self::class, 'handleMemberInvited']);
         $events->listen(MemberJoined::class, [self::class, 'handleMemberJoined']);
         $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);

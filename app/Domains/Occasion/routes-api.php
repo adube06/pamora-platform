@@ -10,4 +10,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/occasions/{occasion}', [OccasionController::class, 'update']);
     Route::post('/occasions/{occasion}/archive', [OccasionController::class, 'archive']);
     Route::post('/occasions/{occasion}/cancel', [OccasionController::class, 'cancel']);
+    Route::post('/occasions/{occasion}/transfer-ownership', [OccasionController::class, 'transferOwnership']);
 });

@@ -5,13 +5,16 @@ namespace App\Domains\Occasion\Presentation\Http\Controllers\Api;
 use App\Domains\Occasion\Application\Services\ArchiveOccasionService;
 use App\Domains\Occasion\Application\Services\CancelOccasionService;
 use App\Domains\Occasion\Application\Services\CreateOccasionService;
+use App\Domains\Occasion\Application\Services\TransferOwnershipService;
 use App\Domains\Occasion\Application\Services\UpdateOccasionService;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Occasion\Presentation\Http\Requests\ArchiveOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\CancelOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\StoreOccasionRequest;
+use App\Domains\Occasion\Presentation\Http\Requests\TransferOwnershipRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\UpdateOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Resources\OccasionResource;
+use App\Domains\People\Domain\Models\OccasionMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,6 +76,18 @@ class OccasionController
     public function cancel(CancelOccasionRequest $request, Occasion $occasion, CancelOccasionService $service): JsonResponse
     {
         $occasion = $service->handle($occasion, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new OccasionResource($occasion->fresh()),
+        ]);
+    }
+
+    public function transferOwnership(TransferOwnershipRequest $request, Occasion $occasion, TransferOwnershipService $service): JsonResponse
+    {
+        $newHostMember = OccasionMember::where('uuid', $request->validated('member_uuid'))->firstOrFail();
+
+        $occasion = $service->handle($occasion, $newHostMember, $request->user());
 
         return response()->json([
             'success' => true,
