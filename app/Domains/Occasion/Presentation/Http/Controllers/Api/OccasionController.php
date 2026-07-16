@@ -2,9 +2,15 @@
 
 namespace App\Domains\Occasion\Presentation\Http\Controllers\Api;
 
+use App\Domains\Occasion\Application\Services\ArchiveOccasionService;
+use App\Domains\Occasion\Application\Services\CancelOccasionService;
 use App\Domains\Occasion\Application\Services\CreateOccasionService;
+use App\Domains\Occasion\Application\Services\UpdateOccasionService;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\Occasion\Presentation\Http\Requests\ArchiveOccasionRequest;
+use App\Domains\Occasion\Presentation\Http\Requests\CancelOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\StoreOccasionRequest;
+use App\Domains\Occasion\Presentation\Http\Requests\UpdateOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Resources\OccasionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +47,36 @@ class OccasionController
         return response()->json([
             'success' => true,
             'data' => new OccasionResource($occasion),
+        ]);
+    }
+
+    public function update(UpdateOccasionRequest $request, Occasion $occasion, UpdateOccasionService $service): JsonResponse
+    {
+        $occasion = $service->handle($occasion, $request->validated(), $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new OccasionResource($occasion->fresh()),
+        ]);
+    }
+
+    public function archive(ArchiveOccasionRequest $request, Occasion $occasion, ArchiveOccasionService $service): JsonResponse
+    {
+        $occasion = $service->handle($occasion, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new OccasionResource($occasion->fresh()),
+        ]);
+    }
+
+    public function cancel(CancelOccasionRequest $request, Occasion $occasion, CancelOccasionService $service): JsonResponse
+    {
+        $occasion = $service->handle($occasion, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new OccasionResource($occasion->fresh()),
         ]);
     }
 }

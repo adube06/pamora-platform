@@ -1,10 +1,21 @@
+import { Form, router } from '@inertiajs/react';
 import Badge from '@/Components/Badge';
+import Button from '@/Components/Button';
 import Card from '@/Components/Card';
 import EmptyState from '@/Components/EmptyState';
+import FormField from '@/Components/FormField';
+import Input from '@/Components/Input';
 import ReadinessRing from '@/Components/ReadinessRing';
+import Select from '@/Components/Select';
+import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import { formatCurrency } from '@/lib/currency';
 import type { BudgetSummary, Occasion, OccasionMember, Readiness, TaskProgress } from '@/types/models';
+
+interface Option {
+    value: string;
+    label: string;
+}
 
 interface Props {
     occasion: Occasion;
@@ -13,6 +24,12 @@ interface Props {
     taskProgress: TaskProgress;
     financialSummary: BudgetSummary;
     canViewBudget: boolean;
+    canEdit: boolean;
+    canArchive: boolean;
+    canCancel: boolean;
+    types: Option[];
+    visibilities: Option[];
+    nextStatuses: Option[];
 }
 
 function formatRole(role: string): string {
@@ -44,7 +61,32 @@ const TASK_STATUS_LABELS: Record<string, string> = {
     deferred: 'Deferred',
 };
 
-export default function Show({ occasion, member, readiness, taskProgress, financialSummary, canViewBudget }: Props) {
+export default function Show({
+    occasion,
+    member,
+    readiness,
+    taskProgress,
+    financialSummary,
+    canViewBudget,
+    canEdit,
+    canArchive,
+    canCancel,
+    types,
+    visibilities,
+    nextStatuses,
+}: Props) {
+    function archive() {
+        if (window.confirm('Archive this Occasion? It will become read-only.')) {
+            router.post(route('occasions.archive', occasion.slug));
+        }
+    }
+
+    function cancel() {
+        if (window.confirm('Cancel this Occasion? This cannot be undone.')) {
+            router.post(route('occasions.cancel', occasion.slug));
+        }
+    }
+
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="overview">
             <div className="mb-6 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
@@ -136,6 +178,96 @@ export default function Show({ occasion, member, readiness, taskProgress, financ
                     <dt className="text-sm font-medium text-text-secondary">Description</dt>
                     <dd className="mt-1 text-sm text-text-primary">{occasion.description}</dd>
                 </div>
+            )}
+
+            {((canEdit && occasion.status !== 'archived') || canArchive || canCancel) && (
+                <Card title="Manage Occasion" className="mt-6 max-w-lg">
+                    {canEdit && occasion.status !== 'archived' && (
+                        <Form
+                            action={route('occasions.update', occasion.slug)}
+                            method="patch"
+                            className="space-y-3"
+                        >
+                            {({ errors, processing }) => (
+                                <>
+                                    <FormField label="Title" htmlFor="title" required error={errors.title}>
+                                        <Input id="title" name="title" type="text" required defaultValue={occasion.title} invalid={!!errors.title} />
+                                    </FormField>
+
+                                    <FormField label="Type" htmlFor="type" required error={errors.type}>
+                                        <Select id="type" name="type" required defaultValue={occasion.type} invalid={!!errors.type}>
+                                            {types.map((type) => (
+                                                <option key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </FormField>
+
+                                    <FormField label="Date" htmlFor="primary_date" error={errors.primary_date}>
+                                        <Input
+                                            id="primary_date"
+                                            name="primary_date"
+                                            type="date"
+                                            defaultValue={occasion.primary_date ?? ''}
+                                            invalid={!!errors.primary_date}
+                                        />
+                                    </FormField>
+
+                                    <FormField label="Location" htmlFor="location">
+                                        <Input id="location" name="location" type="text" defaultValue={occasion.location ?? ''} />
+                                    </FormField>
+
+                                    <FormField label="Visibility" htmlFor="visibility">
+                                        <Select id="visibility" name="visibility" defaultValue={occasion.visibility}>
+                                            {visibilities.map((visibility) => (
+                                                <option key={visibility.value} value={visibility.value}>
+                                                    {visibility.label}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </FormField>
+
+                                    <FormField label="Description" htmlFor="description">
+                                        <Textarea id="description" name="description" rows={3} defaultValue={occasion.description ?? ''} />
+                                    </FormField>
+
+                                    {nextStatuses.length > 1 && (
+                                        <FormField label="Stage" htmlFor="status" error={errors.status}>
+                                            <Select id="status" name="status" defaultValue={occasion.status} invalid={!!errors.status}>
+                                                {nextStatuses.map((status) => (
+                                                    <option key={status.value} value={status.value}>
+                                                        {status.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormField>
+                                    )}
+
+                                    <Button type="submit" size="sm" loading={processing}>
+                                        {processing ? 'Saving…' : 'Save Changes'}
+                                    </Button>
+                                </>
+                            )}
+                        </Form>
+                    )}
+
+                    {((canArchive && occasion.status === 'completed') ||
+                        (canCancel && !['completed', 'archived', 'cancelled'].includes(occasion.status))) && (
+                        <div className="mt-4 flex gap-2 border-t border-border pt-4">
+                            {canArchive && occasion.status === 'completed' && (
+                                <Button variant="ghost" size="sm" onClick={archive}>
+                                    Archive Occasion
+                                </Button>
+                            )}
+                            {canCancel && !['completed', 'archived', 'cancelled'].includes(occasion.status) && (
+                                <Button variant="danger" size="sm" onClick={cancel}>
+                                    Cancel Occasion
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                </Card>
             )}
         </OccasionWorkspaceLayout>
     );

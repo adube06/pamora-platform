@@ -8,6 +8,7 @@ use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -45,6 +46,32 @@ it('logs an entry when an occasion is created', function () {
     // Creating the Occasion also creates the Host's membership, which is
     // its own auditable event.
     expect(ActivityLog::where('action', 'people.member_joined')->count())->toBe(1);
+});
+
+it('logs an entry when an occasion is edited, archived, and cancelled', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id, 'title' => 'Old Title', 'status' => OccasionStatus::Draft]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->patch("/occasions/{$occasion->slug}", [
+        'title' => 'New Title',
+        'type' => $occasion->type->value,
+    ]);
+
+    expect(ActivityLog::where('action', 'occasion.updated')->where('occasion_id', $occasion->id)->count())->toBe(1);
+
+    $occasion->update(['status' => OccasionStatus::Completed]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/archive");
+
+    expect(ActivityLog::where('action', 'occasion.archived')->where('occasion_id', $occasion->id)->count())->toBe(1);
+
+    $cancellable = Occasion::factory()->create(['host_id' => $host->id, 'status' => OccasionStatus::Draft]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $cancellable->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$cancellable->slug}/cancel");
+
+    expect(ActivityLog::where('action', 'occasion.cancelled')->where('occasion_id', $cancellable->id)->count())->toBe(1);
 });
 
 it('logs an entry when an rsvp is submitted and when it is reopened', function () {

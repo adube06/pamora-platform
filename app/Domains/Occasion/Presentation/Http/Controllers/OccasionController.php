@@ -5,11 +5,18 @@ namespace App\Domains\Occasion\Presentation\Http\Controllers;
 use App\Domains\Finance\Application\Services\GetBudgetSummaryService;
 use App\Domains\Insights\Application\Services\GetReadinessScoreService;
 use App\Domains\Insights\Application\Services\GetTaskProgressService;
+use App\Domains\Occasion\Application\Services\ArchiveOccasionService;
+use App\Domains\Occasion\Application\Services\CancelOccasionService;
 use App\Domains\Occasion\Application\Services\CreateOccasionService;
+use App\Domains\Occasion\Application\Services\UpdateOccasionService;
+use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\Occasion\Presentation\Http\Requests\ArchiveOccasionRequest;
+use App\Domains\Occasion\Presentation\Http\Requests\CancelOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\StoreOccasionRequest;
+use App\Domains\Occasion\Presentation\Http\Requests\UpdateOccasionRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -68,6 +75,39 @@ class OccasionController
             'taskProgress' => $taskProgressService->handle($occasion),
             'financialSummary' => $includeFinance ? $financialSummary : Arr::only($financialSummary, ['total_received', 'contribution_count']),
             'canViewBudget' => $includeFinance,
+            'canEdit' => $request->user()->can('update', $occasion),
+            'canArchive' => $request->user()->can('archive', $occasion),
+            'canCancel' => $request->user()->can('cancel', $occasion),
+            'types' => array_map(fn (OccasionType $t) => ['value' => $t->value, 'label' => $t->label()], OccasionType::cases()),
+            'visibilities' => array_map(fn (OccasionVisibility $v) => ['value' => $v->value, 'label' => $v->label()], OccasionVisibility::cases()),
+            // Only statuses the current one may legally move to (plus
+            // itself, meaning "no change") — keeps the Edit form from ever
+            // offering an illegal transition in the first place.
+            'nextStatuses' => collect(OccasionStatus::cases())
+                ->filter(fn (OccasionStatus $s) => $s === $occasion->status || $occasion->status->canTransitionTo($s))
+                ->map(fn (OccasionStatus $s) => ['value' => $s->value, 'label' => $s->label()])
+                ->values(),
         ]);
+    }
+
+    public function update(UpdateOccasionRequest $request, Occasion $occasion, UpdateOccasionService $service): RedirectResponse
+    {
+        $service->handle($occasion, $request->validated(), $request->user());
+
+        return back()->with('success', 'Occasion updated.');
+    }
+
+    public function archive(ArchiveOccasionRequest $request, Occasion $occasion, ArchiveOccasionService $service): RedirectResponse
+    {
+        $service->handle($occasion, $request->user());
+
+        return back()->with('success', 'Occasion archived.');
+    }
+
+    public function cancel(CancelOccasionRequest $request, Occasion $occasion, CancelOccasionService $service): RedirectResponse
+    {
+        $service->handle($occasion, $request->user());
+
+        return back()->with('success', 'Occasion cancelled.');
     }
 }

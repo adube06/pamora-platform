@@ -22,4 +22,23 @@ enum OccasionStatus: string
             self::Cancelled => 'Cancelled',
         };
     }
+
+    /**
+     * @return array<int, self>
+     */
+    private function allowedNextStatuses(): array
+    {
+        return match ($this) {
+            self::Draft => [self::Planning, self::Cancelled],
+            self::Planning => [self::Active, self::Cancelled],
+            self::Active => [self::Completed, self::Cancelled],
+            self::Completed => [self::Archived],
+            self::Archived, self::Cancelled => [],
+        };
+    }
+
+    public function canTransitionTo(self $target): bool
+    {
+        return in_array($target, $this->allowedNextStatuses(), true);
+    }
 }

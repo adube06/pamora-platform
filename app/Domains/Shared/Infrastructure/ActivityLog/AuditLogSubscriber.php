@@ -16,7 +16,10 @@ use App\Domains\Media\Domain\Events\AlbumCreated;
 use App\Domains\Media\Domain\Events\MediaUpdated;
 use App\Domains\Media\Domain\Events\MediaUploaded;
 use App\Domains\Media\Domain\Models\Album;
+use App\Domains\Occasion\Domain\Events\OccasionArchived;
+use App\Domains\Occasion\Domain\Events\OccasionCancelled;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
+use App\Domains\Occasion\Domain\Events\OccasionUpdated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\People\Domain\Events\RsvpReopened;
@@ -72,6 +75,42 @@ class AuditLogSubscriber
             'subject_id' => $event->occasion->id,
             'action' => 'occasion.created',
             'description' => "{$event->actor->name} created \"{$event->occasion->title}\".",
+        ]);
+    }
+
+    public function handleOccasionUpdated(OccasionUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->occasion->id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Occasion',
+            'subject_id' => $event->occasion->id,
+            'action' => 'occasion.updated',
+            'description' => "{$event->actor->name} updated \"{$event->occasion->title}\".",
+        ]);
+    }
+
+    public function handleOccasionArchived(OccasionArchived $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->occasion->id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Occasion',
+            'subject_id' => $event->occasion->id,
+            'action' => 'occasion.archived',
+            'description' => "{$event->actor->name} archived \"{$event->occasion->title}\".",
+        ]);
+    }
+
+    public function handleOccasionCancelled(OccasionCancelled $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->occasion->id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Occasion',
+            'subject_id' => $event->occasion->id,
+            'action' => 'occasion.cancelled',
+            'description' => "{$event->actor->name} cancelled \"{$event->occasion->title}\".",
         ]);
     }
 
@@ -331,6 +370,9 @@ class AuditLogSubscriber
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(OccasionCreated::class, [self::class, 'handleOccasionCreated']);
+        $events->listen(OccasionUpdated::class, [self::class, 'handleOccasionUpdated']);
+        $events->listen(OccasionArchived::class, [self::class, 'handleOccasionArchived']);
+        $events->listen(OccasionCancelled::class, [self::class, 'handleOccasionCancelled']);
         $events->listen(MemberInvited::class, [self::class, 'handleMemberInvited']);
         $events->listen(MemberJoined::class, [self::class, 'handleMemberJoined']);
         $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);
