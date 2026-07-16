@@ -8,6 +8,7 @@ use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
+use App\Models\User;
 
 /**
  * FR-002 — generates in-app Notifications from Domain Events (ADR-006).
@@ -22,6 +23,10 @@ class NotificationSubscriber
 
         // Don't notify a member of their own action.
         if ($assigneeUserId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($assigneeUserId)?->wantsNotification('task_assigned')) {
             return;
         }
 
@@ -43,6 +48,10 @@ class NotificationSubscriber
             return;
         }
 
+        if (! User::find($event->task->created_by)?->wantsNotification('task_completed')) {
+            return;
+        }
+
         Notification::create([
             'user_id' => $event->task->created_by,
             'occasion_id' => $event->task->occasion_id,
@@ -60,6 +69,10 @@ class NotificationSubscriber
 
         // Don't notify a member of their own action.
         if ($occasion->host_id === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($occasion->host_id)?->wantsNotification('contribution_received')) {
             return;
         }
 
@@ -85,6 +98,10 @@ class NotificationSubscriber
             return;
         }
 
+        if (! User::find($occasion->host_id)?->wantsNotification('member_joined')) {
+            return;
+        }
+
         Notification::create([
             'user_id' => $occasion->host_id,
             'occasion_id' => $occasion->id,
@@ -99,6 +116,10 @@ class NotificationSubscriber
     public function handleReminderTriggered(ReminderTriggered $event): void
     {
         $timelineEvent = $event->reminderRule->timelineEvent;
+
+        if (! User::find($event->reminderRule->created_by)?->wantsNotification('reminder_triggered')) {
+            return;
+        }
 
         Notification::create([
             'user_id' => $event->reminderRule->created_by,

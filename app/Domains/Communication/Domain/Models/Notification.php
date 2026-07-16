@@ -14,6 +14,21 @@ class Notification extends Model
 {
     use HasFactory, HasUuid;
 
+    /**
+     * The full set of notification types NotificationSubscriber fires —
+     * single source of truth for both preference validation and the
+     * Profile page's preference checkboxes.
+     *
+     * @var array<string, string>
+     */
+    public const TYPES = [
+        'task_assigned' => 'Task Assigned',
+        'task_completed' => 'Task Completed',
+        'contribution_received' => 'Contribution Received',
+        'member_joined' => 'Member Joined',
+        'reminder_triggered' => 'Reminders',
+    ];
+
     protected static function newFactory(): NotificationFactory
     {
         return NotificationFactory::new();

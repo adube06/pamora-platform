@@ -3,6 +3,7 @@
 namespace App\Domains\Shared\Infrastructure\ActivityLog;
 
 use App\Domains\Communication\Domain\Events\AnnouncementPublished;
+use App\Domains\Communication\Domain\Events\PreferenceUpdated;
 use App\Domains\Communication\Domain\Events\ReminderRuleScheduled;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Announcement;
@@ -338,6 +339,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handlePreferenceUpdated(PreferenceUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'User',
+            'subject_id' => $event->user->id,
+            'action' => 'communication.preferences_updated',
+            'description' => "{$event->user->name} updated their notification preferences.",
+        ]);
+    }
+
     public function handleReminderRuleScheduled(ReminderRuleScheduled $event): void
     {
         ActivityLog::create([
@@ -507,6 +520,7 @@ class AuditLogSubscriber
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
         $events->listen(AnnouncementPublished::class, [self::class, 'handleAnnouncementPublished']);
+        $events->listen(PreferenceUpdated::class, [self::class, 'handlePreferenceUpdated']);
         $events->listen(ReminderRuleScheduled::class, [self::class, 'handleReminderRuleScheduled']);
         $events->listen(ReminderTriggered::class, [self::class, 'handleReminderTriggered']);
         $events->listen(MediaUploaded::class, [self::class, 'handleMediaUploaded']);

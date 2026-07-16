@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
         'email',
         'password',
         'is_admin',
+        'notification_preferences',
     ];
 
     /**
@@ -51,7 +52,18 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Communication PRD FR-005 — opt-out model: a type missing from the
+     * stored preferences (including for every user before this feature
+     * existed) is treated as enabled.
+     */
+    public function wantsNotification(string $type): bool
+    {
+        return $this->notification_preferences[$type] ?? true;
     }
 
     /**
