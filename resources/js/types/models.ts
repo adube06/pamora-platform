@@ -21,6 +21,10 @@ export interface OccasionMember {
     role: string;
     notes: string | null;
     permissions: string[];
+    rsvp_status: string | null;
+    rsvp_responded_at: string | null;
+    guest_count: number | null;
+    rsvp_message: string | null;
     user?: {
         id: number;
         name: string;

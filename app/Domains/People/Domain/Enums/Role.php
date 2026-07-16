@@ -26,6 +26,7 @@ enum Role: string
     case Coordinator = 'coordinator';
     case Member = 'member';
     case Observer = 'observer';
+    case Guest = 'guest';
 
     public function label(): string
     {
@@ -37,6 +38,7 @@ enum Role: string
             self::Coordinator => 'Coordinator',
             self::Member => 'Member',
             self::Observer => 'Observer',
+            self::Guest => 'Guest',
         };
     }
 
@@ -110,6 +112,11 @@ enum Role: string
 
             // View-only by design — no permissions.
             self::Observer => [],
+
+            // An invited attendee, not a committee member — responds via
+            // RSVP rather than organizing. Same empty-permission shape as
+            // Observer, but semantically distinct.
+            self::Guest => [],
         };
     }
 }

@@ -5,6 +5,7 @@ namespace App\Domains\People\Domain\Models;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Enums\OccasionMemberStatus;
 use App\Domains\People\Domain\Enums\Role;
+use App\Domains\People\Domain\Enums\RsvpStatus;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Domains\Shared\Domain\Enums\Permission;
@@ -33,6 +34,10 @@ class OccasionMember extends Model
         'role',
         'notes',
         'permissions',
+        'rsvp_status',
+        'rsvp_responded_at',
+        'guest_count',
+        'rsvp_message',
     ];
 
     protected function casts(): array
@@ -41,7 +46,14 @@ class OccasionMember extends Model
             'status' => OccasionMemberStatus::class,
             'role' => Role::class,
             'permissions' => 'array',
+            'rsvp_status' => RsvpStatus::class,
+            'rsvp_responded_at' => 'datetime',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
     }
 
     public function occasion(): BelongsTo

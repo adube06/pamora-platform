@@ -27,6 +27,8 @@ class CommitteeController
                 ->reject(fn (Role $role) => $role === Role::Host)
                 ->map(fn (Role $role) => ['value' => $role->value, 'label' => $role->label()])
                 ->values(),
+            'myMembership' => $occasion->memberFor($request->user()),
+            'canReopenRsvp' => $request->user()->id === $occasion->host_id,
         ]);
     }
 

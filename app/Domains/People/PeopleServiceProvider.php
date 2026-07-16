@@ -17,6 +17,7 @@ class PeopleServiceProvider extends ServiceProvider
         // Article V). Occasion already has its own bound OccasionPolicy.
         Gate::define('invite-member', [OccasionMemberPolicy::class, 'invite']);
         Gate::define('remove-member', [OccasionMemberPolicy::class, 'remove']);
+        Gate::define('reopen-rsvp', [OccasionMemberPolicy::class, 'reopenRsvp']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

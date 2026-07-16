@@ -46,6 +46,26 @@ it('logs an entry when an occasion is created', function () {
     expect(ActivityLog::where('action', 'people.member_joined')->count())->toBe(1);
 });
 
+it('logs an entry when an rsvp is submitted and when it is reopened', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $guestUser = User::factory()->create();
+    $guestMember = OccasionMember::factory()->create(['occasion_id' => $occasion->id, 'user_id' => $guestUser->id]);
+
+    $this->actingAs($guestUser)->post("/occasions/{$occasion->slug}/rsvp", ['rsvp_status' => 'attending']);
+
+    expect(ActivityLog::where('action', 'people.rsvp_submitted')
+        ->where('subject_id', $guestMember->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($host)->post("/occasion-members/{$guestMember->uuid}/reopen-rsvp");
+
+    expect(ActivityLog::where('action', 'people.rsvp_reopened')
+        ->where('subject_id', $guestMember->id)
+        ->count())->toBe(1);
+});
+
 it('logs an entry when a member is invited and when they accept', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);

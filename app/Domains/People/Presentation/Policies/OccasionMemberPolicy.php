@@ -3,6 +3,7 @@
 namespace App\Domains\People\Presentation\Policies;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\Shared\Domain\Enums\Permission;
 use App\Models\User;
 
@@ -22,5 +23,15 @@ class OccasionMemberPolicy
     public function remove(User $user, Occasion $occasion): bool
     {
         return $occasion->memberFor($user)?->hasPermission(Permission::PeopleRemoveMember) ?? false;
+    }
+
+    /**
+     * BR-013 names "the Host" specifically, not a Permission Catalog
+     * capability — a direct ownership check, same reasoning as Occasion's
+     * own Host-exclusive actions (archive, cancel, transfer ownership).
+     */
+    public function reopenRsvp(User $user, OccasionMember $member): bool
+    {
+        return $member->occasion->host_id === $user->id;
     }
 }

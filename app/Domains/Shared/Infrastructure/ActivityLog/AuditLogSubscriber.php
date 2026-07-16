@@ -14,6 +14,8 @@ use App\Domains\Media\Domain\Events\MediaUploaded;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
+use App\Domains\People\Domain\Events\RsvpReopened;
+use App\Domains\People\Domain\Events\RsvpSubmitted;
 use App\Domains\Planning\Domain\Events\ChecklistCreated;
 use App\Domains\Planning\Domain\Events\MilestoneCompleted;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
@@ -88,6 +90,30 @@ class AuditLogSubscriber
             'subject_id' => $event->member->id,
             'action' => 'people.member_joined',
             'description' => "{$event->member->user->name} joined the Occasion.",
+        ]);
+    }
+
+    public function handleRsvpSubmitted(RsvpSubmitted $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->member->occasion_id,
+            'user_id' => $event->member->user_id,
+            'subject_type' => 'OccasionMember',
+            'subject_id' => $event->member->id,
+            'action' => 'people.rsvp_submitted',
+            'description' => "{$event->member->user->name} responded {$event->member->rsvp_status->label()} to the Occasion.",
+        ]);
+    }
+
+    public function handleRsvpReopened(RsvpReopened $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->member->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'OccasionMember',
+            'subject_id' => $event->member->id,
+            'action' => 'people.rsvp_reopened',
+            'description' => "{$event->actor->name} reopened RSVP for {$event->member->user->name}.",
         ]);
     }
 
@@ -269,6 +295,8 @@ class AuditLogSubscriber
         $events->listen(OccasionCreated::class, [self::class, 'handleOccasionCreated']);
         $events->listen(MemberInvited::class, [self::class, 'handleMemberInvited']);
         $events->listen(MemberJoined::class, [self::class, 'handleMemberJoined']);
+        $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);
+        $events->listen(RsvpReopened::class, [self::class, 'handleRsvpReopened']);
         $events->listen(TaskCreated::class, [self::class, 'handleTaskCreated']);
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
