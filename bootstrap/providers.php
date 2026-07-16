@@ -3,6 +3,7 @@
 use App\Domains\Communication\CommunicationServiceProvider;
 use App\Domains\Finance\FinanceServiceProvider;
 use App\Domains\Identity\IdentityServiceProvider;
+use App\Domains\Media\MediaServiceProvider;
 use App\Domains\Occasion\OccasionServiceProvider;
 use App\Domains\People\PeopleServiceProvider;
 use App\Domains\Planning\PlanningServiceProvider;
@@ -18,4 +19,5 @@ return [
     PlanningServiceProvider::class,
     FinanceServiceProvider::class,
     CommunicationServiceProvider::class,
+    MediaServiceProvider::class,
 ];

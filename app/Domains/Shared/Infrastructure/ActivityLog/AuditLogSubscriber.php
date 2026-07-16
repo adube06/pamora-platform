@@ -10,6 +10,7 @@ use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Media\Domain\Events\MediaUploaded;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
@@ -211,6 +212,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleMediaUploaded(MediaUploaded $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->mediaAsset->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'MediaAsset',
+            'subject_id' => $event->mediaAsset->id,
+            'action' => 'media.uploaded',
+            'description' => "{$event->actor->name} uploaded \"{$event->mediaAsset->file_name}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -266,6 +279,7 @@ class AuditLogSubscriber
         $events->listen(AnnouncementPublished::class, [self::class, 'handleAnnouncementPublished']);
         $events->listen(ReminderRuleScheduled::class, [self::class, 'handleReminderRuleScheduled']);
         $events->listen(ReminderTriggered::class, [self::class, 'handleReminderTriggered']);
+        $events->listen(MediaUploaded::class, [self::class, 'handleMediaUploaded']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

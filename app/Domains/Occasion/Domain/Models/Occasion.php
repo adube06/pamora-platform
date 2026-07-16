@@ -7,6 +7,7 @@ use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
 use App\Domains\Occasion\Domain\Enums\OccasionVisibility;
@@ -98,6 +99,11 @@ class Occasion extends Model
     public function reminderRules(): HasMany
     {
         return $this->hasMany(ReminderRule::class);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(MediaAsset::class);
     }
 
     public function invitations(): HasMany

@@ -6,6 +6,7 @@ use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Domain\Models\OccasionMember;
@@ -14,7 +15,9 @@ use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Domain\Models\TimelineEvent;
 use App\Domains\Shared\Infrastructure\ActivityLog\ActivityLog;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 
 it('logs an entry when a user registers', function () {
     $this->post('/register', [
@@ -167,6 +170,24 @@ it('logs an entry when a reminder rule is scheduled and when it is triggered', f
 
     expect(ActivityLog::where('action', 'communication.reminder_triggered')
         ->where('subject_id', $rule->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a media asset is uploaded', function () {
+    Storage::fake('local');
+
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $file = UploadedFile::fake()->image('venue.jpg');
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/media", ['file' => $file]);
+
+    $mediaAsset = MediaAsset::firstWhere('file_name', 'venue.jpg');
+
+    expect(ActivityLog::where('action', 'media.uploaded')
+        ->where('subject_id', $mediaAsset->id)
         ->count())->toBe(1);
 });
 

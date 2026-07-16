@@ -122,6 +122,17 @@ export interface ReminderRule {
     created_at: string;
 }
 
+export interface MediaAsset {
+    id: string;
+    file_name: string;
+    file_type: string;
+    size: number;
+    visibility: string;
+    download_url: string;
+    uploaded_by: string;
+    created_at: string;
+}
+
 export interface Contribution {
     id: number;
     uuid: string;
