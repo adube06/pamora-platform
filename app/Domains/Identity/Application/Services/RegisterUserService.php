@@ -20,6 +20,8 @@ class RegisterUserService
             'password' => $data['password'],
         ]);
 
+        $user->sendEmailVerificationNotification();
+
         UserRegistered::dispatch($user);
 
         return $user;

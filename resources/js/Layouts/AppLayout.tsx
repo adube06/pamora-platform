@@ -62,7 +62,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
                         <ThemeToggle />
                         {auth.user && (
                             <nav className="flex items-center gap-4 text-sm text-text-secondary">
-                                <span>{auth.user.name}</span>
+                                <Link href={route('profile.show')} className="hover:text-text-primary">
+                                    {auth.user.name}
+                                </Link>
                                 <Link href={route('logout')} method="post" as="button" className="hover:text-text-primary">
                                     Log out
                                 </Link>

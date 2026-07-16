@@ -35,6 +35,8 @@ use App\Domains\Planning\Domain\Events\TaskCreated;
 use App\Domains\Planning\Domain\Events\TaskReopened;
 use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
 use App\Domains\Planning\Domain\Models\Task;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -66,6 +68,41 @@ class AuditLogSubscriber
             'subject_id' => $event->user->id,
             'action' => 'identity.user_signed_in',
             'description' => "{$event->user->name} signed in.",
+        ]);
+    }
+
+    /**
+     * Listens to Laravel's own framework event (fired by
+     * EmailVerificationRequest::fulfill()) rather than a duplicate custom
+     * Identity event — the one deliberate exception to "every audited
+     * action has its own Domain event," since the framework's own signal
+     * already carries exactly what BR-036 needs here.
+     */
+    public function handleVerified(Verified $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->user->id,
+            'subject_type' => 'User',
+            'subject_id' => $event->user->id,
+            'action' => 'identity.email_verified',
+            'description' => "{$event->user->name} verified their email address.",
+        ]);
+    }
+
+    /**
+     * Same reasoning as handleVerified() — Password::reset()'s callback
+     * already fires this framework event once the password is updated.
+     */
+    public function handlePasswordReset(PasswordReset $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->user->id,
+            'subject_type' => 'User',
+            'subject_id' => $event->user->id,
+            'action' => 'identity.password_reset',
+            'description' => "{$event->user->name} reset their password.",
         ]);
     }
 
@@ -408,6 +445,8 @@ class AuditLogSubscriber
     {
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
+        $events->listen(Verified::class, [self::class, 'handleVerified']);
+        $events->listen(PasswordReset::class, [self::class, 'handlePasswordReset']);
         $events->listen(OccasionCreated::class, [self::class, 'handleOccasionCreated']);
         $events->listen(OccasionUpdated::class, [self::class, 'handleOccasionUpdated']);
         $events->listen(OccasionArchived::class, [self::class, 'handleOccasionArchived']);

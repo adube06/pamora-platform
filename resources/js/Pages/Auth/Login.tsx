@@ -34,6 +34,12 @@ export default function Login({ invitation }: Props) {
             </Form>
 
             <p className="mt-4 text-sm text-text-secondary">
+                <Link href={route('password.request')} className="font-medium text-primary underline">
+                    Forgot your password?
+                </Link>
+            </p>
+
+            <p className="mt-2 text-sm text-text-secondary">
                 Don&apos;t have an account?{' '}
                 <Link href={route('register', invitation ? { invitation } : {})} className="font-medium text-primary underline">
                     Register
