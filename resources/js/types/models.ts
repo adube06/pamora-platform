@@ -160,10 +160,20 @@ export interface Contribution {
     contributed_at: string;
 }
 
+export interface BudgetItem {
+    id: number;
+    uuid: string;
+    name: string;
+    estimated_cost: string;
+    currency: string;
+    budget_category_id: number;
+}
+
 export interface BudgetCategory {
     id: number;
     uuid: string;
     name: string;
+    budget_items?: BudgetItem[];
 }
 
 export interface Budget {
@@ -174,6 +184,18 @@ export interface Budget {
     planned_amount: string;
     status: string;
     categories: BudgetCategory[];
+}
+
+export interface Pledge {
+    id: number;
+    uuid: string;
+    pledgor_name: string;
+    pledgor_phone: string | null;
+    amount: string;
+    currency: string;
+    status: string;
+    message: string | null;
+    pledged_at: string;
 }
 
 export interface Expense {
@@ -190,6 +212,8 @@ export interface Expense {
 export interface BudgetSummary {
     total_received: string;
     contribution_count: number;
+    total_pledged?: string;
+    pending_pledged?: string;
     planned_amount?: string | null;
     total_expense?: string;
     remaining_budget?: string | null;

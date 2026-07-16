@@ -4,8 +4,10 @@ use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
+use App\Domains\Finance\Domain\Models\BudgetItem;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
@@ -413,4 +415,56 @@ it('logs an entry when a budget is created and when an expense is recorded', fun
 
     expect($expenseLog)->not->toBeNull()
         ->and($expenseLog->description)->toContain('TZS');
+});
+
+it('logs an entry when a budget item is added', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $budget = Budget::factory()->create(['occasion_id' => $occasion->id]);
+    $category = BudgetCategory::factory()->create(['budget_id' => $budget->id, 'name' => 'Decoration']);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/budget-items", [
+        'budget_category_id' => $category->id,
+        'name' => 'Balloon arch',
+        'estimated_cost' => 800000,
+    ]);
+
+    $item = BudgetItem::firstWhere('name', 'Balloon arch');
+
+    $log = ActivityLog::where('action', 'finance.budget_item_added')
+        ->where('subject_id', $item->id)
+        ->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->description)->toContain('Decoration');
+});
+
+it('logs an entry when a pledge is recorded and when its status is updated', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/pledges", [
+        'pledgor_name' => 'Amina Hassan',
+        'amount' => 50000,
+        'pledged_at' => now()->toDateString(),
+    ]);
+
+    $pledge = Pledge::firstWhere('pledgor_name', 'Amina Hassan');
+
+    expect(ActivityLog::where('action', 'finance.pledge_recorded')
+        ->where('subject_id', $pledge->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($host)->patch("/occasions/{$occasion->slug}/pledges/{$pledge->uuid}", [
+        'status' => 'confirmed',
+    ]);
+
+    $log = ActivityLog::where('action', 'finance.pledge_status_updated')
+        ->where('subject_id', $pledge->id)
+        ->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->description)->toContain('Confirmed');
 });

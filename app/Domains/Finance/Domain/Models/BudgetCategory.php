@@ -33,6 +33,11 @@ class BudgetCategory extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function budgetItems(): HasMany
+    {
+        return $this->hasMany(BudgetItem::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'uuid';

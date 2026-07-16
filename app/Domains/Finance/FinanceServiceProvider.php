@@ -37,6 +37,13 @@ class FinanceServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::FinanceRecordExpense) ?? false;
         });
 
+        // Pledges are transparency-open like Contributions (not gated
+        // behind finance.view_budget) — only recording/updating them is
+        // permission-gated.
+        Gate::define('record-pledge', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::FinanceRecordPledge) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 

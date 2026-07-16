@@ -82,6 +82,7 @@ enum Role: string
                 Permission::PlanningReopenTask->value,
                 Permission::FinanceViewBudget->value,
                 Permission::FinanceEditBudget->value,
+                Permission::FinanceRecordPledge->value,
                 Permission::FinanceRecordContribution->value,
                 Permission::FinanceRecordExpense->value,
                 Permission::MediaUpload->value,

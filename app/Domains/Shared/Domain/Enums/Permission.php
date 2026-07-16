@@ -37,6 +37,7 @@ enum Permission: string
     // Finance
     case FinanceViewBudget = 'finance.view_budget';
     case FinanceEditBudget = 'finance.edit_budget';
+    case FinanceRecordPledge = 'finance.record_pledge';
     case FinanceRecordContribution = 'finance.record_contribution';
     case FinanceRecordExpense = 'finance.record_expense';
 
@@ -75,6 +76,7 @@ enum Permission: string
             self::PlanningManageTimeline->value,
             self::FinanceViewBudget->value,
             self::FinanceEditBudget->value,
+            self::FinanceRecordPledge->value,
             self::FinanceRecordContribution->value,
             self::FinanceRecordExpense->value,
             self::CommunicationPublishAnnouncement->value,

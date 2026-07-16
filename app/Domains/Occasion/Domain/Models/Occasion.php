@@ -7,6 +7,7 @@ use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
@@ -130,6 +131,11 @@ class Occasion extends Model
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    public function pledges(): HasMany
+    {
+        return $this->hasMany(Pledge::class);
     }
 
     public function memberFor(User $user): ?OccasionMember

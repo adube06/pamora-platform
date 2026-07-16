@@ -7,8 +7,11 @@ use App\Domains\Communication\Domain\Events\ReminderRuleScheduled;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Finance\Domain\Events\BudgetCreated;
+use App\Domains\Finance\Domain\Events\BudgetItemAdded;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
+use App\Domains\Finance\Domain\Events\PledgeRecorded;
+use App\Domains\Finance\Domain\Events\PledgeStatusUpdated;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
@@ -441,6 +444,44 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleBudgetItemAdded(BudgetItemAdded $event): void
+    {
+        $category = $event->budgetItem->category;
+
+        ActivityLog::create([
+            'occasion_id' => $category->budget->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'BudgetItem',
+            'subject_id' => $event->budgetItem->id,
+            'action' => 'finance.budget_item_added',
+            'description' => "{$event->actor->name} added budget item \"{$event->budgetItem->name}\" ({$event->budgetItem->estimated_cost} {$event->budgetItem->currency}) to {$category->name}.",
+        ]);
+    }
+
+    public function handlePledgeRecorded(PledgeRecorded $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->pledge->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Pledge',
+            'subject_id' => $event->pledge->id,
+            'action' => 'finance.pledge_recorded',
+            'description' => "{$event->actor->name} recorded a pledge of {$event->pledge->amount} {$event->pledge->currency} from {$event->pledge->pledgor_name}.",
+        ]);
+    }
+
+    public function handlePledgeStatusUpdated(PledgeStatusUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->pledge->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Pledge',
+            'subject_id' => $event->pledge->id,
+            'action' => 'finance.pledge_status_updated',
+            'description' => "{$event->actor->name} marked {$event->pledge->pledgor_name}'s pledge as {$event->pledge->status->label()}.",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
@@ -474,5 +515,8 @@ class AuditLogSubscriber
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);
+        $events->listen(BudgetItemAdded::class, [self::class, 'handleBudgetItemAdded']);
+        $events->listen(PledgeRecorded::class, [self::class, 'handlePledgeRecorded']);
+        $events->listen(PledgeStatusUpdated::class, [self::class, 'handlePledgeStatusUpdated']);
     }
 }

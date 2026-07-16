@@ -1,10 +1,12 @@
 <?php
 
 use App\Domains\Finance\Application\Services\GetBudgetSummaryService;
+use App\Domains\Finance\Domain\Enums\PledgeStatus;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Models\User;
@@ -25,6 +27,22 @@ it('computes derived totals fresh from source rows', function () {
         ->and((float) $summary['remaining_budget'])->toBe(70000.0)
         ->and($summary['funding_progress'])->toBe(40.0)
         ->and($summary['spending_progress'])->toBe(30.0);
+});
+
+it('counts confirmed pledges toward funding progress but not pending ones', function () {
+    $occasion = Occasion::factory()->create();
+    Budget::factory()->create(['occasion_id' => $occasion->id, 'planned_amount' => 100000]);
+
+    Contribution::factory()->create(['occasion_id' => $occasion->id, 'amount' => 20000]);
+    Pledge::factory()->create(['occasion_id' => $occasion->id, 'amount' => 30000, 'status' => PledgeStatus::Confirmed]);
+    Pledge::factory()->create(['occasion_id' => $occasion->id, 'amount' => 15000, 'status' => PledgeStatus::Pending]);
+
+    $summary = app(GetBudgetSummaryService::class)->handle($occasion);
+
+    expect((float) $summary['total_pledged'])->toBe(30000.0)
+        ->and((float) $summary['pending_pledged'])->toBe(15000.0)
+        // funding_progress = (received 20000 + confirmed pledged 30000) / 100000 * 100
+        ->and($summary['funding_progress'])->toBe(50.0);
 });
 
 it('returns a null-safe summary when no budget exists yet', function () {

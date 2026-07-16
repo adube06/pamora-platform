@@ -1,4 +1,4 @@
-import { Form } from '@inertiajs/react';
+import { Form, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Badge from '@/Components/Badge';
 import Button from '@/Components/Button';
@@ -10,15 +10,17 @@ import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import { formatCurrency } from '@/lib/currency';
-import type { Budget, BudgetSummary, Contribution, Expense, Occasion } from '@/types/models';
+import type { Budget, BudgetSummary, Contribution, Expense, Occasion, Pledge } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     budget: Budget | null;
     contributions: Contribution[];
+    pledges: Pledge[];
     expenses: Expense[];
     summary: BudgetSummary;
     canRecordContribution: boolean;
+    canRecordPledge: boolean;
     canViewBudget: boolean;
     canEditBudget: boolean;
     canRecordExpense: boolean;
@@ -29,6 +31,20 @@ const METHOD_LABELS: Record<string, string> = {
     mobile_money: 'Mobile Money',
     bank_transfer: 'Bank Transfer',
     other: 'Other',
+};
+
+const PLEDGE_STATUS_LABELS: Record<string, string> = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    cancelled: 'Cancelled',
+    expired: 'Expired',
+};
+
+const PLEDGE_STATUS_VARIANTS: Record<string, 'neutral' | 'success' | 'warning' | 'error'> = {
+    pending: 'warning',
+    confirmed: 'success',
+    cancelled: 'neutral',
+    expired: 'error',
 };
 
 const HEALTH_LABELS: Record<string, string> = {
@@ -45,20 +61,43 @@ const HEALTH_VARIANTS: Record<string, 'info' | 'success' | 'warning' | 'error'> 
     over_budget: 'error',
 };
 
+function PledgeStatusSelect({ occasion, pledge }: { occasion: Occasion; pledge: Pledge }) {
+    const { setData, patch, processing } = useForm({ status: pledge.status });
+
+    function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+        setData('status', e.target.value);
+        patch(route('occasions.pledges.update', [occasion.slug, pledge.uuid]), { preserveScroll: true });
+    }
+
+    return (
+        <Select value={pledge.status} onChange={handleChange} disabled={processing} className="px-2 py-1 text-xs">
+            {Object.entries(PLEDGE_STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                    {label}
+                </option>
+            ))}
+        </Select>
+    );
+}
+
 export default function Finance({
     occasion,
     budget,
     contributions,
+    pledges,
     expenses,
     summary,
     canRecordContribution,
+    canRecordPledge,
     canViewBudget,
     canEditBudget,
     canRecordExpense,
 }: Props) {
     const [showContributionForm, setShowContributionForm] = useState(false);
+    const [showPledgeForm, setShowPledgeForm] = useState(false);
     const [showBudgetForm, setShowBudgetForm] = useState(false);
     const [showExpenseForm, setShowExpenseForm] = useState(false);
+    const [showBudgetItemForm, setShowBudgetItemForm] = useState(false);
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="finance">
@@ -75,11 +114,20 @@ export default function Finance({
 
                     {budget ? (
                         <>
-                            <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                            <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-5">
                                 <Card>
                                     <p className="text-xs text-text-secondary">Planned</p>
                                     <p className="mt-1 text-xl font-semibold text-text-primary">
                                         {formatCurrency(summary.planned_amount ?? 0)} {budget.currency}
+                                    </p>
+                                </Card>
+                                <Card>
+                                    <p className="text-xs text-text-secondary">Pledged</p>
+                                    <p className="mt-1 text-xl font-semibold text-text-primary">
+                                        {formatCurrency(summary.total_pledged ?? 0)} {budget.currency}
+                                    </p>
+                                    <p className="text-xs text-text-secondary">
+                                        {formatCurrency(summary.pending_pledged ?? 0)} {budget.currency} pending
                                     </p>
                                 </Card>
                                 <Card>
@@ -189,6 +237,98 @@ export default function Finance({
                                             </p>
                                         </li>
                                     ))}
+                                </ul>
+                            )}
+
+                            <div className="mt-6 flex items-center justify-between">
+                                <h3 className="text-sm font-medium text-text-primary">Budget Items</h3>
+                                {canEditBudget && (
+                                    <Button size="sm" onClick={() => setShowBudgetItemForm((v) => !v)}>
+                                        {showBudgetItemForm ? 'Cancel' : 'Add Budget Item'}
+                                    </Button>
+                                )}
+                            </div>
+
+                            {showBudgetItemForm && (
+                                <Card className="mt-4 max-w-md">
+                                    <Form
+                                        action={route('occasions.budget-items.store', occasion.slug)}
+                                        method="post"
+                                        resetOnSuccess
+                                        onSuccess={() => setShowBudgetItemForm(false)}
+                                        className="space-y-3"
+                                    >
+                                        {({ errors, processing }) => (
+                                            <>
+                                                <FormField
+                                                    label="Category"
+                                                    htmlFor="budget_category_id"
+                                                    required
+                                                    error={errors.budget_category_id}
+                                                >
+                                                    <Select
+                                                        id="budget_category_id"
+                                                        name="budget_category_id"
+                                                        required
+                                                        invalid={!!errors.budget_category_id}
+                                                    >
+                                                        {budget.categories.map((category) => (
+                                                            <option key={category.id} value={category.id}>
+                                                                {category.name}
+                                                            </option>
+                                                        ))}
+                                                    </Select>
+                                                </FormField>
+
+                                                <FormField label="Name" htmlFor="item_name" required error={errors.name}>
+                                                    <Input id="item_name" name="name" type="text" required invalid={!!errors.name} />
+                                                </FormField>
+
+                                                <FormField
+                                                    label="Estimated Cost"
+                                                    htmlFor="estimated_cost"
+                                                    required
+                                                    error={errors.estimated_cost}
+                                                >
+                                                    <Input
+                                                        id="estimated_cost"
+                                                        name="estimated_cost"
+                                                        type="number"
+                                                        min="1"
+                                                        step="0.01"
+                                                        required
+                                                        invalid={!!errors.estimated_cost}
+                                                    />
+                                                </FormField>
+
+                                                <Button type="submit" loading={processing}>
+                                                    {processing ? 'Adding…' : 'Add Budget Item'}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Form>
+                                </Card>
+                            )}
+
+                            {budget.categories.every((category) => (category.budget_items?.length ?? 0) === 0) ? (
+                                <div className="mt-4">
+                                    <EmptyState title="No budget items yet" />
+                                </div>
+                            ) : (
+                                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
+                                    {budget.categories.flatMap((category) =>
+                                        (category.budget_items ?? []).map((item) => (
+                                            <li key={item.id} className="flex items-center justify-between px-4 py-3">
+                                                <div>
+                                                    <p className="text-sm font-medium text-text-primary">{item.name}</p>
+                                                    <p className="text-xs text-text-secondary">{category.name}</p>
+                                                </div>
+                                                <p className="text-sm font-semibold text-text-primary">
+                                                    {formatCurrency(item.estimated_cost)} {item.currency}
+                                                </p>
+                                            </li>
+                                        )),
+                                    )}
                                 </ul>
                             )}
                         </>
@@ -343,6 +483,102 @@ export default function Finance({
                             <p className="text-sm font-semibold text-text-primary">
                                 {formatCurrency(contribution.amount)} {contribution.currency}
                             </p>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+                <h2 className="text-sm font-medium text-text-primary">Pledges</h2>
+                {canRecordPledge && (
+                    <Button size="sm" onClick={() => setShowPledgeForm((v) => !v)}>
+                        {showPledgeForm ? 'Cancel' : 'Record Pledge'}
+                    </Button>
+                )}
+            </div>
+
+            {showPledgeForm && (
+                <Card className="mt-4 max-w-md">
+                    <Form
+                        action={route('occasions.pledges.store', occasion.slug)}
+                        method="post"
+                        resetOnSuccess
+                        onSuccess={() => setShowPledgeForm(false)}
+                        className="space-y-3"
+                    >
+                        {({ errors, processing }) => (
+                            <>
+                                <FormField label="Pledgor Name" htmlFor="pledgor_name" required error={errors.pledgor_name}>
+                                    <Input id="pledgor_name" name="pledgor_name" type="text" required invalid={!!errors.pledgor_name} />
+                                </FormField>
+
+                                <FormField label="Phone (optional)" htmlFor="pledgor_phone" error={errors.pledgor_phone}>
+                                    <Input id="pledgor_phone" name="pledgor_phone" type="text" invalid={!!errors.pledgor_phone} />
+                                </FormField>
+
+                                <FormField label="Amount" htmlFor="pledge_amount" required error={errors.amount}>
+                                    <Input
+                                        id="pledge_amount"
+                                        name="amount"
+                                        type="number"
+                                        min="1"
+                                        step="0.01"
+                                        required
+                                        invalid={!!errors.amount}
+                                    />
+                                </FormField>
+
+                                <FormField label="Status" htmlFor="pledge_status" error={errors.status}>
+                                    <Select id="pledge_status" name="status" defaultValue="pending" invalid={!!errors.status}>
+                                        <option value="pending">Pending</option>
+                                        <option value="confirmed">Confirmed</option>
+                                    </Select>
+                                </FormField>
+
+                                <FormField label="Date" htmlFor="pledged_at" required error={errors.pledged_at}>
+                                    <Input id="pledged_at" name="pledged_at" type="date" required invalid={!!errors.pledged_at} />
+                                </FormField>
+
+                                <FormField label="Message (optional)" htmlFor="pledge_message" error={errors.message}>
+                                    <Textarea id="pledge_message" name="message" rows={2} invalid={!!errors.message} />
+                                </FormField>
+
+                                <Button type="submit" loading={processing}>
+                                    {processing ? 'Recording…' : 'Record Pledge'}
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </Card>
+            )}
+
+            {pledges.length === 0 ? (
+                <div className="mt-6">
+                    <EmptyState title="No pledges recorded yet" />
+                </div>
+            ) : (
+                <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
+                    {pledges.map((pledge) => (
+                        <li key={pledge.id} className="flex items-center justify-between px-4 py-3">
+                            <div>
+                                <p className="text-sm font-medium text-text-primary">{pledge.pledgor_name}</p>
+                                <p className="text-xs text-text-secondary">
+                                    {pledge.pledged_at}
+                                    {pledge.message && ` · "${pledge.message}"`}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-text-primary">
+                                    {formatCurrency(pledge.amount)} {pledge.currency}
+                                </p>
+                                {canRecordPledge ? (
+                                    <PledgeStatusSelect occasion={occasion} pledge={pledge} />
+                                ) : (
+                                    <Badge variant={PLEDGE_STATUS_VARIANTS[pledge.status] ?? 'neutral'}>
+                                        {PLEDGE_STATUS_LABELS[pledge.status] ?? pledge.status}
+                                    </Badge>
+                                )}
+                            </div>
                         </li>
                     ))}
                 </ul>
