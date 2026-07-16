@@ -8,7 +8,7 @@ import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Album, Expense, MediaAsset, Occasion, Task } from '@/types/models';
+import type { Album, Announcement, Expense, MediaAsset, Occasion, Task } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
@@ -16,6 +16,7 @@ interface Props {
     albums: Album[];
     tasks: Task[];
     expenses: Expense[];
+    announcements: Announcement[];
     canUploadMedia: boolean;
     canEditMediaMetadata: boolean;
 }
@@ -33,8 +34,8 @@ function formatSize(bytes: number): string {
 }
 
 // Encodes the combined dropdown's value as "album:<id>" / "task:<id>" /
-// "expense:<id>" / "" (Ungrouped) so a single <select> can target any
-// attachable type.
+// "expense:<id>" / "announcement:<id>" / "" (Ungrouped) so a single
+// <select> can target any attachable type.
 function encodeTarget(asset: MediaAsset): string {
     if (asset.album) {
         return `album:${asset.album.id}`;
@@ -48,14 +49,31 @@ function encodeTarget(asset: MediaAsset): string {
         return `expense:${asset.expense.id}`;
     }
 
+    if (asset.announcement) {
+        return `announcement:${asset.announcement.id}`;
+    }
+
     return '';
 }
 
-function MoveSelect({ asset, albums, tasks, expenses }: { asset: MediaAsset; albums: Album[]; tasks: Task[]; expenses: Expense[] }) {
+function MoveSelect({
+    asset,
+    albums,
+    tasks,
+    expenses,
+    announcements,
+}: {
+    asset: MediaAsset;
+    albums: Album[];
+    tasks: Task[];
+    expenses: Expense[];
+    announcements: Announcement[];
+}) {
     const { setData, patch, processing } = useForm({
         album_id: asset.album?.id ?? '',
         task_id: asset.task?.id ?? '',
         expense_id: asset.expense?.id ?? '',
+        announcement_id: asset.announcement?.id ?? '',
     });
 
     function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -64,6 +82,7 @@ function MoveSelect({ asset, albums, tasks, expenses }: { asset: MediaAsset; alb
             album_id: kind === 'album' ? id : '',
             task_id: kind === 'task' ? id : '',
             expense_id: kind === 'expense' ? id : '',
+            announcement_id: kind === 'announcement' ? id : '',
         });
         patch(route('media.move', asset.id), { preserveScroll: true });
     }
@@ -98,6 +117,15 @@ function MoveSelect({ asset, albums, tasks, expenses }: { asset: MediaAsset; alb
                     ))}
                 </optgroup>
             )}
+            {announcements.length > 0 && (
+                <optgroup label="Announcement">
+                    {announcements.map((announcement) => (
+                        <option key={announcement.id} value={`announcement:${announcement.id}`}>
+                            {announcement.title}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
         </Select>
     );
 }
@@ -107,12 +135,14 @@ function MediaCard({
     albums,
     tasks,
     expenses,
+    announcements,
     canEditMediaMetadata,
 }: {
     asset: MediaAsset;
     albums: Album[];
     tasks: Task[];
     expenses: Expense[];
+    announcements: Announcement[];
     canEditMediaMetadata: boolean;
 }) {
     return (
@@ -139,18 +169,20 @@ function MediaCard({
                     Private
                 </Badge>
             )}
-            {canEditMediaMetadata && (albums.length > 0 || tasks.length > 0 || expenses.length > 0) && (
-                <MoveSelect asset={asset} albums={albums} tasks={tasks} expenses={expenses} />
+            {canEditMediaMetadata && (albums.length > 0 || tasks.length > 0 || expenses.length > 0 || announcements.length > 0) && (
+                <MoveSelect asset={asset} albums={albums} tasks={tasks} expenses={expenses} announcements={announcements} />
             )}
         </Card>
     );
 }
 
-export default function Media({ occasion, mediaAssets, albums, tasks, expenses, canUploadMedia, canEditMediaMetadata }: Props) {
+export default function Media({ occasion, mediaAssets, albums, tasks, expenses, announcements, canUploadMedia, canEditMediaMetadata }: Props) {
     const [showUploadForm, setShowUploadForm] = useState(false);
     const [showAlbumForm, setShowAlbumForm] = useState(false);
 
-    const ungroupedAssets = mediaAssets.filter((asset) => asset.album === null && asset.task === null && asset.expense === null);
+    const ungroupedAssets = mediaAssets.filter(
+        (asset) => asset.album === null && asset.task === null && asset.expense === null && asset.announcement === null,
+    );
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="media">
@@ -251,7 +283,15 @@ export default function Media({ occasion, mediaAssets, albums, tasks, expenses, 
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">{album.name}</h3>
                                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                     {albumAssets.map((asset) => (
-                                        <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} expenses={expenses} canEditMediaMetadata={canEditMediaMetadata} />
+                                        <MediaCard
+                                            key={asset.id}
+                                            asset={asset}
+                                            albums={albums}
+                                            tasks={tasks}
+                                            expenses={expenses}
+                                            announcements={announcements}
+                                            canEditMediaMetadata={canEditMediaMetadata}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -270,7 +310,15 @@ export default function Media({ occasion, mediaAssets, albums, tasks, expenses, 
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">Task: {task.title}</h3>
                                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                     {taskAssets.map((asset) => (
-                                        <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} expenses={expenses} canEditMediaMetadata={canEditMediaMetadata} />
+                                        <MediaCard
+                                            key={asset.id}
+                                            asset={asset}
+                                            albums={albums}
+                                            tasks={tasks}
+                                            expenses={expenses}
+                                            announcements={announcements}
+                                            canEditMediaMetadata={canEditMediaMetadata}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -291,7 +339,44 @@ export default function Media({ occasion, mediaAssets, albums, tasks, expenses, 
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                     {expenseAssets.map((asset) => (
-                                        <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} expenses={expenses} canEditMediaMetadata={canEditMediaMetadata} />
+                                        <MediaCard
+                                            key={asset.id}
+                                            asset={asset}
+                                            albums={albums}
+                                            tasks={tasks}
+                                            expenses={expenses}
+                                            announcements={announcements}
+                                            canEditMediaMetadata={canEditMediaMetadata}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {announcements.map((announcement) => {
+                        const announcementAssets = mediaAssets.filter((asset) => asset.announcement?.id === announcement.id);
+
+                        if (announcementAssets.length === 0) {
+                            return null;
+                        }
+
+                        return (
+                            <div key={`announcement-${announcement.id}`}>
+                                <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">
+                                    Announcement: {announcement.title}
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                    {announcementAssets.map((asset) => (
+                                        <MediaCard
+                                            key={asset.id}
+                                            asset={asset}
+                                            albums={albums}
+                                            tasks={tasks}
+                                            expenses={expenses}
+                                            announcements={announcements}
+                                            canEditMediaMetadata={canEditMediaMetadata}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -300,12 +385,20 @@ export default function Media({ occasion, mediaAssets, albums, tasks, expenses, 
 
                     {ungroupedAssets.length > 0 && (
                         <div>
-                            {(albums.length > 0 || tasks.length > 0 || expenses.length > 0) && (
+                            {(albums.length > 0 || tasks.length > 0 || expenses.length > 0 || announcements.length > 0) && (
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">Ungrouped</h3>
                             )}
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                                 {ungroupedAssets.map((asset) => (
-                                    <MediaCard key={asset.id} asset={asset} albums={albums} tasks={tasks} expenses={expenses} canEditMediaMetadata={canEditMediaMetadata} />
+                                    <MediaCard
+                                        key={asset.id}
+                                        asset={asset}
+                                        albums={albums}
+                                        tasks={tasks}
+                                        expenses={expenses}
+                                        announcements={announcements}
+                                        canEditMediaMetadata={canEditMediaMetadata}
+                                    />
                                 ))}
                             </div>
                         </div>

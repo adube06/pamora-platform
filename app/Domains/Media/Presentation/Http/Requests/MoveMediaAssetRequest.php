@@ -34,13 +34,18 @@ class MoveMediaAssetRequest extends FormRequest
                 'integer',
                 Rule::exists('expenses', 'id')->where('occasion_id', $this->route('mediaAsset')->occasion_id),
             ],
+            'announcement_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('announcements', 'id')->where('occasion_id', $this->route('mediaAsset')->occasion_id),
+            ],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $targetsProvided = collect(['album_id', 'task_id', 'expense_id'])
+            $targetsProvided = collect(['album_id', 'task_id', 'expense_id', 'announcement_id'])
                 ->filter(fn (string $field) => $this->filled($field));
 
             if ($targetsProvided->count() > 1) {

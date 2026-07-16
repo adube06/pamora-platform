@@ -137,6 +137,7 @@ export interface MediaAsset {
     album: { id: number; name: string } | null;
     task: { id: number; title: string } | null;
     expense: { id: number; description: string } | null;
+    announcement: { id: number; title: string } | null;
     created_at: string;
 }
 

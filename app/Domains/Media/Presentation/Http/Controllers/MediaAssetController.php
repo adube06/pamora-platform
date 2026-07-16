@@ -2,6 +2,7 @@
 
 namespace App\Domains\Media\Presentation\Http\Controllers;
 
+use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Media\Application\Services\MoveMediaAssetService;
 use App\Domains\Media\Domain\Models\Album;
@@ -17,11 +18,13 @@ class MediaAssetController
         $albumId = $request->validated('album_id');
         $taskId = $request->validated('task_id');
         $expenseId = $request->validated('expense_id');
+        $announcementId = $request->validated('announcement_id');
 
         $attachable = match (true) {
             $albumId !== null => Album::findOrFail($albumId),
             $taskId !== null => Task::findOrFail($taskId),
             $expenseId !== null => Expense::findOrFail($expenseId),
+            $announcementId !== null => Announcement::findOrFail($announcementId),
             default => null,
         };
 

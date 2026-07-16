@@ -5,6 +5,7 @@ namespace App\Domains\Shared\Infrastructure\ActivityLog;
 use App\Domains\Communication\Domain\Events\AnnouncementPublished;
 use App\Domains\Communication\Domain\Events\ReminderRuleScheduled;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
+use App\Domains\Communication\Domain\Models\Announcement;
 use App\Domains\Finance\Domain\Events\BudgetCreated;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
@@ -273,6 +274,7 @@ class AuditLogSubscriber
             $event->mediaAsset->attachable instanceof Album => "album \"{$event->mediaAsset->attachable->name}\"",
             $event->mediaAsset->attachable instanceof Task => "task \"{$event->mediaAsset->attachable->title}\"",
             $event->mediaAsset->attachable instanceof Expense => "the receipt for {$event->mediaAsset->attachable->amount} {$event->mediaAsset->attachable->currency} expense",
+            $event->mediaAsset->attachable instanceof Announcement => "announcement \"{$event->mediaAsset->attachable->title}\"",
             default => 'the Occasion gallery',
         };
 

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Communication\Domain\Models;
 
+use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Database\Factories\AnnouncementFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Announcement extends Model
@@ -45,6 +47,11 @@ class Announcement extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable');
     }
 
     public function getRouteKeyName(): string

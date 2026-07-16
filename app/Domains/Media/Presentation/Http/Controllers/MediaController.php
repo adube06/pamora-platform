@@ -29,6 +29,7 @@ class MediaController
             'albums' => $occasion->albums()->withCount('mediaAssets')->latest()->get(),
             'tasks' => $occasion->tasks()->select('id', 'uuid', 'title')->get(),
             'expenses' => $occasion->expenses()->select('id', 'uuid', 'description', 'amount', 'currency')->get(),
+            'announcements' => $occasion->announcements()->select('id', 'uuid', 'title')->get(),
             'canUploadMedia' => $request->user()->can('upload-media', $occasion),
             'canEditMediaMetadata' => $occasion->memberFor($request->user())?->hasPermission(Permission::MediaEditMetadata) ?? false,
         ]);

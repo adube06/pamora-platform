@@ -271,6 +271,24 @@ it('logs an entry naming the expense when a media asset is attached to it', func
         ->and($log->description)->toContain('TZS');
 });
 
+it('logs an entry naming the announcement when a media asset is attached to it', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $announcement = Announcement::factory()->create(['occasion_id' => $occasion->id, 'title' => 'Venue Change']);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->patch("/media/{$mediaAsset->uuid}/move", ['announcement_id' => $announcement->id]);
+
+    $log = ActivityLog::where('action', 'media.updated')
+        ->where('subject_id', $mediaAsset->id)
+        ->latest('id')
+        ->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->description)->toContain('Venue Change');
+});
+
 it('logs an entry when a contribution is recorded', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);
