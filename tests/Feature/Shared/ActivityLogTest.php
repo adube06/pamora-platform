@@ -252,6 +252,25 @@ it('logs an entry naming the task when a media asset is attached to it', functio
         ->and($log->description)->toContain('Book DJ');
 });
 
+it('logs an entry naming the expense when a media asset is attached to it', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $expense = Expense::factory()->create(['occasion_id' => $occasion->id, 'amount' => 15000, 'currency' => 'TZS']);
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->patch("/media/{$mediaAsset->uuid}/move", ['expense_id' => $expense->id]);
+
+    $log = ActivityLog::where('action', 'media.updated')
+        ->where('subject_id', $mediaAsset->id)
+        ->latest('id')
+        ->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->description)->toContain('15000')
+        ->and($log->description)->toContain('TZS');
+});
+
 it('logs an entry when a contribution is recorded', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);

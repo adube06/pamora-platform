@@ -2,6 +2,7 @@
 
 namespace App\Domains\Finance\Domain\Models;
 
+use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Database\Factories\ExpenseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Expense extends Model
 {
@@ -50,6 +52,11 @@ class Expense extends Model
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable');
     }
 
     public function getRouteKeyName(): string

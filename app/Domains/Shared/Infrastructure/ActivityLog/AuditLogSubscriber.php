@@ -8,6 +8,7 @@ use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Finance\Domain\Events\BudgetCreated;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
+use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
 use App\Domains\Media\Domain\Events\AlbumCreated;
@@ -271,6 +272,7 @@ class AuditLogSubscriber
         $destination = match (true) {
             $event->mediaAsset->attachable instanceof Album => "album \"{$event->mediaAsset->attachable->name}\"",
             $event->mediaAsset->attachable instanceof Task => "task \"{$event->mediaAsset->attachable->title}\"",
+            $event->mediaAsset->attachable instanceof Expense => "the receipt for {$event->mediaAsset->attachable->amount} {$event->mediaAsset->attachable->currency} expense",
             default => 'the Occasion gallery',
         };
 

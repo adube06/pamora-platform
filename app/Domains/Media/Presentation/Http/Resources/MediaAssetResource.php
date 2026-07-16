@@ -2,6 +2,7 @@
 
 namespace App\Domains\Media\Presentation\Http\Resources;
 
+use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Planning\Domain\Models\Task;
@@ -36,6 +37,9 @@ class MediaAssetResource extends JsonResource
                 : null,
             'task' => $this->attachable instanceof Task
                 ? ['id' => $this->attachable->id, 'title' => $this->attachable->title]
+                : null,
+            'expense' => $this->attachable instanceof Expense
+                ? ['id' => $this->attachable->id, 'description' => $this->attachable->description ?? ('Expense of '.$this->attachable->amount.' '.$this->attachable->currency)]
                 : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];

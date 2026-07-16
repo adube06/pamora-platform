@@ -29,13 +29,21 @@ class MoveMediaAssetRequest extends FormRequest
                 'integer',
                 Rule::exists('tasks', 'id')->where('occasion_id', $this->route('mediaAsset')->occasion_id),
             ],
+            'expense_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('expenses', 'id')->where('occasion_id', $this->route('mediaAsset')->occasion_id),
+            ],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            if ($this->filled('album_id') && $this->filled('task_id')) {
+            $targetsProvided = collect(['album_id', 'task_id', 'expense_id'])
+                ->filter(fn (string $field) => $this->filled($field));
+
+            if ($targetsProvided->count() > 1) {
                 $validator->errors()->add('album_id', 'A Media Asset can only be moved to one place at a time.');
             }
         });
