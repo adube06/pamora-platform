@@ -3,7 +3,9 @@
 namespace App\Domains\Occasion\Presentation\Http\Controllers;
 
 use App\Domains\Finance\Application\Services\GetBudgetSummaryService;
+use App\Domains\Insights\Application\Services\GetParticipationService;
 use App\Domains\Insights\Application\Services\GetReadinessScoreService;
+use App\Domains\Insights\Application\Services\GetRecommendationsService;
 use App\Domains\Insights\Application\Services\GetTaskProgressService;
 use App\Domains\Occasion\Application\Services\ArchiveOccasionService;
 use App\Domains\Occasion\Application\Services\CancelOccasionService;
@@ -61,6 +63,8 @@ class OccasionController
         GetReadinessScoreService $readinessService,
         GetBudgetSummaryService $budgetSummaryService,
         GetTaskProgressService $taskProgressService,
+        GetParticipationService $participationService,
+        GetRecommendationsService $recommendationsService,
     ): Response {
         $request->user()->can('view', $occasion) || abort(403);
 
@@ -78,6 +82,8 @@ class OccasionController
             'taskProgress' => $taskProgressService->handle($occasion),
             'financialSummary' => $includeFinance ? $financialSummary : Arr::only($financialSummary, ['total_received', 'contribution_count']),
             'canViewBudget' => $includeFinance,
+            'participation' => $participationService->handle($occasion),
+            'recommendations' => $recommendationsService->handle($occasion, $includeFinance),
             'canEdit' => $request->user()->can('update', $occasion),
             'canArchive' => $request->user()->can('archive', $occasion),
             'canCancel' => $request->user()->can('cancel', $occasion),

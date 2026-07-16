@@ -242,3 +242,22 @@ export interface Readiness {
     score: number | null;
     signals: ReadinessSignal[];
 }
+
+export interface TaskOwnership {
+    member_name: string;
+    task_count: number;
+}
+
+export interface Participation {
+    invitation_acceptance_rate: number | null;
+    total_invitations: number;
+    rsvp_completion_rate: number | null;
+    active_member_count: number;
+    task_ownership: TaskOwnership[];
+}
+
+export interface Recommendation {
+    message: string;
+    reason: string;
+    severity: string;
+}

@@ -1,4 +1,5 @@
 import { Form, router } from '@inertiajs/react';
+import Alert from '@/Components/Alert';
 import Badge from '@/Components/Badge';
 import Button from '@/Components/Button';
 import Card from '@/Components/Card';
@@ -10,7 +11,7 @@ import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import { formatCurrency } from '@/lib/currency';
-import type { BudgetSummary, Occasion, OccasionMember, Readiness, TaskProgress } from '@/types/models';
+import type { BudgetSummary, Occasion, OccasionMember, Participation, Readiness, Recommendation, TaskProgress } from '@/types/models';
 
 interface Option {
     value: string;
@@ -30,6 +31,8 @@ interface Props {
     types: Option[];
     visibilities: Option[];
     nextStatuses: Option[];
+    participation: Participation;
+    recommendations: Recommendation[];
 }
 
 function formatRole(role: string): string {
@@ -61,6 +64,11 @@ const TASK_STATUS_LABELS: Record<string, string> = {
     deferred: 'Deferred',
 };
 
+const SEVERITY_VARIANTS: Record<string, 'error' | 'warning'> = {
+    critical: 'error',
+    warning: 'warning',
+};
+
 export default function Show({
     occasion,
     member,
@@ -74,6 +82,8 @@ export default function Show({
     types,
     visibilities,
     nextStatuses,
+    participation,
+    recommendations,
 }: Props) {
     function archive() {
         if (window.confirm('Archive this Occasion? It will become read-only.')) {
@@ -89,7 +99,7 @@ export default function Show({
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="overview">
-            <div className="mb-6 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="mb-6 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Card title="Readiness">
                     {readiness.score === null ? (
                         <p className="mt-1 text-sm text-text-secondary">Not enough data yet.</p>
@@ -152,7 +162,45 @@ export default function Show({
                         </>
                     )}
                 </Card>
+
+                <Card title="Participation">
+                    <p className="mt-1 text-lg font-semibold text-text-primary">
+                        {participation.invitation_acceptance_rate === null ? '—' : `${participation.invitation_acceptance_rate}%`} accepted
+                    </p>
+                    <p className="text-xs text-text-secondary">{participation.active_member_count} active members</p>
+                    <div className="mt-3 flex items-center justify-between text-xs text-text-secondary">
+                        <span>RSVP Completion</span>
+                        <span className="font-medium text-text-primary">
+                            {participation.rsvp_completion_rate === null ? '—' : `${participation.rsvp_completion_rate}%`}
+                        </span>
+                    </div>
+                    {participation.task_ownership.length > 0 && (
+                        <ul className="mt-2 space-y-1">
+                            {participation.task_ownership.slice(0, 3).map((owner) => (
+                                <li
+                                    key={owner.member_name}
+                                    className="flex items-center justify-between text-xs text-text-secondary"
+                                >
+                                    <span>{owner.member_name}</span>
+                                    <span className="font-medium text-text-primary">{owner.task_count}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
             </div>
+
+            {recommendations.length > 0 && (
+                <div className="mb-6 max-w-lg space-y-2">
+                    <h2 className="text-sm font-medium text-text-primary">Recommendations</h2>
+                    {recommendations.map((recommendation) => (
+                        <Alert key={recommendation.message} variant={SEVERITY_VARIANTS[recommendation.severity] ?? 'warning'}>
+                            <span className="font-medium">{recommendation.message}</span>
+                            <span className="block text-xs opacity-80">{recommendation.reason}</span>
+                        </Alert>
+                    ))}
+                </div>
+            )}
 
             <dl className="grid max-w-lg grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
