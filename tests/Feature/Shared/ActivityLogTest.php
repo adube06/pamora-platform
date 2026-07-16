@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Communication\Domain\Models\Announcement;
+use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
@@ -13,6 +14,7 @@ use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Domain\Models\TimelineEvent;
 use App\Domains\Shared\Infrastructure\ActivityLog\ActivityLog;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 
 it('logs an entry when a user registers', function () {
     $this->post('/register', [
@@ -138,6 +140,33 @@ it('logs an entry when an announcement is published', function () {
 
     expect(ActivityLog::where('action', 'communication.announcement_published')
         ->where('subject_id', $announcement->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a reminder rule is scheduled and when it is triggered', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $timelineEvent = TimelineEvent::factory()->create([
+        'occasion_id' => $occasion->id,
+        'scheduled_at' => now()->addMinutes(30),
+    ]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/reminder-rules", [
+        'timeline_event_id' => $timelineEvent->id,
+        'offset_minutes' => 120,
+    ]);
+
+    $rule = ReminderRule::firstWhere('timeline_event_id', $timelineEvent->id);
+
+    expect(ActivityLog::where('action', 'communication.reminder_scheduled')
+        ->where('subject_id', $rule->id)
+        ->count())->toBe(1);
+
+    Artisan::call('reminders:dispatch');
+
+    expect(ActivityLog::where('action', 'communication.reminder_triggered')
+        ->where('subject_id', $rule->id)
         ->count())->toBe(1);
 });
 

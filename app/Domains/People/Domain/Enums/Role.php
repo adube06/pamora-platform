@@ -68,6 +68,7 @@ enum Role: string
                 Permission::PlanningManageMilestone->value,
                 Permission::PlanningManageTimeline->value,
                 Permission::CommunicationPublishAnnouncement->value,
+                Permission::CommunicationScheduleReminder->value,
             ],
 
             self::Treasurer => [
@@ -87,6 +88,7 @@ enum Role: string
                 Permission::PlanningManageChecklist->value,
                 Permission::PlanningManageMilestone->value,
                 Permission::PlanningManageTimeline->value,
+                Permission::CommunicationScheduleReminder->value,
             ],
 
             self::Coordinator => [

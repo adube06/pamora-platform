@@ -108,6 +108,20 @@ export interface Announcement {
     created_by: { id: number; name: string };
 }
 
+export interface ReminderRule {
+    id: number;
+    uuid: string;
+    offset_minutes: number;
+    triggered_at: string | null;
+    timeline_event: {
+        id: number;
+        uuid: string;
+        name: string;
+        scheduled_at: string;
+    };
+    created_at: string;
+}
+
 export interface Contribution {
     id: number;
     uuid: string;

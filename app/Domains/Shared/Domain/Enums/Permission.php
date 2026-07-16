@@ -42,6 +42,7 @@ enum Permission: string
 
     // Communication
     case CommunicationPublishAnnouncement = 'communication.publish_announcement';
+    case CommunicationScheduleReminder = 'communication.schedule_reminder';
 
     /**
      * The full set of permissions granted to a Host on Occasion creation.
@@ -73,6 +74,7 @@ enum Permission: string
             self::FinanceRecordContribution->value,
             self::FinanceRecordExpense->value,
             self::CommunicationPublishAnnouncement->value,
+            self::CommunicationScheduleReminder->value,
         ];
     }
 }

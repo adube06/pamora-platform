@@ -3,6 +3,8 @@
 namespace App\Domains\Shared\Infrastructure\ActivityLog;
 
 use App\Domains\Communication\Domain\Events\AnnouncementPublished;
+use App\Domains\Communication\Domain\Events\ReminderRuleScheduled;
+use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Finance\Domain\Events\BudgetCreated;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
@@ -185,6 +187,30 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleReminderRuleScheduled(ReminderRuleScheduled $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->reminderRule->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'ReminderRule',
+            'subject_id' => $event->reminderRule->id,
+            'action' => 'communication.reminder_scheduled',
+            'description' => "{$event->actor->name} scheduled a reminder for \"{$event->reminderRule->timelineEvent->name}\".",
+        ]);
+    }
+
+    public function handleReminderTriggered(ReminderTriggered $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->reminderRule->occasion_id,
+            'user_id' => null,
+            'subject_type' => 'ReminderRule',
+            'subject_id' => $event->reminderRule->id,
+            'action' => 'communication.reminder_triggered',
+            'description' => "Reminder triggered for \"{$event->reminderRule->timelineEvent->name}\".",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -238,6 +264,8 @@ class AuditLogSubscriber
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
         $events->listen(AnnouncementPublished::class, [self::class, 'handleAnnouncementPublished']);
+        $events->listen(ReminderRuleScheduled::class, [self::class, 'handleReminderRuleScheduled']);
+        $events->listen(ReminderTriggered::class, [self::class, 'handleReminderTriggered']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

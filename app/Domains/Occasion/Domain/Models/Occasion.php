@@ -3,6 +3,7 @@
 namespace App\Domains\Occasion\Domain\Models;
 
 use App\Domains\Communication\Domain\Models\Announcement;
+use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
@@ -92,6 +93,11 @@ class Occasion extends Model
     public function announcements(): HasMany
     {
         return $this->hasMany(Announcement::class);
+    }
+
+    public function reminderRules(): HasMany
+    {
+        return $this->hasMany(ReminderRule::class);
     }
 
     public function invitations(): HasMany

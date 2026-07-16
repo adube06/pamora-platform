@@ -6,14 +6,18 @@ import Card from '@/Components/Card';
 import EmptyState from '@/Components/EmptyState';
 import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
+import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Announcement, Occasion } from '@/types/models';
+import type { Announcement, Occasion, ReminderRule, TimelineEvent } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     announcements: Announcement[];
+    timelineEvents: TimelineEvent[];
+    reminderRules: ReminderRule[];
     canPublishAnnouncement: boolean;
+    canScheduleReminder: boolean;
 }
 
 function formatPublishedAt(value: string): string {
@@ -23,12 +27,89 @@ function formatPublishedAt(value: string): string {
     });
 }
 
-export default function Communication({ occasion, announcements, canPublishAnnouncement }: Props) {
+const OFFSET_LABELS: Record<number, string> = {
+    120: '2 hours before',
+    1440: '24 hours before',
+    10080: '7 days before',
+};
+
+export default function Communication({
+    occasion,
+    announcements,
+    timelineEvents,
+    reminderRules,
+    canPublishAnnouncement,
+    canScheduleReminder,
+}: Props) {
     const [showForm, setShowForm] = useState(false);
+    const [showReminderForm, setShowReminderForm] = useState(false);
 
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="communication">
-            <div className="flex items-center justify-between">
+            {canScheduleReminder && timelineEvents.length > 0 && (
+                <>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-medium text-text-primary">Reminders</h2>
+                        <Button variant="ghost" size="sm" onClick={() => setShowReminderForm((v) => !v)}>
+                            {showReminderForm ? 'Cancel' : 'New Reminder'}
+                        </Button>
+                    </div>
+
+                    {showReminderForm && (
+                        <Card className="mt-4 max-w-md">
+                            <Form
+                                action={route('occasions.reminder-rules.store', occasion.slug)}
+                                method="post"
+                                resetOnSuccess
+                                onSuccess={() => setShowReminderForm(false)}
+                                className="space-y-3"
+                            >
+                                {({ errors, processing }) => (
+                                    <>
+                                        <FormField label="Timeline Event" htmlFor="timeline_event_id" required error={errors.timeline_event_id}>
+                                            <Select id="timeline_event_id" name="timeline_event_id" required invalid={!!errors.timeline_event_id}>
+                                                {timelineEvents.map((event) => (
+                                                    <option key={event.id} value={event.id}>
+                                                        {event.name}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormField>
+
+                                        <FormField label="Remind" htmlFor="offset_minutes" required error={errors.offset_minutes}>
+                                            <Select id="offset_minutes" name="offset_minutes" defaultValue="120" required>
+                                                <option value="120">2 hours before</option>
+                                                <option value="1440">24 hours before</option>
+                                                <option value="10080">7 days before</option>
+                                            </Select>
+                                        </FormField>
+
+                                        <Button type="submit" loading={processing}>
+                                            {processing ? 'Scheduling…' : 'Schedule Reminder'}
+                                        </Button>
+                                    </>
+                                )}
+                            </Form>
+                        </Card>
+                    )}
+
+                    {reminderRules.length > 0 && (
+                        <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface">
+                            {reminderRules.map((rule) => (
+                                <li key={rule.id} className="flex items-center justify-between px-4 py-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-text-primary">{rule.timeline_event.name}</p>
+                                        <p className="text-xs text-text-secondary">{OFFSET_LABELS[rule.offset_minutes] ?? `${rule.offset_minutes} min before`}</p>
+                                    </div>
+                                    <Badge variant={rule.triggered_at ? 'neutral' : 'info'}>{rule.triggered_at ? 'Sent' : 'Pending'}</Badge>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
                 <h2 className="text-sm font-medium text-text-primary">Announcements</h2>
                 {canPublishAnnouncement && (
                     <Button size="sm" onClick={() => setShowForm((v) => !v)}>

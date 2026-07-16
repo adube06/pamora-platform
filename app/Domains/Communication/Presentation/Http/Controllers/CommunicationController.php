@@ -19,7 +19,10 @@ class CommunicationController
         return Inertia::render('Occasions/Communication', [
             'occasion' => $occasion,
             'announcements' => $occasion->announcements()->with('createdBy:id,name')->latest('published_at')->get(),
+            'timelineEvents' => $occasion->timelineEvents()->orderBy('scheduled_at')->get(),
+            'reminderRules' => $occasion->reminderRules()->with('timelineEvent:id,uuid,name,scheduled_at')->latest()->get(),
             'canPublishAnnouncement' => $request->user()->can('publish-announcement', $occasion),
+            'canScheduleReminder' => $request->user()->can('schedule-reminder', $occasion),
         ]);
     }
 

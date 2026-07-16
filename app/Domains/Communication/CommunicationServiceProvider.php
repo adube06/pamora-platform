@@ -2,7 +2,9 @@
 
 namespace App\Domains\Communication;
 
+use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
+use App\Domains\Communication\Infrastructure\Console\Commands\DispatchRemindersCommand;
 use App\Domains\Communication\Infrastructure\Listeners\NotificationSubscriber;
 use App\Domains\Communication\Presentation\Policies\NotificationPolicy;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
@@ -32,6 +34,14 @@ class CommunicationServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::CommunicationPublishAnnouncement) ?? false;
         });
 
+        Gate::define('schedule-reminder', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::CommunicationScheduleReminder) ?? false;
+        });
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([DispatchRemindersCommand::class]);
+        }
+
         // FR-002 / ADR-006 — Notifications are generated from Domain
         // Events, never called directly by the originating domain. A
         // distinct concern from AuditLogSubscriber (recipient-facing,
@@ -40,6 +50,7 @@ class CommunicationServiceProvider extends ServiceProvider
         Event::listen(TaskCompleted::class, [NotificationSubscriber::class, 'handleTaskCompleted']);
         Event::listen(ContributionReceived::class, [NotificationSubscriber::class, 'handleContributionReceived']);
         Event::listen(MemberJoined::class, [NotificationSubscriber::class, 'handleMemberJoined']);
+        Event::listen(ReminderTriggered::class, [NotificationSubscriber::class, 'handleReminderTriggered']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

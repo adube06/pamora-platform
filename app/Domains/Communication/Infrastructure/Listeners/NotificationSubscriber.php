@@ -2,6 +2,7 @@
 
 namespace App\Domains\Communication\Infrastructure\Listeners;
 
+use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\People\Domain\Events\MemberJoined;
@@ -92,6 +93,21 @@ class NotificationSubscriber
             'type' => 'member_joined',
             'title' => 'New member joined',
             'body' => "{$event->member->user->name} joined the Occasion as {$event->member->role->label()}.",
+        ]);
+    }
+
+    public function handleReminderTriggered(ReminderTriggered $event): void
+    {
+        $timelineEvent = $event->reminderRule->timelineEvent;
+
+        Notification::create([
+            'user_id' => $event->reminderRule->created_by,
+            'occasion_id' => $event->reminderRule->occasion_id,
+            'subject_type' => 'TimelineEvent',
+            'subject_id' => $timelineEvent->id,
+            'type' => 'reminder_triggered',
+            'title' => 'Reminder',
+            'body' => "\"{$timelineEvent->name}\" is coming up.",
         ]);
     }
 }
