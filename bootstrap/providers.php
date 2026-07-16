@@ -9,15 +9,17 @@ use App\Domains\People\PeopleServiceProvider;
 use App\Domains\Planning\PlanningServiceProvider;
 use App\Domains\Shared\SharedServiceProvider;
 use App\Providers\AppServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
 
 return [
-    AppServiceProvider::class,
-    SharedServiceProvider::class,
+    CommunicationServiceProvider::class,
+    FinanceServiceProvider::class,
     IdentityServiceProvider::class,
+    MediaServiceProvider::class,
     OccasionServiceProvider::class,
     PeopleServiceProvider::class,
     PlanningServiceProvider::class,
-    FinanceServiceProvider::class,
-    CommunicationServiceProvider::class,
-    MediaServiceProvider::class,
+    SharedServiceProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
 ];
