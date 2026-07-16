@@ -189,6 +189,22 @@ it('logs an entry when a task is completed and when it is reopened', function ()
     expect(ActivityLog::where('action', 'planning.task_reopened')->where('subject_id', $task->id)->count())->toBe(1);
 });
 
+it('logs an entry when a task dependency is added and when it is removed', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id]);
+    $dependsOnTask = Task::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->post("/tasks/{$task->uuid}/dependencies", ['depends_on_task_id' => $dependsOnTask->id]);
+
+    expect(ActivityLog::where('action', 'planning.task_dependency_added')->where('subject_id', $task->id)->count())->toBe(1);
+
+    $this->actingAs($host)->delete("/tasks/{$task->uuid}/dependencies/{$dependsOnTask->uuid}");
+
+    expect(ActivityLog::where('action', 'planning.task_dependency_removed')->where('subject_id', $task->id)->count())->toBe(1);
+});
+
 it('logs an entry when a checklist is created', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);

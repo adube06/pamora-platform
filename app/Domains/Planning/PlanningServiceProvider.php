@@ -39,6 +39,14 @@ class PlanningServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::PlanningReopenTask) ?? false;
         });
 
+        // Occasion-scoped, used only as a UI hint on the Planning index page
+        // (whether to render the Task dependency-management controls) — the
+        // real enforcement on the mutating endpoints is TaskPolicy::update(),
+        // same split as complete-task/reopen-task.
+        Gate::define('edit-task', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::PlanningEditTask) ?? false;
+        });
+
         // Checklist creation isn't tied to an existing Checklist instance,
         // same reasoning as create-task.
         Gate::define('manage-checklist', function (User $user, Occasion $occasion) {

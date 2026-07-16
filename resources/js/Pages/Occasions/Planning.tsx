@@ -1,4 +1,4 @@
-import { Form, useForm } from '@inertiajs/react';
+import { Form, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Badge from '@/Components/Badge';
 import Button from '@/Components/Button';
@@ -23,6 +23,7 @@ interface Props {
     canManageChecklist: boolean;
     canManageMilestone: boolean;
     canManageTimeline: boolean;
+    canEditTask: boolean;
 }
 
 function formatScheduledAt(value: string): string {
@@ -101,16 +102,103 @@ function TaskStatusAction({ task, canCompleteTask, canReopenTask }: { task: Task
     );
 }
 
+function TaskDependencies({ task, allTasks, canEditTask }: { task: Task; allTasks: Task[]; canEditTask: boolean }) {
+    const { data, setData, post, processing, reset } = useForm({ depends_on_task_id: '' });
+
+    const incompleteDependencies = task.dependencies.filter((dependency) => dependency.status !== 'completed');
+
+    const availableTasks = allTasks.filter(
+        (candidate) => candidate.id !== task.id && !task.dependencies.some((dependency) => dependency.id === candidate.id),
+    );
+
+    function handleAdd(e: React.FormEvent) {
+        e.preventDefault();
+
+        if (!data.depends_on_task_id) {
+            return;
+        }
+
+        post(route('tasks.dependencies.store', task.uuid), {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+        });
+    }
+
+    function handleRemove(dependencyUuid: string) {
+        router.delete(route('tasks.dependencies.destroy', [task.uuid, dependencyUuid]), { preserveScroll: true });
+    }
+
+    if (!canEditTask && task.dependencies.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mt-2 space-y-1 text-xs">
+            {task.is_blocked && (
+                <p className="text-warning">
+                    Blocked by: {incompleteDependencies.map((dependency) => dependency.title).join(', ')}
+                </p>
+            )}
+
+            {task.dependencies.length > 0 && (
+                <ul className="flex flex-wrap gap-1">
+                    {task.dependencies.map((dependency) => (
+                        <li key={dependency.id}>
+                            <Badge variant={dependency.status === 'completed' ? 'success' : 'neutral'}>
+                                {dependency.title}
+                                {canEditTask && (
+                                    <button
+                                        type="button"
+                                        className="ml-1 text-text-secondary hover:text-text-primary"
+                                        onClick={() => handleRemove(dependency.uuid)}
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </Badge>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {canEditTask && availableTasks.length > 0 && (
+                <form onSubmit={handleAdd} className="flex items-center gap-1">
+                    <Select
+                        value={data.depends_on_task_id}
+                        onChange={(e) => setData('depends_on_task_id', e.target.value)}
+                        disabled={processing}
+                        className="w-auto px-2 py-1 text-xs"
+                    >
+                        <option value="">Depends on…</option>
+                        {availableTasks.map((candidate) => (
+                            <option key={candidate.id} value={candidate.id}>
+                                {candidate.title}
+                            </option>
+                        ))}
+                    </Select>
+                    <Button type="submit" variant="ghost" size="sm" loading={processing}>
+                        Add
+                    </Button>
+                </form>
+            )}
+        </div>
+    );
+}
+
 function TaskList({
     tasks,
+    allTasks,
     members,
     canCompleteTask,
     canReopenTask,
+    canEditTask,
 }: {
     tasks: Task[];
+    allTasks: Task[];
     members: OccasionMember[];
     canCompleteTask: boolean;
     canReopenTask: boolean;
+    canEditTask: boolean;
 }) {
     return (
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
@@ -122,7 +210,9 @@ function TaskList({
                             <span>{STATUS_LABELS[task.status]}</span>
                             <Badge variant={PRIORITY_VARIANTS[task.priority] ?? 'neutral'}>{task.priority}</Badge>
                             {task.due_date && <span>Due {task.due_date}</span>}
+                            {task.is_blocked && <Badge variant="warning">Blocked</Badge>}
                         </div>
+                        <TaskDependencies task={task} allTasks={allTasks} canEditTask={canEditTask} />
                     </div>
                     <div className="flex items-center gap-2">
                         <AssignSelect task={task} members={members} />
@@ -147,6 +237,7 @@ export default function Planning({
     canManageChecklist,
     canManageMilestone,
     canManageTimeline,
+    canEditTask,
 }: Props) {
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [showChecklistForm, setShowChecklistForm] = useState(false);
@@ -353,9 +444,11 @@ export default function Planning({
                                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-secondary uppercase">{checklist.name}</h3>
                                 <TaskList
                                     tasks={checklistTasks}
+                                    allTasks={tasks}
                                     members={members}
                                     canCompleteTask={canCompleteTask}
                                     canReopenTask={canReopenTask}
+                                    canEditTask={canEditTask}
                                 />
                             </div>
                         );
@@ -368,9 +461,11 @@ export default function Planning({
                             )}
                             <TaskList
                                 tasks={ungroupedTasks}
+                                allTasks={tasks}
                                 members={members}
                                 canCompleteTask={canCompleteTask}
                                 canReopenTask={canReopenTask}
+                                canEditTask={canEditTask}
                             />
                         </div>
                     )}

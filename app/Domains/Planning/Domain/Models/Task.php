@@ -69,6 +69,33 @@ class Task extends Model
         return $this->belongsToMany(Milestone::class);
     }
 
+    /**
+     * Tasks this Task depends on.
+     */
+    public function dependencies(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'task_dependencies', 'task_id', 'depends_on_task_id');
+    }
+
+    /**
+     * Tasks that depend on this one — the inverse of dependencies(), used
+     * for cycle detection when adding a new dependency.
+     */
+    public function dependents(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'task_dependencies', 'depends_on_task_id', 'task_id');
+    }
+
+    /**
+     * Computed fresh from dependencies' live status, never stored — same
+     * reasoning as Milestone::isAchieved(). Assumes dependencies() is
+     * already loaded by the caller.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->dependencies->contains(fn (self $dependency) => $dependency->status !== TaskStatus::Completed);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

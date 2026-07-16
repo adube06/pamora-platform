@@ -12,6 +12,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/assign', [TaskController::class, 'assign']);
     Route::post('/tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::post('/tasks/{task}/reopen', [TaskController::class, 'reopen']);
+    Route::post('/tasks/{task}/dependencies', [TaskController::class, 'addDependency']);
+    Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskController::class, 'removeDependency']);
     Route::get('/occasions/{occasion}/checklists', [ChecklistController::class, 'index']);
     Route::post('/occasions/{occasion}/checklists', [ChecklistController::class, 'store']);
     Route::get('/occasions/{occasion}/milestones', [MilestoneController::class, 'index']);

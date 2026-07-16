@@ -4,6 +4,7 @@ namespace App\Domains\Planning\Presentation\Http\Controllers;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Planning\Application\Services\CreateTaskService;
+use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Presentation\Http\Requests\StoreTaskRequest;
 use App\Domains\Planning\Presentation\Http\Resources\MilestoneResource;
 use Illuminate\Http\RedirectResponse;
@@ -17,9 +18,20 @@ class PlanningController
     {
         $request->user()->can('view', $occasion) || abort(403);
 
+        $tasks = $occasion->tasks()->with(['assignee.user:id,name', 'dependencies:id,uuid,title,status'])->latest()->get();
+
+        // Not `->each(fn ($task) => $task->is_blocked = ...)`: an arrow
+        // function's implicit return is the assignment's value, and
+        // Collection::each() stops iterating as soon as a callback returns
+        // `false` — the first non-blocked Task would silently truncate the
+        // rest of the list. A statement-body closure returns null instead.
+        $tasks->each(function (Task $task) {
+            $task->is_blocked = $task->isBlocked();
+        });
+
         return Inertia::render('Occasions/Planning', [
             'occasion' => $occasion,
-            'tasks' => $occasion->tasks()->with('assignee.user:id,name')->latest()->get(),
+            'tasks' => $tasks,
             'checklists' => $occasion->checklists()->latest()->get(),
             // MilestoneResource (not the raw model, unlike every other prop
             // here) since is_achieved is a computed value the Resource
@@ -39,6 +51,7 @@ class PlanningController
             'canManageChecklist' => $request->user()->can('manage-checklist', $occasion),
             'canManageMilestone' => $request->user()->can('manage-milestone', $occasion),
             'canManageTimeline' => $request->user()->can('manage-timeline', $occasion),
+            'canEditTask' => $request->user()->can('edit-task', $occasion),
         ]);
     }
 

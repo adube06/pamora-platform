@@ -25,6 +25,12 @@ class TaskResource extends JsonResource
             'assignee_id' => $this->assignee?->uuid,
             'due_date' => $this->due_date?->toDateString(),
             'completed_at' => $this->completed_at?->toIso8601String(),
+            'dependencies' => $this->whenLoaded('dependencies', fn () => $this->dependencies->map(fn ($dependency) => [
+                'id' => $dependency->uuid,
+                'title' => $dependency->title,
+                'status' => $dependency->status->value,
+            ])),
+            'is_blocked' => $this->whenLoaded('dependencies', fn () => $this->isBlocked()),
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

@@ -13,6 +13,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/tasks/{task}/assign', [TaskController::class, 'assign'])->name('tasks.assign');
     Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
     Route::post('/tasks/{task}/reopen', [TaskController::class, 'reopen'])->name('tasks.reopen');
+    Route::post('/tasks/{task}/dependencies', [TaskController::class, 'addDependency'])->name('tasks.dependencies.store');
+    Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskController::class, 'removeDependency'])->name('tasks.dependencies.destroy');
     Route::post('/occasions/{occasion}/checklists', [ChecklistController::class, 'store'])->name('occasions.checklists.store');
     Route::post('/occasions/{occasion}/milestones', [MilestoneController::class, 'store'])->name('occasions.milestones.store');
     Route::post('/occasions/{occasion}/timeline-events', [TimelineEventController::class, 'store'])->name('occasions.timeline-events.store');

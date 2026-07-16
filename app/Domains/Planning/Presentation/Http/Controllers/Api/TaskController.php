@@ -4,13 +4,17 @@ namespace App\Domains\Planning\Presentation\Http\Controllers\Api;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\OccasionMember;
+use App\Domains\Planning\Application\Services\AddTaskDependencyService;
 use App\Domains\Planning\Application\Services\AssignTaskService;
 use App\Domains\Planning\Application\Services\CompleteTaskService;
 use App\Domains\Planning\Application\Services\CreateTaskService;
+use App\Domains\Planning\Application\Services\RemoveTaskDependencyService;
 use App\Domains\Planning\Application\Services\ReopenTaskService;
 use App\Domains\Planning\Domain\Models\Task;
+use App\Domains\Planning\Presentation\Http\Requests\AddTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\AssignTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\CompleteTaskRequest;
+use App\Domains\Planning\Presentation\Http\Requests\RemoveTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\ReopenTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\StoreTaskRequest;
 use App\Domains\Planning\Presentation\Http\Resources\TaskResource;
@@ -68,6 +72,28 @@ class TaskController
         return response()->json([
             'success' => true,
             'data' => new TaskResource($task),
+        ]);
+    }
+
+    public function addDependency(AddTaskDependencyRequest $request, Task $task, AddTaskDependencyService $service): JsonResponse
+    {
+        $dependsOnTask = Task::findOrFail($request->validated('depends_on_task_id'));
+
+        $service->handle($task, $dependsOnTask, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new TaskResource($task->fresh(['dependencies'])),
+        ], 201);
+    }
+
+    public function removeDependency(RemoveTaskDependencyRequest $request, Task $task, Task $dependency, RemoveTaskDependencyService $service): JsonResponse
+    {
+        $service->handle($task, $dependency, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new TaskResource($task->fresh(['dependencies'])),
         ]);
     }
 }

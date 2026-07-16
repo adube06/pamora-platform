@@ -47,6 +47,13 @@ export interface RoleOption {
     label: string;
 }
 
+export interface TaskDependency {
+    id: number;
+    uuid: string;
+    title: string;
+    status: string;
+}
+
 export interface Task {
     id: number;
     uuid: string;
@@ -59,6 +66,8 @@ export interface Task {
     checklist_id: number | null;
     assignee_id: number | null;
     assignee?: OccasionMember | null;
+    dependencies: TaskDependency[];
+    is_blocked: boolean;
 }
 
 export interface Checklist {

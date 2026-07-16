@@ -37,6 +37,8 @@ use App\Domains\Planning\Domain\Events\MilestoneCompleted;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
+use App\Domains\Planning\Domain\Events\TaskDependencyAdded;
+use App\Domains\Planning\Domain\Events\TaskDependencyRemoved;
 use App\Domains\Planning\Domain\Events\TaskReopened;
 use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
 use App\Domains\Planning\Domain\Models\Task;
@@ -304,6 +306,30 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleTaskDependencyAdded(TaskDependencyAdded $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->task->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Task',
+            'subject_id' => $event->task->id,
+            'action' => 'planning.task_dependency_added',
+            'description' => "{$event->actor->name} made \"{$event->task->title}\" depend on \"{$event->dependsOnTask->title}\".",
+        ]);
+    }
+
+    public function handleTaskDependencyRemoved(TaskDependencyRemoved $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->task->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Task',
+            'subject_id' => $event->task->id,
+            'action' => 'planning.task_dependency_removed',
+            'description' => "{$event->actor->name} removed \"{$event->task->title}\"'s dependency on \"{$event->dependsOnTask->title}\".",
+        ]);
+    }
+
     public function handleChecklistCreated(ChecklistCreated $event): void
     {
         ActivityLog::create([
@@ -530,6 +556,8 @@ class AuditLogSubscriber
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
         $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
+        $events->listen(TaskDependencyAdded::class, [self::class, 'handleTaskDependencyAdded']);
+        $events->listen(TaskDependencyRemoved::class, [self::class, 'handleTaskDependencyRemoved']);
         $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
