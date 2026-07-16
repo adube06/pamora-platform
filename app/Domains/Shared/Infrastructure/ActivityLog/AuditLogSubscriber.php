@@ -14,6 +14,7 @@ use App\Domains\Finance\Domain\Events\ExpenseRecorded;
 use App\Domains\Finance\Domain\Events\PledgeRecorded;
 use App\Domains\Finance\Domain\Events\PledgeStatusUpdated;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
 use App\Domains\Media\Domain\Events\AlbumCreated;
@@ -72,6 +73,18 @@ class AuditLogSubscriber
             'subject_id' => $event->user->id,
             'action' => 'identity.user_signed_in',
             'description' => "{$event->user->name} signed in.",
+        ]);
+    }
+
+    public function handleSessionRevoked(SessionRevoked $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'User',
+            'subject_id' => $event->user->id,
+            'action' => 'identity.session_revoked',
+            'description' => "{$event->actor->name} revoked a session.",
         ]);
     }
 
@@ -499,6 +512,7 @@ class AuditLogSubscriber
     {
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
+        $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);
         $events->listen(Verified::class, [self::class, 'handleVerified']);
         $events->listen(PasswordReset::class, [self::class, 'handlePasswordReset']);
         $events->listen(OccasionCreated::class, [self::class, 'handleOccasionCreated']);

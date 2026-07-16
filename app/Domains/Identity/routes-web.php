@@ -5,6 +5,7 @@ use App\Domains\Identity\Presentation\Http\Controllers\LoginController;
 use App\Domains\Identity\Presentation\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Presentation\Http\Controllers\ProfileController;
 use App\Domains\Identity\Presentation\Http\Controllers\RegisterController;
+use App\Domains\Identity\Presentation\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -32,4 +33,7 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    Route::delete('/sessions/{sessionId}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+    Route::post('/sessions/logout-others', [SessionController::class, 'destroyOthers'])->name('sessions.destroy-others');
 });

@@ -16,13 +16,23 @@ interface NotificationType {
     label: string;
 }
 
+interface Session {
+    id: string;
+    ip_address: string | null;
+    device: string;
+    last_active_at: string;
+    expires_at: string;
+    is_current: boolean;
+}
+
 interface Props {
     user: ProfileUser;
     notificationTypes: NotificationType[];
     notificationPreferences: Record<string, boolean>;
+    sessions: Session[];
 }
 
-function NotificationPreferencesCard({ notificationTypes, notificationPreferences }: Omit<Props, 'user'>) {
+function NotificationPreferencesCard({ notificationTypes, notificationPreferences }: Pick<Props, 'notificationTypes' | 'notificationPreferences'>) {
     const initialData = Object.fromEntries(notificationTypes.map((type) => [type.value, notificationPreferences[type.value] ?? true]));
     const { data, setData, patch, processing, wasSuccessful } = useForm(initialData);
 
@@ -63,7 +73,67 @@ function NotificationPreferencesCard({ notificationTypes, notificationPreference
     );
 }
 
-export default function Profile({ user, notificationTypes, notificationPreferences }: Props) {
+function RevokeSessionButton({ session }: { session: Session }) {
+    const { delete: destroy, processing } = useForm({});
+
+    function revoke() {
+        if (window.confirm(`Revoke this session (${session.device})?`)) {
+            destroy(route('sessions.destroy', session.id), { preserveScroll: true });
+        }
+    }
+
+    return (
+        <Button variant="ghost" size="sm" loading={processing} onClick={revoke}>
+            Revoke
+        </Button>
+    );
+}
+
+function ActiveSessionsCard({ sessions }: { sessions: Session[] }) {
+    const { post, processing, wasSuccessful } = useForm({});
+
+    function signOutOthers() {
+        if (window.confirm('Sign out of all other devices?')) {
+            post(route('sessions.destroy-others'), { preserveScroll: true });
+        }
+    }
+
+    return (
+        <Card title="Active Sessions" className="mt-6 max-w-lg">
+            <ul className="divide-y divide-border">
+                {sessions.map((session) => (
+                    <li key={session.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                        <div>
+                            <p className="flex items-center gap-2 text-sm font-medium text-text-primary">
+                                {session.device}
+                                {session.is_current && <Badge variant="success">Current</Badge>}
+                            </p>
+                            <p className="text-xs text-text-secondary">
+                                {session.ip_address ?? 'Unknown IP'} · last active {new Date(session.last_active_at).toLocaleString()}
+                            </p>
+                        </div>
+                        {!session.is_current && <RevokeSessionButton session={session} />}
+                    </li>
+                ))}
+            </ul>
+
+            {sessions.length > 1 && (
+                <div className="mt-4 border-t border-border pt-4">
+                    <Button variant="danger" size="sm" loading={processing} onClick={signOutOthers}>
+                        Sign out other devices
+                    </Button>
+                    {wasSuccessful && (
+                        <Alert variant="success" className="mt-2">
+                            Other sessions signed out.
+                        </Alert>
+                    )}
+                </div>
+            )}
+        </Card>
+    );
+}
+
+export default function Profile({ user, notificationTypes, notificationPreferences, sessions }: Props) {
     const { post, processing, wasSuccessful } = useForm({});
 
     function resend() {
@@ -108,6 +178,8 @@ export default function Profile({ user, notificationTypes, notificationPreferenc
             </Card>
 
             <NotificationPreferencesCard notificationTypes={notificationTypes} notificationPreferences={notificationPreferences} />
+
+            <ActiveSessionsCard sessions={sessions} />
         </AppLayout>
     );
 }
