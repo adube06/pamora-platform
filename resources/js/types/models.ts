@@ -134,7 +134,15 @@ export interface MediaAsset {
     visibility: string;
     download_url: string;
     uploaded_by: string;
+    album: { id: string; name: string } | null;
     created_at: string;
+}
+
+export interface Album {
+    id: number;
+    uuid: string;
+    name: string;
+    media_assets_count: number;
 }
 
 export interface Contribution {

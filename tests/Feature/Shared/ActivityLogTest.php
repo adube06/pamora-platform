@@ -6,6 +6,7 @@ use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\BudgetCategory;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Models\Invitation;
@@ -207,6 +208,28 @@ it('logs an entry when a media asset is uploaded', function () {
     $mediaAsset = MediaAsset::firstWhere('file_name', 'venue.jpg');
 
     expect(ActivityLog::where('action', 'media.uploaded')
+        ->where('subject_id', $mediaAsset->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when an album is created and when a media asset is moved', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/albums", ['name' => 'Ceremony']);
+
+    $album = Album::firstWhere('name', 'Ceremony');
+
+    expect(ActivityLog::where('action', 'media.album_created')
+        ->where('subject_id', $album->id)
+        ->count())->toBe(1);
+
+    $mediaAsset = MediaAsset::factory()->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->patch("/media/{$mediaAsset->uuid}/move", ['album_id' => $album->id]);
+
+    expect(ActivityLog::where('action', 'media.updated')
         ->where('subject_id', $mediaAsset->id)
         ->count())->toBe(1);
 });

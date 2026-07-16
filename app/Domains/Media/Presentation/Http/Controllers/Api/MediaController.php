@@ -18,7 +18,7 @@ class MediaController
         return response()->json([
             'success' => true,
             'data' => MediaAssetResource::collection(
-                $occasion->media()->with('uploadedBy:id,name')->latest()->get()
+                $occasion->media()->with(['uploadedBy:id,name', 'attachable'])->latest()->get()
             ),
         ]);
     }

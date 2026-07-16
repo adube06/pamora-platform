@@ -19,8 +19,16 @@ class MediaServiceProvider extends ServiceProvider
 
         // Uploading is checked against the Occasion, not an existing
         // MediaAsset — same pattern as create-task/manage-checklist.
+        // Album creation reuses this same ability (Design Decision 2).
         Gate::define('upload-media', function (User $user, Occasion $occasion) {
             return $occasion->memberFor($user)?->hasPermission(Permission::MediaUpload) ?? false;
+        });
+
+        // Instance-bound (targets a specific MediaAsset), unlike
+        // upload-media's Occasion-scoped shape — mirrors
+        // MediaAssetPolicy::download()'s own instance-bound pattern.
+        Gate::define('edit-media-metadata', function (User $user, MediaAsset $mediaAsset) {
+            return $mediaAsset->occasion->memberFor($user)?->hasPermission(Permission::MediaEditMetadata) ?? false;
         });
 
         Route::middleware('web')

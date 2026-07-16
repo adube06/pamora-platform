@@ -46,6 +46,7 @@ enum Permission: string
 
     // Media
     case MediaUpload = 'media.upload';
+    case MediaEditMetadata = 'media.edit_metadata';
 
     /**
      * The full set of permissions granted to a Host on Occasion creation.
@@ -79,6 +80,7 @@ enum Permission: string
             self::CommunicationPublishAnnouncement->value,
             self::CommunicationScheduleReminder->value,
             self::MediaUpload->value,
+            self::MediaEditMetadata->value,
         ];
     }
 }

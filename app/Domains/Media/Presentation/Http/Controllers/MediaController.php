@@ -6,6 +6,7 @@ use App\Domains\Media\Application\Services\UploadMediaService;
 use App\Domains\Media\Presentation\Http\Requests\StoreMediaAssetRequest;
 use App\Domains\Media\Presentation\Http\Resources\MediaAssetResource;
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\Shared\Domain\Enums\Permission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,9 +24,11 @@ class MediaController
             // MediaAssetResource::collection() — Inertia's prop
             // resolution calls toResponse() on ResourceCollection
             // instances, which would wrap this in {"data": [...]}.
-            'mediaAssets' => $occasion->media()->with('uploadedBy:id,name')->latest()->get()
+            'mediaAssets' => $occasion->media()->with(['uploadedBy:id,name', 'attachable'])->latest()->get()
                 ->map(fn ($mediaAsset) => (new MediaAssetResource($mediaAsset))->resolve()),
+            'albums' => $occasion->albums()->withCount('mediaAssets')->latest()->get(),
             'canUploadMedia' => $request->user()->can('upload-media', $occasion),
+            'canEditMediaMetadata' => $occasion->memberFor($request->user())?->hasPermission(Permission::MediaEditMetadata) ?? false,
         ]);
     }
 

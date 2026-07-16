@@ -10,7 +10,10 @@ use App\Domains\Finance\Domain\Events\ContributionReceived;
 use App\Domains\Finance\Domain\Events\ExpenseRecorded;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Media\Domain\Events\AlbumCreated;
+use App\Domains\Media\Domain\Events\MediaUpdated;
 use App\Domains\Media\Domain\Events\MediaUploaded;
+use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
@@ -250,6 +253,34 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleAlbumCreated(AlbumCreated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->album->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Album',
+            'subject_id' => $event->album->id,
+            'action' => 'media.album_created',
+            'description' => "{$event->actor->name} created album \"{$event->album->name}\".",
+        ]);
+    }
+
+    public function handleMediaUpdated(MediaUpdated $event): void
+    {
+        $destination = $event->mediaAsset->attachable instanceof Album
+            ? "album \"{$event->mediaAsset->attachable->name}\""
+            : 'the Occasion gallery';
+
+        ActivityLog::create([
+            'occasion_id' => $event->mediaAsset->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'MediaAsset',
+            'subject_id' => $event->mediaAsset->id,
+            'action' => 'media.updated',
+            'description' => "{$event->actor->name} moved \"{$event->mediaAsset->file_name}\" to {$destination}.",
+        ]);
+    }
+
     public function handleContributionReceived(ContributionReceived $event): void
     {
         ActivityLog::create([
@@ -308,6 +339,8 @@ class AuditLogSubscriber
         $events->listen(ReminderRuleScheduled::class, [self::class, 'handleReminderRuleScheduled']);
         $events->listen(ReminderTriggered::class, [self::class, 'handleReminderTriggered']);
         $events->listen(MediaUploaded::class, [self::class, 'handleMediaUploaded']);
+        $events->listen(AlbumCreated::class, [self::class, 'handleAlbumCreated']);
+        $events->listen(MediaUpdated::class, [self::class, 'handleMediaUpdated']);
         $events->listen(ContributionReceived::class, [self::class, 'handleContributionReceived']);
         $events->listen(BudgetCreated::class, [self::class, 'handleBudgetCreated']);
         $events->listen(ExpenseRecorded::class, [self::class, 'handleExpenseRecorded']);

@@ -7,6 +7,7 @@ use App\Domains\Communication\Domain\Models\ReminderRule;
 use App\Domains\Finance\Domain\Models\Budget;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
+use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
 use App\Domains\Occasion\Domain\Enums\OccasionType;
@@ -104,6 +105,11 @@ class Occasion extends Model
     public function media(): HasMany
     {
         return $this->hasMany(MediaAsset::class);
+    }
+
+    public function albums(): HasMany
+    {
+        return $this->hasMany(Album::class);
     }
 
     public function invitations(): HasMany

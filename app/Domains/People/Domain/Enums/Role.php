@@ -72,6 +72,7 @@ enum Role: string
                 Permission::CommunicationPublishAnnouncement->value,
                 Permission::CommunicationScheduleReminder->value,
                 Permission::MediaUpload->value,
+                Permission::MediaEditMetadata->value,
             ],
 
             self::Treasurer => [
@@ -84,6 +85,7 @@ enum Role: string
                 Permission::FinanceRecordContribution->value,
                 Permission::FinanceRecordExpense->value,
                 Permission::MediaUpload->value,
+                Permission::MediaEditMetadata->value,
             ],
 
             self::Secretary => [
@@ -94,6 +96,7 @@ enum Role: string
                 Permission::PlanningManageTimeline->value,
                 Permission::CommunicationScheduleReminder->value,
                 Permission::MediaUpload->value,
+                Permission::MediaEditMetadata->value,
             ],
 
             self::Coordinator => [
@@ -102,12 +105,14 @@ enum Role: string
                 Permission::PlanningCompleteTask->value,
                 Permission::PlanningReopenTask->value,
                 Permission::MediaUpload->value,
+                Permission::MediaEditMetadata->value,
             ],
 
             self::Member => [
                 Permission::PlanningCompleteTask->value,
                 Permission::PlanningReopenTask->value,
                 Permission::MediaUpload->value,
+                Permission::MediaEditMetadata->value,
             ],
 
             // View-only by design — no permissions.
