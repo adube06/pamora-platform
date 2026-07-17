@@ -76,6 +76,19 @@ export interface AvailabilityBlock {
     reason: string | null;
 }
 
+export interface ReputationSignal {
+    key: string;
+    label: string;
+    value: number;
+}
+
+export interface VendorReputation {
+    score: number | null;
+    signals: ReputationSignal[];
+    review_count: number;
+    average_response_hours: number | null;
+}
+
 export interface Vendor {
     id: number;
     uuid: string;

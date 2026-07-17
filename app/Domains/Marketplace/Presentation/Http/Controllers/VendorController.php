@@ -2,9 +2,11 @@
 
 namespace App\Domains\Marketplace\Presentation\Http\Controllers;
 
+use App\Domains\Insights\Application\Services\GetVendorReputationService;
 use App\Domains\Marketplace\Application\Services\ApplyAsVendorService;
 use App\Domains\Marketplace\Domain\Enums\PricingModel;
 use App\Domains\Marketplace\Domain\Enums\VendorCategory;
+use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Marketplace\Domain\Models\Vendor;
 use App\Domains\Marketplace\Presentation\Http\Requests\ApplyAsVendorRequest;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +17,7 @@ use Inertia\Response;
 
 class VendorController
 {
-    public function index(Request $request): Response
+    public function index(Request $request, GetVendorReputationService $reputationService): Response
     {
         $vendor = Vendor::where('owner_id', $request->user()->id)->with('services.quotations', 'services.bookings', 'rentalItems', 'availabilityBlocks')->first();
 
@@ -26,6 +28,9 @@ class VendorController
                 'pricingModelOptions' => collect(PricingModel::cases())
                     ->map(fn (PricingModel $model) => ['value' => $model->value, 'label' => $model->label()])
                     ->values(),
+                'reputation' => $vendor->verification_status === VendorVerificationStatus::Verified
+                    ? $reputationService->handle($vendor)
+                    : null,
             ]);
         }
 

@@ -5,10 +5,11 @@ import Button from '@/Components/Button';
 import Card from '@/Components/Card';
 import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
+import ReadinessRing from '@/Components/ReadinessRing';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
-import type { AvailabilityBlock, Booking, Quotation, RentalItem, Service, Vendor } from '@/types/models';
+import type { AvailabilityBlock, Booking, Quotation, RentalItem, Service, Vendor, VendorReputation } from '@/types/models';
 
 interface Option {
     value: string;
@@ -19,6 +20,7 @@ interface Props {
     vendor: Vendor;
     categoryOptions: Option[];
     pricingModelOptions: Option[];
+    reputation: VendorReputation | null;
 }
 
 const STATUS_BADGE: Record<string, { variant: 'success' | 'warning' | 'error'; label: string }> = {
@@ -560,7 +562,7 @@ function AddServiceCard({ vendor, categoryOptions, pricingModelOptions }: { vend
     );
 }
 
-export default function Profile({ vendor, categoryOptions, pricingModelOptions }: Props) {
+export default function Profile({ vendor, categoryOptions, pricingModelOptions, reputation }: Props) {
     const badge = STATUS_BADGE[vendor.verification_status] ?? { variant: 'warning' as const, label: vendor.verification_status };
 
     return (
@@ -611,6 +613,30 @@ export default function Profile({ vendor, categoryOptions, pricingModelOptions }
                     </div>
                 </dl>
             </Card>
+
+            {reputation && (
+                <Card className="mt-4 max-w-lg" title="Reputation">
+                    {reputation.score === null ? (
+                        <p className="mt-1 text-sm text-text-secondary">Not enough data yet.</p>
+                    ) : (
+                        <div className="mt-2 flex items-center gap-6">
+                            <ReadinessRing score={reputation.score} />
+                            <ul className="flex-1 space-y-1">
+                                {reputation.signals.map((signal) => (
+                                    <li key={signal.key} className="flex items-center justify-between text-xs text-text-secondary">
+                                        <span>{signal.label}</span>
+                                        <span className="font-medium text-text-primary">{signal.value}%</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    <p className="mt-3 border-t border-border pt-3 text-xs text-text-secondary">
+                        {reputation.review_count} review{reputation.review_count === 1 ? '' : 's'}
+                        {reputation.average_response_hours !== null && ` · Responds in ~${reputation.average_response_hours}h`}
+                    </p>
+                </Card>
+            )}
 
             {vendor.verification_status === 'verified' && (
                 <div className="mt-6 max-w-lg space-y-4">
