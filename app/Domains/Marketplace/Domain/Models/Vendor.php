@@ -2,10 +2,12 @@
 
 namespace App\Domains\Marketplace\Domain\Models;
 
+use App\Domains\Marketplace\Domain\Enums\BookingStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Database\Factories\VendorFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +58,34 @@ class Vendor extends Model
     public function rentalItems(): HasMany
     {
         return $this->hasMany(RentalItem::class);
+    }
+
+    public function availabilityBlocks(): HasMany
+    {
+        return $this->hasMany(AvailabilityBlock::class);
+    }
+
+    /**
+     * Whether this Vendor can take on new work on the given date — checked
+     * fresh every call (ADR-004: derived state is never stored). Blocked by
+     * either a manual/maintenance AvailabilityBlock, or an existing Booking
+     * against any of the Vendor's Services on that date.
+     */
+    public function isAvailableOn(CarbonInterface $date): bool
+    {
+        $blocked = $this->availabilityBlocks()
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->exists();
+
+        if ($blocked) {
+            return false;
+        }
+
+        return ! Booking::whereIn('service_id', $this->services()->pluck('id'))
+            ->whereIn('status', [BookingStatus::Confirmed, BookingStatus::InProgress, BookingStatus::Completed])
+            ->whereHas('occasion', fn ($query) => $query->whereDate('primary_date', $date))
+            ->exists();
     }
 
     public function getRouteKeyName(): string

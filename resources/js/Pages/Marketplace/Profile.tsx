@@ -8,7 +8,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
-import type { Booking, Quotation, RentalItem, Service, Vendor } from '@/types/models';
+import type { AvailabilityBlock, Booking, Quotation, RentalItem, Service, Vendor } from '@/types/models';
 
 interface Option {
     value: string;
@@ -195,6 +195,100 @@ function RentalItemForm({
                 </Button>
             </div>
         </form>
+    );
+}
+
+function AvailabilityBlockForm({ vendor, onClose }: { vendor: Vendor; onClose: () => void }) {
+    const { data, setData, post, processing, errors } = useForm({
+        start_date: '',
+        end_date: '',
+        reason: '',
+    });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('vendor.availability-blocks.store', vendor.uuid), {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="space-y-2">
+            <FormField label="Start Date" htmlFor="availability_start_date" required error={errors.start_date}>
+                <Input
+                    id="availability_start_date"
+                    type="date"
+                    value={data.start_date}
+                    onChange={(e) => setData('start_date', e.target.value)}
+                    invalid={!!errors.start_date}
+                />
+            </FormField>
+
+            <FormField label="End Date" htmlFor="availability_end_date" required error={errors.end_date}>
+                <Input
+                    id="availability_end_date"
+                    type="date"
+                    value={data.end_date}
+                    onChange={(e) => setData('end_date', e.target.value)}
+                    invalid={!!errors.end_date}
+                />
+            </FormField>
+
+            <FormField label="Reason (optional)" htmlFor="availability_reason">
+                <Input id="availability_reason" value={data.reason} onChange={(e) => setData('reason', e.target.value)} />
+            </FormField>
+
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={processing}>
+                    Add Block
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function AvailabilityBlockRow({ availabilityBlock }: { availabilityBlock: AvailabilityBlock }) {
+    const { delete: destroy, processing } = useForm({});
+
+    return (
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-border p-2 text-xs">
+            <div>
+                <span className="text-text-primary">
+                    {availabilityBlock.start_date} – {availabilityBlock.end_date}
+                </span>
+                {availabilityBlock.reason && <p className="mt-1 text-text-secondary">{availabilityBlock.reason}</p>}
+            </div>
+            <Button
+                variant="danger"
+                size="sm"
+                loading={processing}
+                onClick={() => destroy(route('vendor.availability-blocks.destroy', availabilityBlock.uuid), { preserveScroll: true })}
+            >
+                Remove
+            </Button>
+        </div>
+    );
+}
+
+function AddAvailabilityBlockCard({ vendor }: { vendor: Vendor }) {
+    const [adding, setAdding] = useState(false);
+
+    if (!adding) {
+        return (
+            <Button size="sm" onClick={() => setAdding(true)}>
+                Block Availability
+            </Button>
+        );
+    }
+
+    return (
+        <Card className="max-w-md">
+            <AvailabilityBlockForm vendor={vendor} onClose={() => setAdding(false)} />
+        </Card>
     );
 }
 
@@ -544,6 +638,18 @@ export default function Profile({ vendor, categoryOptions, pricingModelOptions }
                     ))}
 
                     <AddRentalItemCard vendor={vendor} />
+                </div>
+            )}
+
+            {vendor.verification_status === 'verified' && (
+                <div className="mt-6 max-w-lg space-y-4">
+                    <h2 className="text-sm font-medium text-text-primary">Availability</h2>
+
+                    {vendor.availability_blocks.map((availabilityBlock) => (
+                        <AvailabilityBlockRow key={availabilityBlock.id} availabilityBlock={availabilityBlock} />
+                    ))}
+
+                    <AddAvailabilityBlockCard vendor={vendor} />
                 </div>
             )}
         </AppLayout>

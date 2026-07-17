@@ -67,6 +67,15 @@ export interface RentalItem {
     status: string;
 }
 
+export interface AvailabilityBlock {
+    id: number;
+    uuid: string;
+    vendor_id: number;
+    start_date: string;
+    end_date: string;
+    reason: string | null;
+}
+
 export interface Vendor {
     id: number;
     uuid: string;
@@ -79,6 +88,7 @@ export interface Vendor {
     status: string;
     services: Service[];
     rental_items: RentalItem[];
+    availability_blocks: AvailabilityBlock[];
 }
 
 export interface Occasion {

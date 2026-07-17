@@ -12,6 +12,7 @@ use App\Domains\Marketplace\Application\Services\ApproveVendorService;
 use App\Domains\Marketplace\Domain\Enums\BookingStatus;
 use App\Domains\Marketplace\Domain\Enums\QuotationStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
+use App\Domains\Marketplace\Domain\Models\AvailabilityBlock;
 use App\Domains\Marketplace\Domain\Models\Booking;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\RentalItem;
@@ -609,6 +610,28 @@ it('logs an entry when a rental item is published and when it is updated', funct
 
     expect(ActivityLog::where('action', 'marketplace.rental_item_updated')
         ->where('subject_id', $rentalItem->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when an availability block is created and when it is removed', function () {
+    $owner = User::factory()->create();
+    $vendor = Vendor::factory()->create(['owner_id' => $owner->id]);
+
+    $this->actingAs($owner)->post("/vendor/{$vendor->uuid}/availability-blocks", [
+        'start_date' => '2026-09-01',
+        'end_date' => '2026-09-02',
+    ]);
+
+    $block = AvailabilityBlock::where('vendor_id', $vendor->id)->first();
+
+    expect(ActivityLog::where('action', 'marketplace.availability_block_created')
+        ->where('subject_id', $block->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($owner)->delete("/vendor/availability-blocks/{$block->uuid}");
+
+    expect(ActivityLog::where('action', 'marketplace.availability_block_removed')
+        ->where('subject_id', $block->id)
         ->count())->toBe(1);
 });
 

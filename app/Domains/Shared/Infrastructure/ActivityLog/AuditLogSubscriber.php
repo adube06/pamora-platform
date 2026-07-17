@@ -17,6 +17,8 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Marketplace\Domain\Events\AvailabilityBlockCreated;
+use App\Domains\Marketplace\Domain\Events\AvailabilityBlockRemoved;
 use App\Domains\Marketplace\Domain\Events\BookingCompleted;
 use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
@@ -678,6 +680,30 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleAvailabilityBlockCreated(AvailabilityBlockCreated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'AvailabilityBlock',
+            'subject_id' => $event->availabilityBlock->id,
+            'action' => 'marketplace.availability_block_created',
+            'description' => "{$event->actor->name} blocked availability from {$event->availabilityBlock->start_date->toDateString()} to {$event->availabilityBlock->end_date->toDateString()}.",
+        ]);
+    }
+
+    public function handleAvailabilityBlockRemoved(AvailabilityBlockRemoved $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'AvailabilityBlock',
+            'subject_id' => $event->availabilityBlock->id,
+            'action' => 'marketplace.availability_block_removed',
+            'description' => "{$event->actor->name} removed an availability block from {$event->availabilityBlock->start_date->toDateString()} to {$event->availabilityBlock->end_date->toDateString()}.",
+        ]);
+    }
+
     public function handleQuotationRequested(QuotationRequested $event): void
     {
         ActivityLog::create([
@@ -778,6 +804,8 @@ class AuditLogSubscriber
         $events->listen(BookingConfirmed::class, [self::class, 'handleBookingConfirmed']);
         $events->listen(BookingCompleted::class, [self::class, 'handleBookingCompleted']);
         $events->listen(ReviewPublished::class, [self::class, 'handleReviewPublished']);
+        $events->listen(AvailabilityBlockCreated::class, [self::class, 'handleAvailabilityBlockCreated']);
+        $events->listen(AvailabilityBlockRemoved::class, [self::class, 'handleAvailabilityBlockRemoved']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);

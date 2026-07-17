@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Marketplace\Presentation\Http\Controllers\AvailabilityBlockController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\OccasionMarketplaceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\QuotationController;
@@ -16,6 +17,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update'])->name('vendor.services.update');
     Route::post('/vendor/{vendor}/rental-items', [RentalItemController::class, 'store'])->name('vendor.rental-items.store');
     Route::patch('/vendor/rental-items/{rentalItem}', [RentalItemController::class, 'update'])->name('vendor.rental-items.update');
+    Route::post('/vendor/{vendor}/availability-blocks', [AvailabilityBlockController::class, 'store'])->name('vendor.availability-blocks.store');
+    Route::delete('/vendor/availability-blocks/{availabilityBlock}', [AvailabilityBlockController::class, 'destroy'])->name('vendor.availability-blocks.destroy');
 
     Route::get('/occasions/{occasion}/marketplace', [OccasionMarketplaceController::class, 'index'])->name('occasions.marketplace');
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store'])->name('occasions.quotations.store');

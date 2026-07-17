@@ -17,7 +17,7 @@ class VendorController
 {
     public function index(Request $request): Response
     {
-        $vendor = Vendor::where('owner_id', $request->user()->id)->with('services.quotations', 'services.bookings', 'rentalItems')->first();
+        $vendor = Vendor::where('owner_id', $request->user()->id)->with('services.quotations', 'services.bookings', 'rentalItems', 'availabilityBlocks')->first();
 
         if ($vendor !== null) {
             return Inertia::render('Marketplace/Profile', [

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Marketplace\Presentation\Http\Controllers\Api\AvailabilityBlockController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\QuotationController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\RentalItemController;
@@ -15,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update']);
     Route::post('/vendor/{vendor}/rental-items', [RentalItemController::class, 'store']);
     Route::patch('/vendor/rental-items/{rentalItem}', [RentalItemController::class, 'update']);
+    Route::post('/vendor/{vendor}/availability-blocks', [AvailabilityBlockController::class, 'store']);
+    Route::delete('/vendor/availability-blocks/{availabilityBlock}', [AvailabilityBlockController::class, 'destroy']);
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store']);
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit']);
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);

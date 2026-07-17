@@ -26,6 +26,14 @@ class ConfirmBookingService
             ]);
         }
 
+        $occasion = $quotation->occasion;
+
+        if ($occasion->primary_date && ! $quotation->service->vendor->isAvailableOn($occasion->primary_date)) {
+            throw ValidationException::withMessages([
+                'status' => 'The Vendor is not available on the Occasion date.',
+            ]);
+        }
+
         $booking = Booking::create([
             'occasion_id' => $quotation->occasion_id,
             'service_id' => $quotation->service_id,
