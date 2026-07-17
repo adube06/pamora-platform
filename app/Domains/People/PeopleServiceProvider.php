@@ -18,6 +18,7 @@ class PeopleServiceProvider extends ServiceProvider
         Gate::define('invite-member', [OccasionMemberPolicy::class, 'invite']);
         Gate::define('remove-member', [OccasionMemberPolicy::class, 'remove']);
         Gate::define('reopen-rsvp', [OccasionMemberPolicy::class, 'reopenRsvp']);
+        Gate::define('assign-responsibilities', [OccasionMemberPolicy::class, 'assignResponsibilities']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

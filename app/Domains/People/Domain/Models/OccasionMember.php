@@ -34,6 +34,7 @@ class OccasionMember extends Model
         'role',
         'notes',
         'permissions',
+        'responsibilities',
         'rsvp_status',
         'rsvp_responded_at',
         'guest_count',
@@ -46,6 +47,7 @@ class OccasionMember extends Model
             'status' => OccasionMemberStatus::class,
             'role' => Role::class,
             'permissions' => 'array',
+            'responsibilities' => 'array',
             'rsvp_status' => RsvpStatus::class,
             'rsvp_responded_at' => 'datetime',
         ];

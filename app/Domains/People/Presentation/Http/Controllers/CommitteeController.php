@@ -3,11 +3,14 @@
 namespace App\Domains\People\Presentation\Http\Controllers;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\People\Application\Services\AssignResponsibilitiesService;
 use App\Domains\People\Application\Services\InviteMemberService;
 use App\Domains\People\Application\Services\RemoveMemberService;
 use App\Domains\People\Domain\Enums\InvitationStatus;
+use App\Domains\People\Domain\Enums\Responsibility;
 use App\Domains\People\Domain\Enums\Role;
 use App\Domains\People\Domain\Models\OccasionMember;
+use App\Domains\People\Presentation\Http\Requests\AssignResponsibilitiesRequest;
 use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
 use App\Domains\People\Presentation\Http\Requests\RemoveMemberRequest;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +37,10 @@ class CommitteeController
             'canReopenRsvp' => $request->user()->id === $occasion->host_id,
             'canRemoveMember' => $request->user()->can('remove-member', $occasion),
             'canTransferOwnership' => $request->user()->can('transferOwnership', $occasion),
+            'responsibilityOptions' => collect(Responsibility::cases())
+                ->map(fn (Responsibility $responsibility) => ['value' => $responsibility->value, 'label' => $responsibility->label()])
+                ->values(),
+            'canAssignResponsibilities' => $request->user()->can('assign-responsibilities', $occasion),
         ]);
     }
 
@@ -49,5 +56,12 @@ class CommitteeController
         $service->handle($occasionMember, $request->user());
 
         return back()->with('success', 'Member removed.');
+    }
+
+    public function updateResponsibilities(AssignResponsibilitiesRequest $request, OccasionMember $occasionMember, AssignResponsibilitiesService $service): RedirectResponse
+    {
+        $service->handle($occasionMember, $request->validated('responsibilities', []), $request->user());
+
+        return back()->with('success', 'Responsibilities updated.');
     }
 }

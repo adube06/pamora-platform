@@ -26,10 +26,12 @@ use App\Domains\Occasion\Domain\Events\OccasionCancelled;
 use App\Domains\Occasion\Domain\Events\OccasionCreated;
 use App\Domains\Occasion\Domain\Events\OccasionOwnershipTransferred;
 use App\Domains\Occasion\Domain\Events\OccasionUpdated;
+use App\Domains\People\Domain\Enums\Responsibility;
 use App\Domains\People\Domain\Events\InvitationDeclined;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\People\Domain\Events\MemberRemoved;
+use App\Domains\People\Domain\Events\ResponsibilityAssigned;
 use App\Domains\People\Domain\Events\RsvpReopened;
 use App\Domains\People\Domain\Events\RsvpSubmitted;
 use App\Domains\Planning\Domain\Events\ChecklistCreated;
@@ -206,6 +208,24 @@ class AuditLogSubscriber
             'subject_id' => $event->member->id,
             'action' => 'people.member_removed',
             'description' => "{$event->actor->name} removed {$event->member->user->name} from the Occasion.",
+        ]);
+    }
+
+    public function handleResponsibilityAssigned(ResponsibilityAssigned $event): void
+    {
+        $labels = collect($event->member->responsibilities ?? [])
+            ->map(fn (string $value) => Responsibility::from($value)->label())
+            ->implode(', ');
+
+        ActivityLog::create([
+            'occasion_id' => $event->member->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'OccasionMember',
+            'subject_id' => $event->member->id,
+            'action' => 'people.responsibilities_assigned',
+            'description' => $labels !== ''
+                ? "{$event->actor->name} set {$event->member->user->name}'s responsibilities to: {$labels}."
+                : "{$event->actor->name} cleared {$event->member->user->name}'s responsibilities.",
         ]);
     }
 
@@ -548,6 +568,7 @@ class AuditLogSubscriber
         $events->listen(OccasionOwnershipTransferred::class, [self::class, 'handleOccasionOwnershipTransferred']);
         $events->listen(InvitationDeclined::class, [self::class, 'handleInvitationDeclined']);
         $events->listen(MemberRemoved::class, [self::class, 'handleMemberRemoved']);
+        $events->listen(ResponsibilityAssigned::class, [self::class, 'handleResponsibilityAssigned']);
         $events->listen(MemberInvited::class, [self::class, 'handleMemberInvited']);
         $events->listen(MemberJoined::class, [self::class, 'handleMemberJoined']);
         $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);

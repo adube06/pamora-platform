@@ -1,4 +1,5 @@
-import { Form, useForm } from '@inertiajs/react';
+import { Form, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Alert from '@/Components/Alert';
 import Avatar from '@/Components/Avatar';
 import Badge from '@/Components/Badge';
@@ -9,7 +10,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Invitation, Occasion, OccasionMember, RoleOption } from '@/types/models';
+import type { Invitation, Occasion, OccasionMember, ResponsibilityOption, RoleOption } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
@@ -21,6 +22,8 @@ interface Props {
     canReopenRsvp: boolean;
     canRemoveMember: boolean;
     canTransferOwnership: boolean;
+    responsibilityOptions: ResponsibilityOption[];
+    canAssignResponsibilities: boolean;
 }
 
 const NON_ORGANIZING_ROLES = ['host', 'guest', 'observer'];
@@ -88,6 +91,79 @@ function TransferOwnershipButton({ occasion, member }: { occasion: Occasion; mem
     );
 }
 
+function MemberResponsibilities({
+    member,
+    responsibilityOptions,
+    canAssignResponsibilities,
+}: {
+    member: OccasionMember;
+    responsibilityOptions: ResponsibilityOption[];
+    canAssignResponsibilities: boolean;
+}) {
+    const [editing, setEditing] = useState(false);
+    const { data, setData, processing } = useForm({ responsibilities: member.responsibilities });
+
+    function toggle(value: string) {
+        setData('responsibilities', data.responsibilities.includes(value)
+            ? data.responsibilities.filter((v) => v !== value)
+            : [...data.responsibilities, value]);
+    }
+
+    function save() {
+        router.patch(route('occasion-members.update-responsibilities', member.uuid), { responsibilities: data.responsibilities }, {
+            preserveScroll: true,
+            onSuccess: () => setEditing(false),
+        });
+    }
+
+    if (!editing) {
+        return (
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+                {member.responsibilities.map((value) => (
+                    <Badge key={value} variant="info">
+                        {responsibilityOptions.find((r) => r.value === value)?.label ?? value}
+                    </Badge>
+                ))}
+                {canAssignResponsibilities && (
+                    <button
+                        type="button"
+                        className="text-xs text-text-secondary underline hover:text-text-primary"
+                        onClick={() => setEditing(true)}
+                    >
+                        Edit responsibilities
+                    </button>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div className="mt-1 space-y-1">
+            <div className="flex flex-wrap gap-2">
+                {responsibilityOptions.map((option) => (
+                    <label key={option.value} className="flex items-center gap-1 text-xs text-text-primary">
+                        <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={data.responsibilities.includes(option.value)}
+                            onChange={() => toggle(option.value)}
+                        />
+                        {option.label}
+                    </label>
+                ))}
+            </div>
+            <div className="flex gap-2">
+                <Button size="sm" loading={processing} onClick={save}>
+                    Save
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                    Cancel
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 function YourRsvpCard({ occasion, myMembership }: { occasion: Occasion; myMembership: OccasionMember }) {
     if (myMembership.rsvp_status) {
         return (
@@ -148,6 +224,8 @@ export default function Committee({
     canReopenRsvp,
     canRemoveMember,
     canTransferOwnership,
+    responsibilityOptions,
+    canAssignResponsibilities,
 }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="committee">
@@ -169,6 +247,11 @@ export default function Committee({
                                         <p className="text-sm font-medium text-text-primary">{member.user?.name}</p>
                                         <p className="text-xs text-text-secondary">{member.user?.email}</p>
                                         {member.notes && <p className="mt-0.5 text-xs text-text-secondary">{member.notes}</p>}
+                                        <MemberResponsibilities
+                                            member={member}
+                                            responsibilityOptions={responsibilityOptions}
+                                            canAssignResponsibilities={canAssignResponsibilities}
+                                        />
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

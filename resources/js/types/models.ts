@@ -21,6 +21,7 @@ export interface OccasionMember {
     role: string;
     notes: string | null;
     permissions: string[];
+    responsibilities: string[];
     rsvp_status: string | null;
     rsvp_responded_at: string | null;
     guest_count: number | null;
@@ -43,6 +44,11 @@ export interface Invitation {
 }
 
 export interface RoleOption {
+    value: string;
+    label: string;
+}
+
+export interface ResponsibilityOption {
     value: string;
     label: string;
 }

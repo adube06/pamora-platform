@@ -9,6 +9,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/occasions/{occasion}/committee', [CommitteeController::class, 'index'])->name('occasions.committee');
     Route::post('/occasions/{occasion}/committee/invitations', [CommitteeController::class, 'store'])->name('occasions.committee.invite');
     Route::delete('/occasion-members/{occasionMember}', [CommitteeController::class, 'destroy'])->name('occasion-members.destroy');
+    Route::patch('/occasion-members/{occasionMember}/responsibilities', [CommitteeController::class, 'updateResponsibilities'])->name('occasion-members.update-responsibilities');
 
     Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
