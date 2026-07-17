@@ -5,6 +5,7 @@ namespace App\Domains\Communication\Infrastructure\Listeners;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\BookingCompleted;
 use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
@@ -229,6 +230,30 @@ class NotificationSubscriber
             'type' => 'booking_confirmed',
             'title' => 'Booking confirmed',
             'body' => "Your Booking for \"{$event->booking->service->name}\" was confirmed.",
+        ]);
+    }
+
+    public function handleBookingCompleted(BookingCompleted $event): void
+    {
+        $hostUserId = $event->booking->confirmed_by;
+
+        // Don't notify a member of their own action.
+        if ($hostUserId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($hostUserId)?->wantsNotification('booking_completed')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $hostUserId,
+            'occasion_id' => $event->booking->occasion_id,
+            'subject_type' => 'Booking',
+            'subject_id' => $event->booking->id,
+            'type' => 'booking_completed',
+            'title' => 'Booking completed',
+            'body' => "The Vendor marked your Booking for \"{$event->booking->service->name}\" as complete.",
         ]);
     }
 }

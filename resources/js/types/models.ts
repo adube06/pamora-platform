@@ -12,6 +12,7 @@ export interface Service {
     status: string;
     vendor?: { id: number; business_name: string };
     quotations?: Quotation[];
+    bookings?: Booking[];
 }
 
 export interface Quotation {

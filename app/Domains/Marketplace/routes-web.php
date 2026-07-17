@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Marketplace\Presentation\Http\Controllers\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\OccasionMarketplaceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\QuotationController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\ServiceController;
@@ -18,4 +19,5 @@ Route::middleware('auth')->group(function () {
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept'])->name('quotations.accept');
     Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
     Route::patch('/quotations/{quotation}/confirm', [QuotationController::class, 'confirm'])->name('quotations.confirm');
+    Route::patch('/bookings/{booking}/complete', [BookingController::class, 'complete'])->name('bookings.complete');
 });

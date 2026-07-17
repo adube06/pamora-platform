@@ -54,6 +54,11 @@ class Service extends Model
         return $this->hasMany(Quotation::class);
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'uuid';

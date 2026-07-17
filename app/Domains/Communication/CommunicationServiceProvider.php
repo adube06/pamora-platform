@@ -8,6 +8,7 @@ use App\Domains\Communication\Infrastructure\Console\Commands\DispatchRemindersC
 use App\Domains\Communication\Infrastructure\Listeners\NotificationSubscriber;
 use App\Domains\Communication\Presentation\Policies\NotificationPolicy;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\BookingCompleted;
 use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
@@ -59,6 +60,7 @@ class CommunicationServiceProvider extends ServiceProvider
         Event::listen(QuotationAccepted::class, [NotificationSubscriber::class, 'handleQuotationAccepted']);
         Event::listen(QuotationRejected::class, [NotificationSubscriber::class, 'handleQuotationRejected']);
         Event::listen(BookingConfirmed::class, [NotificationSubscriber::class, 'handleBookingConfirmed']);
+        Event::listen(BookingCompleted::class, [NotificationSubscriber::class, 'handleBookingCompleted']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

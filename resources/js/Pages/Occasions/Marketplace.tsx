@@ -25,6 +25,7 @@ const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'error' | 'neutral
     rejected: 'error',
     expired: 'neutral',
     confirmed: 'success',
+    completed: 'success',
 };
 
 function RequestQuotationForm({ occasion, service, onClose }: { occasion: Occasion; service: Service; onClose: () => void }) {

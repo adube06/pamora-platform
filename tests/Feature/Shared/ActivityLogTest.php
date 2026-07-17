@@ -9,6 +9,7 @@ use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Marketplace\Application\Services\ApproveVendorService;
+use App\Domains\Marketplace\Domain\Enums\BookingStatus;
 use App\Domains\Marketplace\Domain\Enums\QuotationStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Marketplace\Domain\Models\Booking;
@@ -653,6 +654,24 @@ it('logs an entry when a booking is confirmed', function () {
     $booking = Booking::firstWhere('quotation_id', $quotation->id);
 
     expect(ActivityLog::where('action', 'marketplace.booking_confirmed')
+        ->where('subject_id', $booking->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a booking is completed', function () {
+    $vendorOwner = User::factory()->create();
+    $vendor = Vendor::factory()->create(['owner_id' => $vendorOwner->id]);
+    $service = Service::factory()->create(['vendor_id' => $vendor->id]);
+    $quotation = Quotation::factory()->create(['service_id' => $service->id]);
+    $booking = Booking::factory()->create([
+        'service_id' => $service->id,
+        'quotation_id' => $quotation->id,
+        'status' => BookingStatus::Confirmed,
+    ]);
+
+    $this->actingAs($vendorOwner)->patch("/bookings/{$booking->uuid}/complete");
+
+    expect(ActivityLog::where('action', 'marketplace.booking_completed')
         ->where('subject_id', $booking->id)
         ->count())->toBe(1);
 });

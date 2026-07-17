@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Marketplace\Presentation\Http\Controllers\Api\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\QuotationController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\ServiceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\VendorController;
@@ -15,4 +16,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);
     Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject']);
     Route::patch('/quotations/{quotation}/confirm', [QuotationController::class, 'confirm']);
+    Route::patch('/bookings/{booking}/complete', [BookingController::class, 'complete']);
 });

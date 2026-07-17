@@ -8,7 +8,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
-import type { Quotation, Service, Vendor } from '@/types/models';
+import type { Booking, Quotation, Service, Vendor } from '@/types/models';
 
 interface Option {
     value: string;
@@ -187,9 +187,25 @@ function PendingQuotation({ quotation }: { quotation: Quotation }) {
     );
 }
 
+function ConfirmedBooking({ booking }: { booking: Booking }) {
+    const { patch, processing } = useForm({});
+
+    return (
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-border p-2 text-xs">
+            <span className="text-text-secondary">
+                {booking.agreed_price} {booking.currency}
+            </span>
+            <Button size="sm" loading={processing} onClick={() => patch(route('bookings.complete', booking.uuid), { preserveScroll: true })}>
+                Mark Complete
+            </Button>
+        </div>
+    );
+}
+
 function ServiceCard({ service, categoryOptions, pricingModelOptions }: { service: Service; categoryOptions: Option[]; pricingModelOptions: Option[] }) {
     const [editing, setEditing] = useState(false);
     const pendingQuotations = (service.quotations ?? []).filter((quotation) => quotation.status === 'draft');
+    const confirmedBookings = (service.bookings ?? []).filter((booking) => booking.status === 'confirmed');
 
     if (editing) {
         return (
@@ -242,6 +258,15 @@ function ServiceCard({ service, categoryOptions, pricingModelOptions }: { servic
                     <p className="text-xs font-medium text-text-secondary">Quotation Requests</p>
                     {pendingQuotations.map((quotation) => (
                         <PendingQuotation key={quotation.id} quotation={quotation} />
+                    ))}
+                </div>
+            )}
+
+            {confirmedBookings.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                    <p className="text-xs font-medium text-text-secondary">Confirmed Bookings</p>
+                    {confirmedBookings.map((booking) => (
+                        <ConfirmedBooking key={booking.id} booking={booking} />
                     ))}
                 </div>
             )}
