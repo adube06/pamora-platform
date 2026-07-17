@@ -55,6 +55,18 @@ export interface Booking {
     review?: Review | null;
 }
 
+export interface RentalItem {
+    id: number;
+    uuid: string;
+    vendor_id: number;
+    name: string;
+    description: string | null;
+    quantity_available: number;
+    unit_price: string;
+    currency: string;
+    status: string;
+}
+
 export interface Vendor {
     id: number;
     uuid: string;
@@ -66,6 +78,7 @@ export interface Vendor {
     verification_status: string;
     status: string;
     services: Service[];
+    rental_items: RentalItem[];
 }
 
 export interface Occasion {

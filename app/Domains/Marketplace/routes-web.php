@@ -3,6 +3,7 @@
 use App\Domains\Marketplace\Presentation\Http\Controllers\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\OccasionMarketplaceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\QuotationController;
+use App\Domains\Marketplace\Presentation\Http\Controllers\RentalItemController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\ReviewController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\ServiceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\VendorController;
@@ -13,6 +14,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/vendor', [VendorController::class, 'store'])->name('vendor.store');
     Route::post('/vendor/{vendor}/services', [ServiceController::class, 'store'])->name('vendor.services.store');
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update'])->name('vendor.services.update');
+    Route::post('/vendor/{vendor}/rental-items', [RentalItemController::class, 'store'])->name('vendor.rental-items.store');
+    Route::patch('/vendor/rental-items/{rentalItem}', [RentalItemController::class, 'update'])->name('vendor.rental-items.update');
 
     Route::get('/occasions/{occasion}/marketplace', [OccasionMarketplaceController::class, 'index'])->name('occasions.marketplace');
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store'])->name('occasions.quotations.store');

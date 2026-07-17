@@ -14,6 +14,7 @@ use App\Domains\Marketplace\Domain\Enums\QuotationStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Marketplace\Domain\Models\Booking;
 use App\Domains\Marketplace\Domain\Models\Quotation;
+use App\Domains\Marketplace\Domain\Models\RentalItem;
 use App\Domains\Marketplace\Domain\Models\Review;
 use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Marketplace\Domain\Models\Vendor;
@@ -581,6 +582,33 @@ it('logs an entry when a service is published and when it is updated', function 
 
     expect(ActivityLog::where('action', 'marketplace.service_updated')
         ->where('subject_id', $service->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a rental item is published and when it is updated', function () {
+    $owner = User::factory()->create();
+    $vendor = Vendor::factory()->create(['owner_id' => $owner->id, 'verification_status' => VendorVerificationStatus::Verified]);
+
+    $this->actingAs($owner)->post("/vendor/{$vendor->uuid}/rental-items", [
+        'name' => 'Tents',
+        'quantity_available' => 5,
+        'unit_price' => 20000,
+    ]);
+
+    $rentalItem = RentalItem::firstWhere('name', 'Tents');
+
+    expect(ActivityLog::where('action', 'marketplace.rental_item_published')
+        ->where('subject_id', $rentalItem->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($owner)->patch("/vendor/rental-items/{$rentalItem->uuid}", [
+        'name' => 'Large Tents',
+        'quantity_available' => 5,
+        'unit_price' => 20000,
+    ]);
+
+    expect(ActivityLog::where('action', 'marketplace.rental_item_updated')
+        ->where('subject_id', $rentalItem->id)
         ->count())->toBe(1);
 });
 

@@ -23,6 +23,8 @@ use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationRequested;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
+use App\Domains\Marketplace\Domain\Events\RentalItemPublished;
+use App\Domains\Marketplace\Domain\Events\RentalItemUpdated;
 use App\Domains\Marketplace\Domain\Events\ReviewPublished;
 use App\Domains\Marketplace\Domain\Events\ServicePublished;
 use App\Domains\Marketplace\Domain\Events\ServiceUpdated;
@@ -652,6 +654,30 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleRentalItemPublished(RentalItemPublished $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'RentalItem',
+            'subject_id' => $event->rentalItem->id,
+            'action' => 'marketplace.rental_item_published',
+            'description' => "{$event->actor->name} published Rental Item \"{$event->rentalItem->name}\".",
+        ]);
+    }
+
+    public function handleRentalItemUpdated(RentalItemUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'RentalItem',
+            'subject_id' => $event->rentalItem->id,
+            'action' => 'marketplace.rental_item_updated',
+            'description' => "{$event->actor->name} updated Rental Item \"{$event->rentalItem->name}\".",
+        ]);
+    }
+
     public function handleQuotationRequested(QuotationRequested $event): void
     {
         ActivityLog::create([
@@ -743,6 +769,8 @@ class AuditLogSubscriber
         $events->listen(VendorRejected::class, [self::class, 'handleVendorRejected']);
         $events->listen(ServicePublished::class, [self::class, 'handleServicePublished']);
         $events->listen(ServiceUpdated::class, [self::class, 'handleServiceUpdated']);
+        $events->listen(RentalItemPublished::class, [self::class, 'handleRentalItemPublished']);
+        $events->listen(RentalItemUpdated::class, [self::class, 'handleRentalItemUpdated']);
         $events->listen(QuotationRequested::class, [self::class, 'handleQuotationRequested']);
         $events->listen(QuotationSubmitted::class, [self::class, 'handleQuotationSubmitted']);
         $events->listen(QuotationAccepted::class, [self::class, 'handleQuotationAccepted']);

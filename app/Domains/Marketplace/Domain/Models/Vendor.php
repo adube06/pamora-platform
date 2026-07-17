@@ -53,6 +53,11 @@ class Vendor extends Model
         return $this->hasMany(Service::class);
     }
 
+    public function rentalItems(): HasMany
+    {
+        return $this->hasMany(RentalItem::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'uuid';

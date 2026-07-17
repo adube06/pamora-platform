@@ -2,6 +2,7 @@
 
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\QuotationController;
+use App\Domains\Marketplace\Presentation\Http\Controllers\Api\RentalItemController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\ReviewController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\ServiceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\Api\VendorController;
@@ -12,6 +13,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vendor', [VendorController::class, 'store']);
     Route::post('/vendor/{vendor}/services', [ServiceController::class, 'store']);
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update']);
+    Route::post('/vendor/{vendor}/rental-items', [RentalItemController::class, 'store']);
+    Route::patch('/vendor/rental-items/{rentalItem}', [RentalItemController::class, 'update']);
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store']);
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit']);
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);

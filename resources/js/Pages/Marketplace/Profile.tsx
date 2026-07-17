@@ -8,7 +8,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
-import type { Booking, Quotation, Service, Vendor } from '@/types/models';
+import type { Booking, Quotation, RentalItem, Service, Vendor } from '@/types/models';
 
 interface Option {
     value: string;
@@ -108,6 +108,82 @@ function ServiceForm({
 
             <FormField label="Estimated Duration" htmlFor="service_duration" helperText="e.g. 2 hours, Full day">
                 <Input id="service_duration" value={data.estimated_duration} onChange={(e) => setData('estimated_duration', e.target.value)} />
+            </FormField>
+
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={processing || submitting}>
+                    {submitLabel}
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function RentalItemForm({
+    initial,
+    onSubmit,
+    onCancel,
+    submitLabel,
+}: {
+    initial: { name: string; description: string; quantity_available: string; unit_price: string };
+    onSubmit: (data: typeof initial, helpers: { setErrors: (errors: Record<string, string>) => void; finish: () => void }) => void;
+    onCancel: () => void;
+    submitLabel: string;
+}) {
+    const { data, setData, processing, errors, setError, clearErrors } = useForm(initial);
+    const [submitting, setSubmitting] = useState(false);
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        clearErrors();
+        setSubmitting(true);
+
+        onSubmit(data, {
+            setErrors: (newErrors) => {
+                Object.entries(newErrors).forEach(([field, message]) => setError(field as keyof typeof data, message));
+            },
+            finish: () => setSubmitting(false),
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="space-y-2">
+            <FormField label="Name" htmlFor="rental_item_name" required error={errors.name}>
+                <Input id="rental_item_name" value={data.name} onChange={(e) => setData('name', e.target.value)} required invalid={!!errors.name} />
+            </FormField>
+
+            <FormField label="Description" htmlFor="rental_item_description">
+                <Textarea
+                    id="rental_item_description"
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    rows={2}
+                />
+            </FormField>
+
+            <FormField label="Quantity Available" htmlFor="rental_item_quantity" required error={errors.quantity_available}>
+                <Input
+                    id="rental_item_quantity"
+                    type="number"
+                    min={0}
+                    value={data.quantity_available}
+                    onChange={(e) => setData('quantity_available', e.target.value)}
+                    invalid={!!errors.quantity_available}
+                />
+            </FormField>
+
+            <FormField label="Unit Price (TZS)" htmlFor="rental_item_price" required error={errors.unit_price}>
+                <Input
+                    id="rental_item_price"
+                    type="number"
+                    min={0}
+                    value={data.unit_price}
+                    onChange={(e) => setData('unit_price', e.target.value)}
+                    invalid={!!errors.unit_price}
+                />
             </FormField>
 
             <div className="flex gap-2">
@@ -274,6 +350,83 @@ function ServiceCard({ service, categoryOptions, pricingModelOptions }: { servic
     );
 }
 
+function RentalItemCard({ rentalItem }: { rentalItem: RentalItem }) {
+    const [editing, setEditing] = useState(false);
+
+    if (editing) {
+        return (
+            <Card>
+                <RentalItemForm
+                    initial={{
+                        name: rentalItem.name,
+                        description: rentalItem.description ?? '',
+                        quantity_available: String(rentalItem.quantity_available),
+                        unit_price: rentalItem.unit_price,
+                    }}
+                    submitLabel="Save"
+                    onCancel={() => setEditing(false)}
+                    onSubmit={(data, { setErrors, finish }) => {
+                        router.patch(route('vendor.rental-items.update', rentalItem.uuid), data, {
+                            preserveScroll: true,
+                            onSuccess: () => setEditing(false),
+                            onError: setErrors,
+                            onFinish: finish,
+                        });
+                    }}
+                />
+            </Card>
+        );
+    }
+
+    return (
+        <Card>
+            <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-text-primary">{rentalItem.name}</p>
+                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+                    Edit
+                </Button>
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
+                <span>{rentalItem.quantity_available} available</span>
+                <span>
+                    · {rentalItem.unit_price} {rentalItem.currency} each
+                </span>
+            </div>
+            {rentalItem.description && <p className="mt-2 text-xs text-text-secondary">{rentalItem.description}</p>}
+        </Card>
+    );
+}
+
+function AddRentalItemCard({ vendor }: { vendor: Vendor }) {
+    const [adding, setAdding] = useState(false);
+
+    if (!adding) {
+        return (
+            <Button size="sm" onClick={() => setAdding(true)}>
+                Add a Rental Item
+            </Button>
+        );
+    }
+
+    return (
+        <Card className="max-w-md">
+            <RentalItemForm
+                initial={{ name: '', description: '', quantity_available: '', unit_price: '' }}
+                submitLabel="Publish"
+                onCancel={() => setAdding(false)}
+                onSubmit={(data, { setErrors, finish }) => {
+                    router.post(route('vendor.rental-items.store', vendor.uuid), data, {
+                        preserveScroll: true,
+                        onSuccess: () => setAdding(false),
+                        onError: setErrors,
+                        onFinish: finish,
+                    });
+                }}
+            />
+        </Card>
+    );
+}
+
 function AddServiceCard({ vendor, categoryOptions, pricingModelOptions }: { vendor: Vendor; categoryOptions: Option[]; pricingModelOptions: Option[] }) {
     const [adding, setAdding] = useState(false);
 
@@ -379,6 +532,18 @@ export default function Profile({ vendor, categoryOptions, pricingModelOptions }
                     ))}
 
                     <AddServiceCard vendor={vendor} categoryOptions={categoryOptions} pricingModelOptions={pricingModelOptions} />
+                </div>
+            )}
+
+            {vendor.verification_status === 'verified' && (
+                <div className="mt-6 max-w-lg space-y-4">
+                    <h2 className="text-sm font-medium text-text-primary">Rental Inventory</h2>
+
+                    {vendor.rental_items.map((rentalItem) => (
+                        <RentalItemCard key={rentalItem.id} rentalItem={rentalItem} />
+                    ))}
+
+                    <AddRentalItemCard vendor={vendor} />
                 </div>
             )}
         </AppLayout>
