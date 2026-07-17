@@ -74,6 +74,7 @@ enum Role: string
                 Permission::MediaUpload->value,
                 Permission::MediaEditMetadata->value,
                 Permission::MarketplaceRequestQuotation->value,
+                Permission::MarketplaceConfirmBooking->value,
             ],
 
             self::Treasurer => [

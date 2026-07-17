@@ -30,6 +30,7 @@ class Notification extends Model
         'quotation_submitted' => 'Quotation Submitted',
         'quotation_accepted' => 'Quotation Accepted',
         'quotation_rejected' => 'Quotation Rejected',
+        'booking_confirmed' => 'Booking Confirmed',
     ];
 
     protected static function newFactory(): NotificationFactory

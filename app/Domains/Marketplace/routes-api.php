@@ -14,4 +14,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit']);
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);
     Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject']);
+    Route::patch('/quotations/{quotation}/confirm', [QuotationController::class, 'confirm']);
 });

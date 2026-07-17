@@ -25,6 +25,14 @@ class MarketplaceServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::MarketplaceRequestQuotation) ?? false;
         });
 
+        // Confirming a Booking is a separate, bigger commitment than
+        // requesting a quotation — the Permission Catalog reserves it as
+        // its own string, so it gets its own Gate rather than reusing
+        // request-quotation's.
+        Gate::define('confirm-booking', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::MarketplaceConfirmBooking) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 

@@ -7,13 +7,15 @@ import EmptyState from '@/Components/EmptyState';
 import FormField from '@/Components/FormField';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
-import type { Occasion, Quotation, Service } from '@/types/models';
+import type { Booking, Occasion, Quotation, Service } from '@/types/models';
 
 interface Props {
     occasion: Occasion;
     services: Service[];
     quotations: Quotation[];
+    bookings: Booking[];
     canRequestQuotation: boolean;
+    canConfirmBooking: boolean;
 }
 
 const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'error' | 'neutral'> = {
@@ -22,6 +24,7 @@ const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'error' | 'neutral
     accepted: 'success',
     rejected: 'error',
     expired: 'neutral',
+    confirmed: 'success',
 };
 
 function RequestQuotationForm({ occasion, service, onClose }: { occasion: Occasion; service: Service; onClose: () => void }) {
@@ -82,6 +85,16 @@ function AcceptRejectButtons({ quotation }: { quotation: Quotation }) {
     );
 }
 
+function ConfirmBookingButton({ quotation }: { quotation: Quotation }) {
+    const { patch, processing } = useForm({});
+
+    return (
+        <Button size="sm" loading={processing} onClick={() => patch(route('quotations.confirm', quotation.uuid), { preserveScroll: true })}>
+            Confirm Booking
+        </Button>
+    );
+}
+
 function ServiceCard({ occasion, service, canRequestQuotation }: { occasion: Occasion; service: Service; canRequestQuotation: boolean }) {
     const [requesting, setRequesting] = useState(false);
 
@@ -111,7 +124,7 @@ function ServiceCard({ occasion, service, canRequestQuotation }: { occasion: Occ
     );
 }
 
-export default function Marketplace({ occasion, services, quotations, canRequestQuotation }: Props) {
+export default function Marketplace({ occasion, services, quotations, bookings, canRequestQuotation, canConfirmBooking }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="marketplace">
             <h2 className="text-sm font-medium text-text-primary">Your Quotation Requests</h2>
@@ -135,7 +148,30 @@ export default function Marketplace({ occasion, services, quotations, canRequest
                             <div className="flex items-center gap-2">
                                 <Badge variant={STATUS_VARIANTS[quotation.status] ?? 'neutral'}>{quotation.status}</Badge>
                                 {canRequestQuotation && quotation.status === 'submitted' && <AcceptRejectButtons quotation={quotation} />}
+                                {canConfirmBooking && quotation.status === 'accepted' && <ConfirmBookingButton quotation={quotation} />}
                             </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            <h2 className="mt-8 text-sm font-medium text-text-primary">Confirmed Bookings</h2>
+
+            {bookings.length === 0 ? (
+                <div className="mt-3">
+                    <EmptyState title="No confirmed bookings yet" description="Accepted quotations can be confirmed into Bookings above." />
+                </div>
+            ) : (
+                <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface">
+                    {bookings.map((booking) => (
+                        <li key={booking.id} className="flex items-center justify-between px-4 py-3">
+                            <div>
+                                <p className="text-sm font-medium text-text-primary">{booking.service?.name}</p>
+                                <p className="text-xs text-text-secondary">
+                                    {booking.agreed_price} {booking.currency}
+                                </p>
+                            </div>
+                            <Badge variant={STATUS_VARIANTS[booking.status] ?? 'neutral'}>{booking.status}</Badge>
                         </li>
                     ))}
                 </ul>

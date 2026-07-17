@@ -3,12 +3,14 @@
 namespace App\Domains\Marketplace\Presentation\Http\Controllers;
 
 use App\Domains\Marketplace\Application\Services\AcceptQuotationService;
+use App\Domains\Marketplace\Application\Services\ConfirmBookingService;
 use App\Domains\Marketplace\Application\Services\RejectQuotationService;
 use App\Domains\Marketplace\Application\Services\RequestQuotationService;
 use App\Domains\Marketplace\Application\Services\SubmitQuotationService;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Marketplace\Presentation\Http\Requests\AcceptQuotationRequest;
+use App\Domains\Marketplace\Presentation\Http\Requests\ConfirmBookingRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\RejectQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\RequestQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\SubmitQuotationRequest;
@@ -45,5 +47,12 @@ class QuotationController
         $service->handle($quotation, $request->user());
 
         return back()->with('success', 'Quotation rejected.');
+    }
+
+    public function confirm(ConfirmBookingRequest $request, Quotation $quotation, ConfirmBookingService $service): RedirectResponse
+    {
+        $service->handle($quotation, $request->user());
+
+        return back()->with('success', 'Booking confirmed.');
     }
 }

@@ -30,6 +30,21 @@ export interface Quotation {
     service?: { id: number; uuid: string; name: string };
 }
 
+export interface Booking {
+    id: number;
+    uuid: string;
+    occasion_id: number;
+    service_id: number;
+    quotation_id: number;
+    confirmed_by: number;
+    status: string;
+    agreed_price: string;
+    currency: string;
+    notes: string | null;
+    confirmed_at: string;
+    service?: { id: number; uuid: string; name: string };
+}
+
 export interface Vendor {
     id: number;
     uuid: string;

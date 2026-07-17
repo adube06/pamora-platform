@@ -4,6 +4,7 @@ namespace App\Domains\Marketplace\Presentation\Http\Controllers;
 
 use App\Domains\Marketplace\Domain\Enums\ServiceStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
+use App\Domains\Marketplace\Domain\Models\Booking;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Occasion\Domain\Models\Occasion;
@@ -29,7 +30,12 @@ class OccasionMarketplaceController
                 ->with('service:id,uuid,name')
                 ->latest()
                 ->get(),
+            'bookings' => Booking::where('occasion_id', $occasion->id)
+                ->with('service:id,uuid,name')
+                ->latest()
+                ->get(),
             'canRequestQuotation' => $request->user()->can('request-quotation', $occasion),
+            'canConfirmBooking' => $request->user()->can('confirm-booking', $occasion),
         ]);
     }
 }

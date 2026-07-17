@@ -5,6 +5,7 @@ namespace App\Domains\Communication\Infrastructure\Listeners;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
@@ -204,6 +205,30 @@ class NotificationSubscriber
             'type' => 'quotation_rejected',
             'title' => 'Quotation rejected',
             'body' => "Your quotation for \"{$event->quotation->service->name}\" was rejected.",
+        ]);
+    }
+
+    public function handleBookingConfirmed(BookingConfirmed $event): void
+    {
+        $vendorOwnerId = $event->booking->service->vendor->owner_id;
+
+        // Don't notify a member of their own action.
+        if ($vendorOwnerId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($vendorOwnerId)?->wantsNotification('booking_confirmed')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $vendorOwnerId,
+            'occasion_id' => $event->booking->occasion_id,
+            'subject_type' => 'Booking',
+            'subject_id' => $event->booking->id,
+            'type' => 'booking_confirmed',
+            'title' => 'Booking confirmed',
+            'body' => "Your Booking for \"{$event->booking->service->name}\" was confirmed.",
         ]);
     }
 }

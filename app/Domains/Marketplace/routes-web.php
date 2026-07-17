@@ -17,4 +17,5 @@ Route::middleware('auth')->group(function () {
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit'])->name('quotations.submit');
     Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept'])->name('quotations.accept');
     Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
+    Route::patch('/quotations/{quotation}/confirm', [QuotationController::class, 'confirm'])->name('quotations.confirm');
 });

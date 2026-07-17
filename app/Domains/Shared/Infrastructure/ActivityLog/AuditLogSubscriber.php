@@ -17,6 +17,7 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationRequested;
@@ -697,6 +698,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleBookingConfirmed(BookingConfirmed $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->booking->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Booking',
+            'subject_id' => $event->booking->id,
+            'action' => 'marketplace.booking_confirmed',
+            'description' => "{$event->actor->name} confirmed a Booking for \"{$event->booking->service->name}\".",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(VendorApplied::class, [self::class, 'handleVendorApplied']);
@@ -708,6 +721,7 @@ class AuditLogSubscriber
         $events->listen(QuotationSubmitted::class, [self::class, 'handleQuotationSubmitted']);
         $events->listen(QuotationAccepted::class, [self::class, 'handleQuotationAccepted']);
         $events->listen(QuotationRejected::class, [self::class, 'handleQuotationRejected']);
+        $events->listen(BookingConfirmed::class, [self::class, 'handleBookingConfirmed']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);
