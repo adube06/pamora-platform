@@ -9,6 +9,8 @@ use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Marketplace\Application\Services\ApproveVendorService;
+use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
+use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Marketplace\Domain\Models\Vendor;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
@@ -547,5 +549,32 @@ it('logs an entry when a vendor applies and when they are approved', function ()
 
     expect(ActivityLog::where('action', 'marketplace.vendor_approved')
         ->where('subject_id', $vendor->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a service is published and when it is updated', function () {
+    $owner = User::factory()->create();
+    $vendor = Vendor::factory()->create(['owner_id' => $owner->id, 'verification_status' => VendorVerificationStatus::Verified]);
+
+    $this->actingAs($owner)->post("/vendor/{$vendor->uuid}/services", [
+        'category' => 'photography',
+        'name' => 'Wedding Photography',
+        'pricing_model' => 'custom',
+    ]);
+
+    $service = Service::firstWhere('name', 'Wedding Photography');
+
+    expect(ActivityLog::where('action', 'marketplace.service_published')
+        ->where('subject_id', $service->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($owner)->patch("/vendor/services/{$service->uuid}", [
+        'category' => 'photography',
+        'name' => 'Wedding Photography Package',
+        'pricing_model' => 'custom',
+    ]);
+
+    expect(ActivityLog::where('action', 'marketplace.service_updated')
+        ->where('subject_id', $service->id)
         ->count())->toBe(1);
 });

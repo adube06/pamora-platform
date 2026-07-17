@@ -17,6 +17,8 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Marketplace\Domain\Events\ServicePublished;
+use App\Domains\Marketplace\Domain\Events\ServiceUpdated;
 use App\Domains\Marketplace\Domain\Events\VendorApplied;
 use App\Domains\Marketplace\Domain\Events\VendorApproved;
 use App\Domains\Marketplace\Domain\Events\VendorRejected;
@@ -619,11 +621,37 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleServicePublished(ServicePublished $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Service',
+            'subject_id' => $event->service->id,
+            'action' => 'marketplace.service_published',
+            'description' => "{$event->actor->name} published Service \"{$event->service->name}\".",
+        ]);
+    }
+
+    public function handleServiceUpdated(ServiceUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Service',
+            'subject_id' => $event->service->id,
+            'action' => 'marketplace.service_updated',
+            'description' => "{$event->actor->name} updated Service \"{$event->service->name}\".",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(VendorApplied::class, [self::class, 'handleVendorApplied']);
         $events->listen(VendorApproved::class, [self::class, 'handleVendorApproved']);
         $events->listen(VendorRejected::class, [self::class, 'handleVendorRejected']);
+        $events->listen(ServicePublished::class, [self::class, 'handleServicePublished']);
+        $events->listen(ServiceUpdated::class, [self::class, 'handleServiceUpdated']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);

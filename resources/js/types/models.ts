@@ -1,3 +1,17 @@
+export interface Service {
+    id: number;
+    uuid: string;
+    vendor_id: number;
+    category: string;
+    name: string;
+    description: string | null;
+    pricing_model: string;
+    price: string | null;
+    currency: string;
+    estimated_duration: string | null;
+    status: string;
+}
+
 export interface Vendor {
     id: number;
     uuid: string;
@@ -8,6 +22,7 @@ export interface Vendor {
     contact_phone: string;
     verification_status: string;
     status: string;
+    services: Service[];
 }
 
 export interface Occasion {
