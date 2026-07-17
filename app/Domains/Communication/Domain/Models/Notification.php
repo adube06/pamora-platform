@@ -27,6 +27,7 @@ class Notification extends Model
         'contribution_received' => 'Contribution Received',
         'member_joined' => 'Member Joined',
         'reminder_triggered' => 'Reminders',
+        'quotation_submitted' => 'Quotation Submitted',
     ];
 
     protected static function newFactory(): NotificationFactory

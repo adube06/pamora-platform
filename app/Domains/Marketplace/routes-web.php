@@ -1,5 +1,7 @@
 <?php
 
+use App\Domains\Marketplace\Presentation\Http\Controllers\OccasionMarketplaceController;
+use App\Domains\Marketplace\Presentation\Http\Controllers\QuotationController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\ServiceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
@@ -9,4 +11,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/vendor', [VendorController::class, 'store'])->name('vendor.store');
     Route::post('/vendor/{vendor}/services', [ServiceController::class, 'store'])->name('vendor.services.store');
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update'])->name('vendor.services.update');
+
+    Route::get('/occasions/{occasion}/marketplace', [OccasionMarketplaceController::class, 'index'])->name('occasions.marketplace');
+    Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store'])->name('occasions.quotations.store');
+    Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit'])->name('quotations.submit');
 });

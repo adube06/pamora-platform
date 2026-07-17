@@ -73,6 +73,7 @@ enum Role: string
                 Permission::CommunicationScheduleReminder->value,
                 Permission::MediaUpload->value,
                 Permission::MediaEditMetadata->value,
+                Permission::MarketplaceRequestQuotation->value,
             ],
 
             self::Treasurer => [

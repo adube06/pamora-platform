@@ -10,6 +10,7 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Marketplace\Application\Services\ApproveVendorService;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
+use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Marketplace\Domain\Models\Vendor;
 use App\Domains\Media\Domain\Models\Album;
@@ -576,5 +577,29 @@ it('logs an entry when a service is published and when it is updated', function 
 
     expect(ActivityLog::where('action', 'marketplace.service_updated')
         ->where('subject_id', $service->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a quotation is requested and when it is submitted', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $vendorOwner = User::factory()->create();
+    $vendor = Vendor::factory()->create(['owner_id' => $vendorOwner->id, 'verification_status' => VendorVerificationStatus::Verified]);
+    $service = Service::factory()->create(['vendor_id' => $vendor->id]);
+
+    $this->actingAs($host)->post("/occasions/{$occasion->slug}/quotations", ['service_id' => $service->id]);
+
+    $quotation = Quotation::firstWhere('service_id', $service->id);
+
+    expect(ActivityLog::where('action', 'marketplace.quotation_requested')
+        ->where('subject_id', $quotation->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($vendorOwner)->patch("/quotations/{$quotation->uuid}/submit", ['quoted_price' => 100000]);
+
+    expect(ActivityLog::where('action', 'marketplace.quotation_submitted')
+        ->where('subject_id', $quotation->id)
         ->count())->toBe(1);
 });

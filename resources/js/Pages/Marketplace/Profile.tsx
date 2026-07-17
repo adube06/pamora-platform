@@ -8,7 +8,7 @@ import Input from '@/Components/Input';
 import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import AppLayout from '@/Layouts/AppLayout';
-import type { Service, Vendor } from '@/types/models';
+import type { Quotation, Service, Vendor } from '@/types/models';
 
 interface Option {
     value: string;
@@ -122,8 +122,74 @@ function ServiceForm({
     );
 }
 
+function SubmitQuotationForm({ quotation, onClose }: { quotation: Quotation; onClose: () => void }) {
+    const { data, setData, patch, processing, errors } = useForm({
+        quoted_price: '',
+        vendor_notes: '',
+    });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        patch(route('quotations.submit', quotation.uuid), {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="mt-2 space-y-2 rounded-lg border border-border p-3">
+            <FormField label="Quoted Price (TZS)" htmlFor={`quoted_price_${quotation.id}`} required error={errors.quoted_price}>
+                <Input
+                    id={`quoted_price_${quotation.id}`}
+                    type="number"
+                    min={0}
+                    value={data.quoted_price}
+                    onChange={(e) => setData('quoted_price', e.target.value)}
+                    invalid={!!errors.quoted_price}
+                />
+            </FormField>
+
+            <FormField label="Notes" htmlFor={`vendor_notes_${quotation.id}`}>
+                <Textarea
+                    id={`vendor_notes_${quotation.id}`}
+                    value={data.vendor_notes}
+                    onChange={(e) => setData('vendor_notes', e.target.value)}
+                    rows={2}
+                />
+            </FormField>
+
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={processing}>
+                    Submit Quotation
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function PendingQuotation({ quotation }: { quotation: Quotation }) {
+    const [responding, setResponding] = useState(false);
+
+    if (responding) {
+        return <SubmitQuotationForm quotation={quotation} onClose={() => setResponding(false)} />;
+    }
+
+    return (
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-border p-2 text-xs">
+            <span className="text-text-secondary">{quotation.message ?? 'A quotation request is awaiting your response.'}</span>
+            <Button size="sm" onClick={() => setResponding(true)}>
+                Respond
+            </Button>
+        </div>
+    );
+}
+
 function ServiceCard({ service, categoryOptions, pricingModelOptions }: { service: Service; categoryOptions: Option[]; pricingModelOptions: Option[] }) {
     const [editing, setEditing] = useState(false);
+    const pendingQuotations = (service.quotations ?? []).filter((quotation) => quotation.status === 'draft');
 
     if (editing) {
         return (
@@ -170,6 +236,15 @@ function ServiceCard({ service, categoryOptions, pricingModelOptions }: { servic
                 {service.estimated_duration && <span>· {service.estimated_duration}</span>}
             </div>
             {service.description && <p className="mt-2 text-xs text-text-secondary">{service.description}</p>}
+
+            {pendingQuotations.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                    <p className="text-xs font-medium text-text-secondary">Quotation Requests</p>
+                    {pendingQuotations.map((quotation) => (
+                        <PendingQuotation key={quotation.id} quotation={quotation} />
+                    ))}
+                </div>
+            )}
         </Card>
     );
 }

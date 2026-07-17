@@ -49,6 +49,9 @@ enum Permission: string
     case MediaUpload = 'media.upload';
     case MediaEditMetadata = 'media.edit_metadata';
 
+    // Marketplace
+    case MarketplaceRequestQuotation = 'marketplace.request_quotation';
+
     /**
      * The full set of permissions granted to a Host on Occasion creation.
      *
@@ -83,6 +86,7 @@ enum Permission: string
             self::CommunicationScheduleReminder->value,
             self::MediaUpload->value,
             self::MediaEditMetadata->value,
+            self::MarketplaceRequestQuotation->value,
         ];
     }
 }

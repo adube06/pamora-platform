@@ -8,6 +8,7 @@ use App\Domains\Communication\Infrastructure\Console\Commands\DispatchRemindersC
 use App\Domains\Communication\Infrastructure\Listeners\NotificationSubscriber;
 use App\Domains\Communication\Presentation\Policies\NotificationPolicy;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
@@ -51,6 +52,7 @@ class CommunicationServiceProvider extends ServiceProvider
         Event::listen(ContributionReceived::class, [NotificationSubscriber::class, 'handleContributionReceived']);
         Event::listen(MemberJoined::class, [NotificationSubscriber::class, 'handleMemberJoined']);
         Event::listen(ReminderTriggered::class, [NotificationSubscriber::class, 'handleReminderTriggered']);
+        Event::listen(QuotationSubmitted::class, [NotificationSubscriber::class, 'handleQuotationSubmitted']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

@@ -17,6 +17,8 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Marketplace\Domain\Events\QuotationRequested;
+use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
 use App\Domains\Marketplace\Domain\Events\ServicePublished;
 use App\Domains\Marketplace\Domain\Events\ServiceUpdated;
 use App\Domains\Marketplace\Domain\Events\VendorApplied;
@@ -645,6 +647,30 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleQuotationRequested(QuotationRequested $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->quotation->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Quotation',
+            'subject_id' => $event->quotation->id,
+            'action' => 'marketplace.quotation_requested',
+            'description' => "{$event->actor->name} requested a quotation for \"{$event->quotation->service->name}\".",
+        ]);
+    }
+
+    public function handleQuotationSubmitted(QuotationSubmitted $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->quotation->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Quotation',
+            'subject_id' => $event->quotation->id,
+            'action' => 'marketplace.quotation_submitted',
+            'description' => "{$event->actor->name} submitted a quotation for \"{$event->quotation->service->name}\".",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(VendorApplied::class, [self::class, 'handleVendorApplied']);
@@ -652,6 +678,8 @@ class AuditLogSubscriber
         $events->listen(VendorRejected::class, [self::class, 'handleVendorRejected']);
         $events->listen(ServicePublished::class, [self::class, 'handleServicePublished']);
         $events->listen(ServiceUpdated::class, [self::class, 'handleServiceUpdated']);
+        $events->listen(QuotationRequested::class, [self::class, 'handleQuotationRequested']);
+        $events->listen(QuotationSubmitted::class, [self::class, 'handleQuotationSubmitted']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);

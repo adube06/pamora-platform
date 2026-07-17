@@ -5,6 +5,7 @@ namespace App\Domains\Communication\Infrastructure\Listeners;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
@@ -129,6 +130,30 @@ class NotificationSubscriber
             'type' => 'reminder_triggered',
             'title' => 'Reminder',
             'body' => "\"{$timelineEvent->name}\" is coming up.",
+        ]);
+    }
+
+    public function handleQuotationSubmitted(QuotationSubmitted $event): void
+    {
+        $hostUserId = $event->quotation->requested_by;
+
+        // Don't notify a member of their own action.
+        if ($hostUserId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($hostUserId)?->wantsNotification('quotation_submitted')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $hostUserId,
+            'occasion_id' => $event->quotation->occasion_id,
+            'subject_type' => 'Quotation',
+            'subject_id' => $event->quotation->id,
+            'type' => 'quotation_submitted',
+            'title' => 'Quotation submitted',
+            'body' => "A Vendor submitted a quotation for \"{$event->quotation->service->name}\".",
         ]);
     }
 }

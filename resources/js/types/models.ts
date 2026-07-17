@@ -10,6 +10,24 @@ export interface Service {
     currency: string;
     estimated_duration: string | null;
     status: string;
+    vendor?: { id: number; business_name: string };
+    quotations?: Quotation[];
+}
+
+export interface Quotation {
+    id: number;
+    uuid: string;
+    occasion_id: number;
+    service_id: number;
+    requested_by: number;
+    message: string | null;
+    status: string;
+    quoted_price: string | null;
+    currency: string;
+    vendor_notes: string | null;
+    requested_at: string;
+    responded_at: string | null;
+    service?: { id: number; uuid: string; name: string };
 }
 
 export interface Vendor {
