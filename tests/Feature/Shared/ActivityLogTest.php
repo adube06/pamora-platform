@@ -202,6 +202,17 @@ it('logs an entry when a task is created and when it is assigned', function () {
     expect(ActivityLog::where('action', 'planning.task_assigned')->where('subject_id', $task->id)->count())->toBe(1);
 });
 
+it('logs an entry when a task is updated', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $task = Task::factory()->create(['occasion_id' => $occasion->id, 'title' => 'Book DJ']);
+
+    $this->actingAs($host)->patch("/tasks/{$task->uuid}", ['title' => 'Book a DJ']);
+
+    expect(ActivityLog::where('action', 'planning.task_updated')->where('subject_id', $task->id)->count())->toBe(1);
+});
+
 it('logs an entry when a task is completed and when it is reopened', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);

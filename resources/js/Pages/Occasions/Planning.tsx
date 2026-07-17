@@ -7,6 +7,7 @@ import EmptyState from '@/Components/EmptyState';
 import FormField from '@/Components/FormField';
 import Input from '@/Components/Input';
 import Select from '@/Components/Select';
+import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import type { Checklist, Milestone, Occasion, OccasionMember, Task, TimelineEvent } from '@/types/models';
 
@@ -185,9 +186,143 @@ function TaskDependencies({ task, allTasks, canEditTask }: { task: Task; allTask
     );
 }
 
+function TaskEditForm({ task, checklists, onClose }: { task: Task; checklists: Checklist[]; onClose: () => void }) {
+    const { data, setData, patch, processing, errors } = useForm({
+        title: task.title,
+        description: task.description ?? '',
+        priority: task.priority,
+        due_date: task.due_date ?? '',
+        checklist_id: task.checklist_id !== null ? String(task.checklist_id) : '',
+    });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        patch(route('tasks.update', task.uuid), {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="mt-2 space-y-2 rounded-lg border border-border p-3">
+            <FormField label="Title" htmlFor={`title-${task.id}`} required error={errors.title}>
+                <Input
+                    id={`title-${task.id}`}
+                    value={data.title}
+                    onChange={(e) => setData('title', e.target.value)}
+                    invalid={!!errors.title}
+                />
+            </FormField>
+
+            <FormField label="Description" htmlFor={`description-${task.id}`}>
+                <Textarea
+                    id={`description-${task.id}`}
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    rows={2}
+                />
+            </FormField>
+
+            <FormField label="Priority" htmlFor={`priority-${task.id}`}>
+                <Select id={`priority-${task.id}`} value={data.priority} onChange={(e) => setData('priority', e.target.value)}>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </Select>
+            </FormField>
+
+            {checklists.length > 0 && (
+                <FormField label="Checklist" htmlFor={`checklist-${task.id}`} error={errors.checklist_id}>
+                    <Select
+                        id={`checklist-${task.id}`}
+                        value={data.checklist_id}
+                        onChange={(e) => setData('checklist_id', e.target.value)}
+                        invalid={!!errors.checklist_id}
+                    >
+                        <option value="">None</option>
+                        {checklists.map((checklist) => (
+                            <option key={checklist.id} value={checklist.id}>
+                                {checklist.name}
+                            </option>
+                        ))}
+                    </Select>
+                </FormField>
+            )}
+
+            <FormField label="Due date" htmlFor={`due_date-${task.id}`}>
+                <Input
+                    id={`due_date-${task.id}`}
+                    type="date"
+                    value={data.due_date}
+                    onChange={(e) => setData('due_date', e.target.value)}
+                />
+            </FormField>
+
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={processing}>
+                    Save
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function TaskRow({
+    task,
+    allTasks,
+    checklists,
+    members,
+    canCompleteTask,
+    canReopenTask,
+    canEditTask,
+}: {
+    task: Task;
+    allTasks: Task[];
+    checklists: Checklist[];
+    members: OccasionMember[];
+    canCompleteTask: boolean;
+    canReopenTask: boolean;
+    canEditTask: boolean;
+}) {
+    const [editing, setEditing] = useState(false);
+
+    return (
+        <li className="px-4 py-3">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-text-primary">{task.title}</p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
+                        <span>{STATUS_LABELS[task.status]}</span>
+                        <Badge variant={PRIORITY_VARIANTS[task.priority] ?? 'neutral'}>{task.priority}</Badge>
+                        {task.due_date && <span>Due {task.due_date}</span>}
+                        {task.is_blocked && <Badge variant="warning">Blocked</Badge>}
+                    </div>
+                    <TaskDependencies task={task} allTasks={allTasks} canEditTask={canEditTask} />
+                </div>
+                <div className="flex items-center gap-2">
+                    <AssignSelect task={task} members={members} />
+                    <TaskStatusAction task={task} canCompleteTask={canCompleteTask} canReopenTask={canReopenTask} />
+                    {canEditTask && !editing && (
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+                            Edit
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {editing && <TaskEditForm task={task} checklists={checklists} onClose={() => setEditing(false)} />}
+        </li>
+    );
+}
+
 function TaskList({
     tasks,
     allTasks,
+    checklists,
     members,
     canCompleteTask,
     canReopenTask,
@@ -195,6 +330,7 @@ function TaskList({
 }: {
     tasks: Task[];
     allTasks: Task[];
+    checklists: Checklist[];
     members: OccasionMember[];
     canCompleteTask: boolean;
     canReopenTask: boolean;
@@ -203,22 +339,16 @@ function TaskList({
     return (
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
             {tasks.map((task) => (
-                <li key={task.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                        <p className="text-sm font-medium text-text-primary">{task.title}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
-                            <span>{STATUS_LABELS[task.status]}</span>
-                            <Badge variant={PRIORITY_VARIANTS[task.priority] ?? 'neutral'}>{task.priority}</Badge>
-                            {task.due_date && <span>Due {task.due_date}</span>}
-                            {task.is_blocked && <Badge variant="warning">Blocked</Badge>}
-                        </div>
-                        <TaskDependencies task={task} allTasks={allTasks} canEditTask={canEditTask} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <AssignSelect task={task} members={members} />
-                        <TaskStatusAction task={task} canCompleteTask={canCompleteTask} canReopenTask={canReopenTask} />
-                    </div>
-                </li>
+                <TaskRow
+                    key={task.id}
+                    task={task}
+                    allTasks={allTasks}
+                    checklists={checklists}
+                    members={members}
+                    canCompleteTask={canCompleteTask}
+                    canReopenTask={canReopenTask}
+                    canEditTask={canEditTask}
+                />
             ))}
         </ul>
     );
@@ -445,6 +575,7 @@ export default function Planning({
                                 <TaskList
                                     tasks={checklistTasks}
                                     allTasks={tasks}
+                                    checklists={checklists}
                                     members={members}
                                     canCompleteTask={canCompleteTask}
                                     canReopenTask={canReopenTask}
@@ -462,6 +593,7 @@ export default function Planning({
                             <TaskList
                                 tasks={ungroupedTasks}
                                 allTasks={tasks}
+                                checklists={checklists}
                                 members={members}
                                 canCompleteTask={canCompleteTask}
                                 canReopenTask={canReopenTask}

@@ -10,6 +10,7 @@ use App\Domains\Planning\Application\Services\CompleteTaskService;
 use App\Domains\Planning\Application\Services\CreateTaskService;
 use App\Domains\Planning\Application\Services\RemoveTaskDependencyService;
 use App\Domains\Planning\Application\Services\ReopenTaskService;
+use App\Domains\Planning\Application\Services\UpdateTaskService;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Presentation\Http\Requests\AddTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\AssignTaskRequest;
@@ -17,6 +18,7 @@ use App\Domains\Planning\Presentation\Http\Requests\CompleteTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\RemoveTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\ReopenTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\StoreTaskRequest;
+use App\Domains\Planning\Presentation\Http\Requests\UpdateTaskRequest;
 use App\Domains\Planning\Presentation\Http\Resources\TaskResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +43,16 @@ class TaskController
             'success' => true,
             'data' => new TaskResource($task),
         ], 201);
+    }
+
+    public function update(UpdateTaskRequest $request, Task $task, UpdateTaskService $service): JsonResponse
+    {
+        $task = $service->handle($task, $request->validated(), $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new TaskResource($task),
+        ]);
     }
 
     public function assign(AssignTaskRequest $request, Task $task, AssignTaskService $service): JsonResponse

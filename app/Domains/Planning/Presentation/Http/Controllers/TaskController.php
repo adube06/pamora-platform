@@ -8,16 +8,25 @@ use App\Domains\Planning\Application\Services\AssignTaskService;
 use App\Domains\Planning\Application\Services\CompleteTaskService;
 use App\Domains\Planning\Application\Services\RemoveTaskDependencyService;
 use App\Domains\Planning\Application\Services\ReopenTaskService;
+use App\Domains\Planning\Application\Services\UpdateTaskService;
 use App\Domains\Planning\Domain\Models\Task;
 use App\Domains\Planning\Presentation\Http\Requests\AddTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\AssignTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\CompleteTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\RemoveTaskDependencyRequest;
 use App\Domains\Planning\Presentation\Http\Requests\ReopenTaskRequest;
+use App\Domains\Planning\Presentation\Http\Requests\UpdateTaskRequest;
 use Illuminate\Http\RedirectResponse;
 
 class TaskController
 {
+    public function update(UpdateTaskRequest $request, Task $task, UpdateTaskService $service): RedirectResponse
+    {
+        $service->handle($task, $request->validated(), $request->user());
+
+        return back()->with('success', 'Task updated.');
+    }
+
     public function assign(AssignTaskRequest $request, Task $task, AssignTaskService $service): RedirectResponse
     {
         $assignee = OccasionMember::findOrFail($request->validated('assignee_id'));

@@ -43,6 +43,7 @@ use App\Domains\Planning\Domain\Events\TaskCreated;
 use App\Domains\Planning\Domain\Events\TaskDependencyAdded;
 use App\Domains\Planning\Domain\Events\TaskDependencyRemoved;
 use App\Domains\Planning\Domain\Events\TaskReopened;
+use App\Domains\Planning\Domain\Events\TaskUpdated;
 use App\Domains\Planning\Domain\Events\TimelineEventScheduled;
 use App\Domains\Planning\Domain\Models\Task;
 use Illuminate\Auth\Events\PasswordReset;
@@ -299,6 +300,18 @@ class AuditLogSubscriber
             'subject_id' => $event->task->id,
             'action' => 'planning.task_created',
             'description' => "{$event->actor->name} created task \"{$event->task->title}\".",
+        ]);
+    }
+
+    public function handleTaskUpdated(TaskUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->task->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Task',
+            'subject_id' => $event->task->id,
+            'action' => 'planning.task_updated',
+            'description' => "{$event->actor->name} updated task \"{$event->task->title}\".",
         ]);
     }
 
@@ -588,6 +601,7 @@ class AuditLogSubscriber
         $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);
         $events->listen(RsvpReopened::class, [self::class, 'handleRsvpReopened']);
         $events->listen(TaskCreated::class, [self::class, 'handleTaskCreated']);
+        $events->listen(TaskUpdated::class, [self::class, 'handleTaskUpdated']);
         $events->listen(TaskAssigned::class, [self::class, 'handleTaskAssigned']);
         $events->listen(TaskCompleted::class, [self::class, 'handleTaskCompleted']);
         $events->listen(TaskReopened::class, [self::class, 'handleTaskReopened']);
