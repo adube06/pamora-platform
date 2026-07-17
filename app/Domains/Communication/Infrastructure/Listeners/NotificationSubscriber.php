@@ -4,7 +4,9 @@ namespace App\Domains\Communication\Infrastructure\Listeners;
 
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
+use App\Domains\Communication\Infrastructure\Mail\NotificationMail;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Integrations\Domain\Contracts\EmailProvider;
 use App\Domains\Marketplace\Domain\Events\BookingCompleted;
 use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
@@ -20,9 +22,18 @@ use App\Models\User;
  * FR-002 — generates in-app Notifications from Domain Events (ADR-006).
  * A distinct concern from AuditLogSubscriber (recipient-facing, not
  * compliance-facing) even though both react to the same events.
+ *
+ * Every Notification is also emailed via the Integrations domain's
+ * EmailProvider (deliver()) — Communication owns the content
+ * (NotificationMail), Integrations owns the transport, per the
+ * Integrations PRD's Architecture Principle.
  */
 class NotificationSubscriber
 {
+    public function __construct(
+        private readonly EmailProvider $emailProvider,
+    ) {}
+
     public function handleTaskAssigned(TaskAssigned $event): void
     {
         $assigneeUserId = $event->task->assignee->user_id;
@@ -32,11 +43,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($assigneeUserId)?->wantsNotification('task_assigned')) {
+        $recipient = User::find($assigneeUserId);
+
+        if (! $recipient?->wantsNotification('task_assigned')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $assigneeUserId,
             'occasion_id' => $event->task->occasion_id,
             'subject_type' => 'Task',
@@ -54,11 +67,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($event->task->created_by)?->wantsNotification('task_completed')) {
+        $recipient = User::find($event->task->created_by);
+
+        if (! $recipient?->wantsNotification('task_completed')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $event->task->created_by,
             'occasion_id' => $event->task->occasion_id,
             'subject_type' => 'Task',
@@ -78,11 +93,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($occasion->host_id)?->wantsNotification('contribution_received')) {
+        $recipient = User::find($occasion->host_id);
+
+        if (! $recipient?->wantsNotification('contribution_received')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $occasion->host_id,
             'occasion_id' => $occasion->id,
             'subject_type' => 'Contribution',
@@ -104,11 +121,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($occasion->host_id)?->wantsNotification('member_joined')) {
+        $recipient = User::find($occasion->host_id);
+
+        if (! $recipient?->wantsNotification('member_joined')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $occasion->host_id,
             'occasion_id' => $occasion->id,
             'subject_type' => 'OccasionMember',
@@ -123,11 +142,13 @@ class NotificationSubscriber
     {
         $timelineEvent = $event->reminderRule->timelineEvent;
 
-        if (! User::find($event->reminderRule->created_by)?->wantsNotification('reminder_triggered')) {
+        $recipient = User::find($event->reminderRule->created_by);
+
+        if (! $recipient?->wantsNotification('reminder_triggered')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $event->reminderRule->created_by,
             'occasion_id' => $event->reminderRule->occasion_id,
             'subject_type' => 'TimelineEvent',
@@ -147,11 +168,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($hostUserId)?->wantsNotification('quotation_submitted')) {
+        $recipient = User::find($hostUserId);
+
+        if (! $recipient?->wantsNotification('quotation_submitted')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $hostUserId,
             'occasion_id' => $event->quotation->occasion_id,
             'subject_type' => 'Quotation',
@@ -171,11 +194,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($vendorOwnerId)?->wantsNotification('quotation_accepted')) {
+        $recipient = User::find($vendorOwnerId);
+
+        if (! $recipient?->wantsNotification('quotation_accepted')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $vendorOwnerId,
             'occasion_id' => $event->quotation->occasion_id,
             'subject_type' => 'Quotation',
@@ -195,11 +220,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($vendorOwnerId)?->wantsNotification('quotation_rejected')) {
+        $recipient = User::find($vendorOwnerId);
+
+        if (! $recipient?->wantsNotification('quotation_rejected')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $vendorOwnerId,
             'occasion_id' => $event->quotation->occasion_id,
             'subject_type' => 'Quotation',
@@ -219,11 +246,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($vendorOwnerId)?->wantsNotification('booking_confirmed')) {
+        $recipient = User::find($vendorOwnerId);
+
+        if (! $recipient?->wantsNotification('booking_confirmed')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $vendorOwnerId,
             'occasion_id' => $event->booking->occasion_id,
             'subject_type' => 'Booking',
@@ -243,11 +272,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($hostUserId)?->wantsNotification('booking_completed')) {
+        $recipient = User::find($hostUserId);
+
+        if (! $recipient?->wantsNotification('booking_completed')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $hostUserId,
             'occasion_id' => $event->booking->occasion_id,
             'subject_type' => 'Booking',
@@ -267,11 +298,13 @@ class NotificationSubscriber
             return;
         }
 
-        if (! User::find($vendorOwnerId)?->wantsNotification('review_published')) {
+        $recipient = User::find($vendorOwnerId);
+
+        if (! $recipient?->wantsNotification('review_published')) {
             return;
         }
 
-        Notification::create([
+        $this->deliver($recipient, [
             'user_id' => $vendorOwnerId,
             'occasion_id' => $event->review->occasion_id,
             'subject_type' => 'Review',
@@ -280,5 +313,17 @@ class NotificationSubscriber
             'title' => 'New review received',
             'body' => "You received a {$event->review->rating}-star review for \"{$event->review->service->name}\".",
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function deliver(User $recipient, array $data): Notification
+    {
+        $notification = Notification::create($data);
+
+        $this->emailProvider->send(new NotificationMail($notification), $recipient->email);
+
+        return $notification;
     }
 }
