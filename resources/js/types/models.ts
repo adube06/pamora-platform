@@ -1,3 +1,15 @@
+export interface Vendor {
+    id: number;
+    uuid: string;
+    business_name: string;
+    categories: string[];
+    service_areas: string[] | null;
+    contact_email: string;
+    contact_phone: string;
+    verification_status: string;
+    status: string;
+}
+
 export interface Occasion {
     id: number;
     uuid: string;

@@ -62,6 +62,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
                         <ThemeToggle />
                         {auth.user && (
                             <nav className="flex items-center gap-4 text-sm text-text-secondary">
+                                <Link href={route('vendor.index')} className="hover:text-text-primary">
+                                    Marketplace
+                                </Link>
                                 <Link href={route('profile.show')} className="hover:text-text-primary">
                                     {auth.user.name}
                                 </Link>

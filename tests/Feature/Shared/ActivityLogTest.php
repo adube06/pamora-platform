@@ -8,6 +8,8 @@ use App\Domains\Finance\Domain\Models\BudgetItem;
 use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Finance\Domain\Models\Pledge;
+use App\Domains\Marketplace\Application\Services\ApproveVendorService;
+use App\Domains\Marketplace\Domain\Models\Vendor;
 use App\Domains\Media\Domain\Models\Album;
 use App\Domains\Media\Domain\Models\MediaAsset;
 use App\Domains\Occasion\Domain\Enums\OccasionStatus;
@@ -522,4 +524,28 @@ it('logs an entry when a pledge is recorded and when its status is updated', fun
 
     expect($log)->not->toBeNull()
         ->and($log->description)->toContain('Confirmed');
+});
+
+it('logs an entry when a vendor applies and when they are approved', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/vendor', [
+        'business_name' => 'Amina Photography',
+        'categories' => ['photography'],
+        'contact_email' => 'hello@aminaphotography.example',
+        'contact_phone' => '+255700000000',
+    ]);
+
+    $vendor = Vendor::firstWhere('owner_id', $user->id);
+
+    expect(ActivityLog::where('action', 'marketplace.vendor_applied')
+        ->where('subject_id', $vendor->id)
+        ->count())->toBe(1);
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    app(ApproveVendorService::class)->handle($vendor, $admin);
+
+    expect(ActivityLog::where('action', 'marketplace.vendor_approved')
+        ->where('subject_id', $vendor->id)
+        ->count())->toBe(1);
 });

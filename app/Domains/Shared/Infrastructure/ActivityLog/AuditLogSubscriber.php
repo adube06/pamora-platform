@@ -17,6 +17,9 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Marketplace\Domain\Events\VendorApplied;
+use App\Domains\Marketplace\Domain\Events\VendorApproved;
+use App\Domains\Marketplace\Domain\Events\VendorRejected;
 use App\Domains\Media\Domain\Events\AlbumCreated;
 use App\Domains\Media\Domain\Events\MediaUpdated;
 use App\Domains\Media\Domain\Events\MediaUploaded;
@@ -580,8 +583,47 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleVendorApplied(VendorApplied $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Vendor',
+            'subject_id' => $event->vendor->id,
+            'action' => 'marketplace.vendor_applied',
+            'description' => "{$event->actor->name} applied to become a Vendor as \"{$event->vendor->business_name}\".",
+        ]);
+    }
+
+    public function handleVendorApproved(VendorApproved $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Vendor',
+            'subject_id' => $event->vendor->id,
+            'action' => 'marketplace.vendor_approved',
+            'description' => "{$event->actor->name} approved Vendor \"{$event->vendor->business_name}\".",
+        ]);
+    }
+
+    public function handleVendorRejected(VendorRejected $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Vendor',
+            'subject_id' => $event->vendor->id,
+            'action' => 'marketplace.vendor_rejected',
+            'description' => "{$event->actor->name} rejected Vendor \"{$event->vendor->business_name}\".",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
+        $events->listen(VendorApplied::class, [self::class, 'handleVendorApplied']);
+        $events->listen(VendorApproved::class, [self::class, 'handleVendorApproved']);
+        $events->listen(VendorRejected::class, [self::class, 'handleVendorRejected']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);
