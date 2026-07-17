@@ -13,4 +13,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/occasion-members/{occasionMember}/reopen-rsvp', [RsvpController::class, 'reopen']);
     Route::delete('/occasion-members/{occasionMember}', [MemberController::class, 'destroy']);
     Route::patch('/occasion-members/{occasionMember}/responsibilities', [MemberController::class, 'updateResponsibilities']);
+    Route::patch('/occasion-members/{occasionMember}/role', [MemberController::class, 'updateRole']);
 });

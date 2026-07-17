@@ -30,6 +30,11 @@ class OccasionMemberPolicy
         return $occasion->memberFor($user)?->hasPermission(Permission::PeopleAssignResponsibility) ?? false;
     }
 
+    public function managePermissions(User $user, Occasion $occasion): bool
+    {
+        return $occasion->memberFor($user)?->hasPermission(Permission::PeopleManagePermissions) ?? false;
+    }
+
     /**
      * BR-013 names "the Host" specifically, not a Permission Catalog
      * capability — a direct ownership check, same reasoning as Occasion's

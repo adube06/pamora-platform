@@ -24,6 +24,7 @@ interface Props {
     canTransferOwnership: boolean;
     responsibilityOptions: ResponsibilityOption[];
     canAssignResponsibilities: boolean;
+    canManagePermissions: boolean;
 }
 
 const NON_ORGANIZING_ROLES = ['host', 'guest', 'observer'];
@@ -72,6 +73,25 @@ function RemoveMemberButton({ member }: { member: OccasionMember }) {
         <Button variant="danger" size="sm" loading={processing} onClick={remove}>
             Remove
         </Button>
+    );
+}
+
+function RoleSelect({ member, roles }: { member: OccasionMember; roles: RoleOption[] }) {
+    const { data, setData, patch, processing } = useForm({ role: member.role });
+
+    function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+        setData('role', e.target.value);
+        patch(route('occasion-members.update-role', member.uuid), { preserveScroll: true });
+    }
+
+    return (
+        <Select value={data.role} onChange={handleChange} disabled={processing} className="w-auto px-2 py-1 text-xs">
+            {roles.map((role) => (
+                <option key={role.value} value={role.value}>
+                    {role.label}
+                </option>
+            ))}
+        </Select>
     );
 }
 
@@ -226,6 +246,7 @@ export default function Committee({
     canTransferOwnership,
     responsibilityOptions,
     canAssignResponsibilities,
+    canManagePermissions,
 }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="committee">
@@ -255,7 +276,11 @@ export default function Committee({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Badge>{member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}</Badge>
+                                    {canManagePermissions && member.role !== 'host' ? (
+                                        <RoleSelect member={member} roles={roles} />
+                                    ) : (
+                                        <Badge>{member.role === 'host' ? 'Host' : roleLabel(roles, member.role)}</Badge>
+                                    )}
                                     <RsvpBadge status={member.rsvp_status} />
                                     {canReopenRsvp && member.rsvp_status && <ReopenRsvpButton member={member} />}
                                     {canTransferOwnership && member.status === 'active' && !NON_ORGANIZING_ROLES.includes(member.role) && (

@@ -6,6 +6,7 @@ use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Application\Services\AssignResponsibilitiesService;
 use App\Domains\People\Application\Services\InviteMemberService;
 use App\Domains\People\Application\Services\RemoveMemberService;
+use App\Domains\People\Application\Services\UpdateMemberRoleService;
 use App\Domains\People\Domain\Enums\InvitationStatus;
 use App\Domains\People\Domain\Enums\Responsibility;
 use App\Domains\People\Domain\Enums\Role;
@@ -13,6 +14,7 @@ use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\People\Presentation\Http\Requests\AssignResponsibilitiesRequest;
 use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
 use App\Domains\People\Presentation\Http\Requests\RemoveMemberRequest;
+use App\Domains\People\Presentation\Http\Requests\UpdateMemberRoleRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,6 +43,7 @@ class CommitteeController
                 ->map(fn (Responsibility $responsibility) => ['value' => $responsibility->value, 'label' => $responsibility->label()])
                 ->values(),
             'canAssignResponsibilities' => $request->user()->can('assign-responsibilities', $occasion),
+            'canManagePermissions' => $request->user()->can('manage-permissions', $occasion),
         ]);
     }
 
@@ -63,5 +66,12 @@ class CommitteeController
         $service->handle($occasionMember, $request->validated('responsibilities', []), $request->user());
 
         return back()->with('success', 'Responsibilities updated.');
+    }
+
+    public function updateRole(UpdateMemberRoleRequest $request, OccasionMember $occasionMember, UpdateMemberRoleService $service): RedirectResponse
+    {
+        $service->handle($occasionMember, Role::from($request->validated('role')), $request->user());
+
+        return back()->with('success', 'Role updated.');
     }
 }

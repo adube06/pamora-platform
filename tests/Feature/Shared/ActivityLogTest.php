@@ -159,6 +159,19 @@ it('logs an entry when responsibilities are assigned', function () {
         ->count())->toBe(1);
 });
 
+it('logs an entry when a member\'s role is changed', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+    $target = OccasionMember::factory()->role(Role::Member)->create(['occasion_id' => $occasion->id]);
+
+    $this->actingAs($host)->patch("/occasion-members/{$target->uuid}/role", ['role' => 'treasurer']);
+
+    expect(ActivityLog::where('action', 'people.role_updated')
+        ->where('subject_id', $target->id)
+        ->count())->toBe(1);
+});
+
 it('logs an entry when ownership is transferred', function () {
     $host = User::factory()->create();
     $occasion = Occasion::factory()->create(['host_id' => $host->id]);

@@ -31,6 +31,7 @@ use App\Domains\People\Domain\Events\InvitationDeclined;
 use App\Domains\People\Domain\Events\MemberInvited;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\People\Domain\Events\MemberRemoved;
+use App\Domains\People\Domain\Events\MemberRoleUpdated;
 use App\Domains\People\Domain\Events\ResponsibilityAssigned;
 use App\Domains\People\Domain\Events\RsvpReopened;
 use App\Domains\People\Domain\Events\RsvpSubmitted;
@@ -226,6 +227,18 @@ class AuditLogSubscriber
             'description' => $labels !== ''
                 ? "{$event->actor->name} set {$event->member->user->name}'s responsibilities to: {$labels}."
                 : "{$event->actor->name} cleared {$event->member->user->name}'s responsibilities.",
+        ]);
+    }
+
+    public function handleMemberRoleUpdated(MemberRoleUpdated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->member->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'OccasionMember',
+            'subject_id' => $event->member->id,
+            'action' => 'people.role_updated',
+            'description' => "{$event->actor->name} changed {$event->member->user->name}'s role from {$event->previousRole->label()} to {$event->member->role->label()}.",
         ]);
     }
 
@@ -569,6 +582,7 @@ class AuditLogSubscriber
         $events->listen(InvitationDeclined::class, [self::class, 'handleInvitationDeclined']);
         $events->listen(MemberRemoved::class, [self::class, 'handleMemberRemoved']);
         $events->listen(ResponsibilityAssigned::class, [self::class, 'handleResponsibilityAssigned']);
+        $events->listen(MemberRoleUpdated::class, [self::class, 'handleMemberRoleUpdated']);
         $events->listen(MemberInvited::class, [self::class, 'handleMemberInvited']);
         $events->listen(MemberJoined::class, [self::class, 'handleMemberJoined']);
         $events->listen(RsvpSubmitted::class, [self::class, 'handleRsvpSubmitted']);
