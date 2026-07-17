@@ -5,6 +5,7 @@ import Button from '@/Components/Button';
 import Card from '@/Components/Card';
 import EmptyState from '@/Components/EmptyState';
 import FormField from '@/Components/FormField';
+import Select from '@/Components/Select';
 import Textarea from '@/Components/Textarea';
 import OccasionWorkspaceLayout from '@/Layouts/OccasionWorkspaceLayout';
 import type { Booking, Occasion, Quotation, Service } from '@/types/models';
@@ -16,6 +17,7 @@ interface Props {
     bookings: Booking[];
     canRequestQuotation: boolean;
     canConfirmBooking: boolean;
+    canLeaveReview: boolean;
 }
 
 const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'error' | 'neutral'> = {
@@ -96,6 +98,80 @@ function ConfirmBookingButton({ quotation }: { quotation: Quotation }) {
     );
 }
 
+function LeaveReviewForm({ booking, onClose }: { booking: Booking; onClose: () => void }) {
+    const { data, setData, post, processing, errors } = useForm({
+        rating: '5',
+        comment: '',
+    });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('bookings.review.store', booking.uuid), {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="mt-2 space-y-2 rounded-lg border border-border p-3">
+            <FormField label="Rating" htmlFor={`review_rating_${booking.id}`} required error={errors.rating}>
+                <Select id={`review_rating_${booking.id}`} value={data.rating} onChange={(e) => setData('rating', e.target.value)}>
+                    {[5, 4, 3, 2, 1].map((value) => (
+                        <option key={value} value={value}>
+                            {value} star{value === 1 ? '' : 's'}
+                        </option>
+                    ))}
+                </Select>
+            </FormField>
+
+            <FormField label="Comment (optional)" htmlFor={`review_comment_${booking.id}`} error={errors.comment}>
+                <Textarea
+                    id={`review_comment_${booking.id}`}
+                    value={data.comment}
+                    onChange={(e) => setData('comment', e.target.value)}
+                    rows={2}
+                />
+            </FormField>
+
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={processing}>
+                    Submit Review
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function BookingReview({ booking, canLeaveReview }: { booking: Booking; canLeaveReview: boolean }) {
+    const [reviewing, setReviewing] = useState(false);
+
+    if (booking.review) {
+        return (
+            <div className="mt-2 rounded-lg border border-border p-2 text-xs">
+                <span className="font-medium text-text-primary">{booking.review.rating} / 5</span>
+                {booking.review.comment && <p className="mt-1 text-text-secondary">{booking.review.comment}</p>}
+            </div>
+        );
+    }
+
+    if (!canLeaveReview) {
+        return null;
+    }
+
+    if (reviewing) {
+        return <LeaveReviewForm booking={booking} onClose={() => setReviewing(false)} />;
+    }
+
+    return (
+        <Button size="sm" className="mt-2" onClick={() => setReviewing(true)}>
+            Leave a Review
+        </Button>
+    );
+}
+
 function ServiceCard({ occasion, service, canRequestQuotation }: { occasion: Occasion; service: Service; canRequestQuotation: boolean }) {
     const [requesting, setRequesting] = useState(false);
 
@@ -125,7 +201,7 @@ function ServiceCard({ occasion, service, canRequestQuotation }: { occasion: Occ
     );
 }
 
-export default function Marketplace({ occasion, services, quotations, bookings, canRequestQuotation, canConfirmBooking }: Props) {
+export default function Marketplace({ occasion, services, quotations, bookings, canRequestQuotation, canConfirmBooking, canLeaveReview }: Props) {
     return (
         <OccasionWorkspaceLayout occasion={occasion} active="marketplace">
             <h2 className="text-sm font-medium text-text-primary">Your Quotation Requests</h2>
@@ -165,14 +241,17 @@ export default function Marketplace({ occasion, services, quotations, bookings, 
             ) : (
                 <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface">
                     {bookings.map((booking) => (
-                        <li key={booking.id} className="flex items-center justify-between px-4 py-3">
-                            <div>
-                                <p className="text-sm font-medium text-text-primary">{booking.service?.name}</p>
-                                <p className="text-xs text-text-secondary">
-                                    {booking.agreed_price} {booking.currency}
-                                </p>
+                        <li key={booking.id} className="px-4 py-3">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-text-primary">{booking.service?.name}</p>
+                                    <p className="text-xs text-text-secondary">
+                                        {booking.agreed_price} {booking.currency}
+                                    </p>
+                                </div>
+                                <Badge variant={STATUS_VARIANTS[booking.status] ?? 'neutral'}>{booking.status}</Badge>
                             </div>
-                            <Badge variant={STATUS_VARIANTS[booking.status] ?? 'neutral'}>{booking.status}</Badge>
+                            {booking.status === 'completed' && <BookingReview booking={booking} canLeaveReview={canLeaveReview} />}
                         </li>
                     ))}
                 </ul>

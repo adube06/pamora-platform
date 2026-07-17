@@ -23,6 +23,7 @@ use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationRequested;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
+use App\Domains\Marketplace\Domain\Events\ReviewPublished;
 use App\Domains\Marketplace\Domain\Events\ServicePublished;
 use App\Domains\Marketplace\Domain\Events\ServiceUpdated;
 use App\Domains\Marketplace\Domain\Events\VendorApplied;
@@ -723,6 +724,18 @@ class AuditLogSubscriber
         ]);
     }
 
+    public function handleReviewPublished(ReviewPublished $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->review->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Review',
+            'subject_id' => $event->review->id,
+            'action' => 'marketplace.review_published',
+            'description' => "{$event->actor->name} left a {$event->review->rating}-star review for \"{$event->review->service->name}\".",
+        ]);
+    }
+
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(VendorApplied::class, [self::class, 'handleVendorApplied']);
@@ -736,6 +749,7 @@ class AuditLogSubscriber
         $events->listen(QuotationRejected::class, [self::class, 'handleQuotationRejected']);
         $events->listen(BookingConfirmed::class, [self::class, 'handleBookingConfirmed']);
         $events->listen(BookingCompleted::class, [self::class, 'handleBookingCompleted']);
+        $events->listen(ReviewPublished::class, [self::class, 'handleReviewPublished']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);

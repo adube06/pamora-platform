@@ -31,11 +31,12 @@ class OccasionMarketplaceController
                 ->latest()
                 ->get(),
             'bookings' => Booking::where('occasion_id', $occasion->id)
-                ->with('service:id,uuid,name')
+                ->with('service:id,uuid,name', 'review')
                 ->latest()
                 ->get(),
             'canRequestQuotation' => $request->user()->can('request-quotation', $occasion),
             'canConfirmBooking' => $request->user()->can('confirm-booking', $occasion),
+            'canLeaveReview' => $request->user()->can('leave-review', $occasion),
         ]);
     }
 }

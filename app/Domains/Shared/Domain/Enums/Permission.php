@@ -52,6 +52,7 @@ enum Permission: string
     // Marketplace
     case MarketplaceRequestQuotation = 'marketplace.request_quotation';
     case MarketplaceConfirmBooking = 'marketplace.confirm_booking';
+    case MarketplaceLeaveReview = 'marketplace.leave_review';
 
     /**
      * The full set of permissions granted to a Host on Occasion creation.
@@ -89,6 +90,7 @@ enum Permission: string
             self::MediaEditMetadata->value,
             self::MarketplaceRequestQuotation->value,
             self::MarketplaceConfirmBooking->value,
+            self::MarketplaceLeaveReview->value,
         ];
     }
 }

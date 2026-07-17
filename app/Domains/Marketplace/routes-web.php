@@ -3,6 +3,7 @@
 use App\Domains\Marketplace\Presentation\Http\Controllers\BookingController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\OccasionMarketplaceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\QuotationController;
+use App\Domains\Marketplace\Presentation\Http\Controllers\ReviewController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\ServiceController;
 use App\Domains\Marketplace\Presentation\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
@@ -20,4 +21,5 @@ Route::middleware('auth')->group(function () {
     Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
     Route::patch('/quotations/{quotation}/confirm', [QuotationController::class, 'confirm'])->name('quotations.confirm');
     Route::patch('/bookings/{booking}/complete', [BookingController::class, 'complete'])->name('bookings.complete');
+    Route::post('/bookings/{booking}/review', [ReviewController::class, 'store'])->name('bookings.review.store');
 });

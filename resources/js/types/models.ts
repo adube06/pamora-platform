@@ -31,6 +31,14 @@ export interface Quotation {
     service?: { id: number; uuid: string; name: string };
 }
 
+export interface Review {
+    id: number;
+    uuid: string;
+    rating: number;
+    comment: string | null;
+    published_at: string;
+}
+
 export interface Booking {
     id: number;
     uuid: string;
@@ -44,6 +52,7 @@ export interface Booking {
     notes: string | null;
     confirmed_at: string;
     service?: { id: number; uuid: string; name: string };
+    review?: Review | null;
 }
 
 export interface Vendor {

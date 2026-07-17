@@ -2,45 +2,44 @@
 
 namespace App\Domains\Marketplace\Domain\Models;
 
-use App\Domains\Marketplace\Domain\Enums\BookingStatus;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\Shared\Domain\Concerns\HasUuid;
 use App\Models\User;
-use Database\Factories\BookingFactory;
+use Database\Factories\ReviewFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Booking extends Model
+class Review extends Model
 {
     use HasFactory, HasUuid, SoftDeletes;
 
-    protected static function newFactory(): BookingFactory
+    protected static function newFactory(): ReviewFactory
     {
-        return BookingFactory::new();
+        return ReviewFactory::new();
     }
 
     protected $fillable = [
+        'booking_id',
         'occasion_id',
         'service_id',
-        'quotation_id',
-        'confirmed_by',
-        'status',
-        'agreed_price',
-        'currency',
-        'notes',
-        'confirmed_at',
+        'reviewed_by',
+        'rating',
+        'comment',
+        'published_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => BookingStatus::class,
-            'agreed_price' => 'decimal:2',
-            'confirmed_at' => 'datetime',
+            'published_at' => 'datetime',
         ];
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
     }
 
     public function occasion(): BelongsTo
@@ -53,19 +52,9 @@ class Booking extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function quotation(): BelongsTo
+    public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(Quotation::class);
-    }
-
-    public function confirmedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'confirmed_by');
-    }
-
-    public function review(): HasOne
-    {
-        return $this->hasOne(Review::class);
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     public function getRouteKeyName(): string

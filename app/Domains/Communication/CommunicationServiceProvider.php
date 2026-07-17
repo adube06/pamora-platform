@@ -13,6 +13,7 @@ use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
+use App\Domains\Marketplace\Domain\Events\ReviewPublished;
 use App\Domains\Occasion\Domain\Models\Occasion;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
@@ -61,6 +62,7 @@ class CommunicationServiceProvider extends ServiceProvider
         Event::listen(QuotationRejected::class, [NotificationSubscriber::class, 'handleQuotationRejected']);
         Event::listen(BookingConfirmed::class, [NotificationSubscriber::class, 'handleBookingConfirmed']);
         Event::listen(BookingCompleted::class, [NotificationSubscriber::class, 'handleBookingCompleted']);
+        Event::listen(ReviewPublished::class, [NotificationSubscriber::class, 'handleReviewPublished']);
 
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');

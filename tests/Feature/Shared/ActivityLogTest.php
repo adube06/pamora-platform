@@ -14,6 +14,7 @@ use App\Domains\Marketplace\Domain\Enums\QuotationStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Marketplace\Domain\Models\Booking;
 use App\Domains\Marketplace\Domain\Models\Quotation;
+use App\Domains\Marketplace\Domain\Models\Review;
 use App\Domains\Marketplace\Domain\Models\Service;
 use App\Domains\Marketplace\Domain\Models\Vendor;
 use App\Domains\Media\Domain\Models\Album;
@@ -673,5 +674,29 @@ it('logs an entry when a booking is completed', function () {
 
     expect(ActivityLog::where('action', 'marketplace.booking_completed')
         ->where('subject_id', $booking->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a review is published', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $vendor = Vendor::factory()->create();
+    $service = Service::factory()->create(['vendor_id' => $vendor->id]);
+    $quotation = Quotation::factory()->create(['occasion_id' => $occasion->id, 'service_id' => $service->id]);
+    $booking = Booking::factory()->create([
+        'occasion_id' => $occasion->id,
+        'service_id' => $service->id,
+        'quotation_id' => $quotation->id,
+        'status' => BookingStatus::Completed,
+    ]);
+
+    $this->actingAs($host)->post("/bookings/{$booking->uuid}/review", ['rating' => 5]);
+
+    $review = Review::firstWhere('booking_id', $booking->id);
+
+    expect(ActivityLog::where('action', 'marketplace.review_published')
+        ->where('subject_id', $review->id)
         ->count())->toBe(1);
 });

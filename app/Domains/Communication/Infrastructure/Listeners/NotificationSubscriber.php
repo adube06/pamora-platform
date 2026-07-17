@@ -10,6 +10,7 @@ use App\Domains\Marketplace\Domain\Events\BookingConfirmed;
 use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
 use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
+use App\Domains\Marketplace\Domain\Events\ReviewPublished;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
@@ -254,6 +255,30 @@ class NotificationSubscriber
             'type' => 'booking_completed',
             'title' => 'Booking completed',
             'body' => "The Vendor marked your Booking for \"{$event->booking->service->name}\" as complete.",
+        ]);
+    }
+
+    public function handleReviewPublished(ReviewPublished $event): void
+    {
+        $vendorOwnerId = $event->review->service->vendor->owner_id;
+
+        // Don't notify a member of their own action.
+        if ($vendorOwnerId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($vendorOwnerId)?->wantsNotification('review_published')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $vendorOwnerId,
+            'occasion_id' => $event->review->occasion_id,
+            'subject_type' => 'Review',
+            'subject_id' => $event->review->id,
+            'type' => 'review_published',
+            'title' => 'New review received',
+            'body' => "You received a {$event->review->rating}-star review for \"{$event->review->service->name}\".",
         ]);
     }
 }

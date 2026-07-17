@@ -33,6 +33,10 @@ class MarketplaceServiceProvider extends ServiceProvider
             return $occasion->memberFor($user)?->hasPermission(Permission::MarketplaceConfirmBooking) ?? false;
         });
 
+        Gate::define('leave-review', function (User $user, Occasion $occasion) {
+            return $occasion->memberFor($user)?->hasPermission(Permission::MarketplaceLeaveReview) ?? false;
+        });
+
         Route::middleware('web')
             ->group(__DIR__.'/routes-web.php');
 
