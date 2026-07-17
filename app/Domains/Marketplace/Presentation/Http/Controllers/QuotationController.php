@@ -2,10 +2,14 @@
 
 namespace App\Domains\Marketplace\Presentation\Http\Controllers;
 
+use App\Domains\Marketplace\Application\Services\AcceptQuotationService;
+use App\Domains\Marketplace\Application\Services\RejectQuotationService;
 use App\Domains\Marketplace\Application\Services\RequestQuotationService;
 use App\Domains\Marketplace\Application\Services\SubmitQuotationService;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
+use App\Domains\Marketplace\Presentation\Http\Requests\AcceptQuotationRequest;
+use App\Domains\Marketplace\Presentation\Http\Requests\RejectQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\RequestQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\SubmitQuotationRequest;
 use App\Domains\Occasion\Domain\Models\Occasion;
@@ -27,5 +31,19 @@ class QuotationController
         $service->handle($quotation, $request->validated(), $request->user());
 
         return redirect()->route('vendor.index')->with('success', 'Quotation submitted.');
+    }
+
+    public function accept(AcceptQuotationRequest $request, Quotation $quotation, AcceptQuotationService $service): RedirectResponse
+    {
+        $service->handle($quotation, $request->user());
+
+        return back()->with('success', 'Quotation accepted.');
+    }
+
+    public function reject(RejectQuotationRequest $request, Quotation $quotation, RejectQuotationService $service): RedirectResponse
+    {
+        $service->handle($quotation, $request->user());
+
+        return back()->with('success', 'Quotation rejected.');
     }
 }

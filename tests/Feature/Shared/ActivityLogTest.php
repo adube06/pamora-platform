@@ -9,6 +9,7 @@ use App\Domains\Finance\Domain\Models\Contribution;
 use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Finance\Domain\Models\Pledge;
 use App\Domains\Marketplace\Application\Services\ApproveVendorService;
+use App\Domains\Marketplace\Domain\Enums\QuotationStatus;
 use App\Domains\Marketplace\Domain\Enums\VendorVerificationStatus;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
@@ -600,6 +601,33 @@ it('logs an entry when a quotation is requested and when it is submitted', funct
     $this->actingAs($vendorOwner)->patch("/quotations/{$quotation->uuid}/submit", ['quoted_price' => 100000]);
 
     expect(ActivityLog::where('action', 'marketplace.quotation_submitted')
+        ->where('subject_id', $quotation->id)
+        ->count())->toBe(1);
+
+    $this->actingAs($host)->patch("/quotations/{$quotation->uuid}/accept");
+
+    expect(ActivityLog::where('action', 'marketplace.quotation_accepted')
+        ->where('subject_id', $quotation->id)
+        ->count())->toBe(1);
+});
+
+it('logs an entry when a quotation is rejected', function () {
+    $host = User::factory()->create();
+    $occasion = Occasion::factory()->create(['host_id' => $host->id]);
+    OccasionMember::factory()->host()->create(['occasion_id' => $occasion->id, 'user_id' => $host->id]);
+
+    $vendor = Vendor::factory()->create();
+    $service = Service::factory()->create(['vendor_id' => $vendor->id]);
+    $quotation = Quotation::factory()->create([
+        'occasion_id' => $occasion->id,
+        'service_id' => $service->id,
+        'requested_by' => $host->id,
+        'status' => QuotationStatus::Submitted,
+    ]);
+
+    $this->actingAs($host)->patch("/quotations/{$quotation->uuid}/reject");
+
+    expect(ActivityLog::where('action', 'marketplace.quotation_rejected')
         ->where('subject_id', $quotation->id)
         ->count())->toBe(1);
 });

@@ -2,10 +2,14 @@
 
 namespace App\Domains\Marketplace\Presentation\Http\Controllers\Api;
 
+use App\Domains\Marketplace\Application\Services\AcceptQuotationService;
+use App\Domains\Marketplace\Application\Services\RejectQuotationService;
 use App\Domains\Marketplace\Application\Services\RequestQuotationService;
 use App\Domains\Marketplace\Application\Services\SubmitQuotationService;
 use App\Domains\Marketplace\Domain\Models\Quotation;
 use App\Domains\Marketplace\Domain\Models\Service;
+use App\Domains\Marketplace\Presentation\Http\Requests\AcceptQuotationRequest;
+use App\Domains\Marketplace\Presentation\Http\Requests\RejectQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\RequestQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Requests\SubmitQuotationRequest;
 use App\Domains\Marketplace\Presentation\Http\Resources\QuotationResource;
@@ -33,6 +37,26 @@ class QuotationController
         return response()->json([
             'success' => true,
             'data' => new QuotationResource($submitted),
+        ]);
+    }
+
+    public function accept(AcceptQuotationRequest $request, Quotation $quotation, AcceptQuotationService $service): JsonResponse
+    {
+        $accepted = $service->handle($quotation, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new QuotationResource($accepted),
+        ]);
+    }
+
+    public function reject(RejectQuotationRequest $request, Quotation $quotation, RejectQuotationService $service): JsonResponse
+    {
+        $rejected = $service->handle($quotation, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => new QuotationResource($rejected),
         ]);
     }
 }

@@ -12,4 +12,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/vendor/services/{service}', [ServiceController::class, 'update']);
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store']);
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit']);
+    Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);
+    Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject']);
 });

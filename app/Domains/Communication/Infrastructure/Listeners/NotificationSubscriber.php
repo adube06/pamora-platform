@@ -5,6 +5,8 @@ namespace App\Domains\Communication\Infrastructure\Listeners;
 use App\Domains\Communication\Domain\Events\ReminderTriggered;
 use App\Domains\Communication\Domain\Models\Notification;
 use App\Domains\Finance\Domain\Events\ContributionReceived;
+use App\Domains\Marketplace\Domain\Events\QuotationAccepted;
+use App\Domains\Marketplace\Domain\Events\QuotationRejected;
 use App\Domains\Marketplace\Domain\Events\QuotationSubmitted;
 use App\Domains\People\Domain\Events\MemberJoined;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
@@ -154,6 +156,54 @@ class NotificationSubscriber
             'type' => 'quotation_submitted',
             'title' => 'Quotation submitted',
             'body' => "A Vendor submitted a quotation for \"{$event->quotation->service->name}\".",
+        ]);
+    }
+
+    public function handleQuotationAccepted(QuotationAccepted $event): void
+    {
+        $vendorOwnerId = $event->quotation->service->vendor->owner_id;
+
+        // Don't notify a member of their own action.
+        if ($vendorOwnerId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($vendorOwnerId)?->wantsNotification('quotation_accepted')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $vendorOwnerId,
+            'occasion_id' => $event->quotation->occasion_id,
+            'subject_type' => 'Quotation',
+            'subject_id' => $event->quotation->id,
+            'type' => 'quotation_accepted',
+            'title' => 'Quotation accepted',
+            'body' => "Your quotation for \"{$event->quotation->service->name}\" was accepted.",
+        ]);
+    }
+
+    public function handleQuotationRejected(QuotationRejected $event): void
+    {
+        $vendorOwnerId = $event->quotation->service->vendor->owner_id;
+
+        // Don't notify a member of their own action.
+        if ($vendorOwnerId === $event->actor->id) {
+            return;
+        }
+
+        if (! User::find($vendorOwnerId)?->wantsNotification('quotation_rejected')) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $vendorOwnerId,
+            'occasion_id' => $event->quotation->occasion_id,
+            'subject_type' => 'Quotation',
+            'subject_id' => $event->quotation->id,
+            'type' => 'quotation_rejected',
+            'title' => 'Quotation rejected',
+            'body' => "Your quotation for \"{$event->quotation->service->name}\" was rejected.",
         ]);
     }
 }

@@ -61,6 +61,27 @@ function RequestQuotationForm({ occasion, service, onClose }: { occasion: Occasi
     );
 }
 
+function AcceptRejectButtons({ quotation }: { quotation: Quotation }) {
+    const { patch: acceptPatch, processing: accepting } = useForm({});
+    const { patch: rejectPatch, processing: rejecting } = useForm({});
+
+    return (
+        <div className="flex gap-2">
+            <Button size="sm" loading={accepting} onClick={() => acceptPatch(route('quotations.accept', quotation.uuid), { preserveScroll: true })}>
+                Accept
+            </Button>
+            <Button
+                variant="danger"
+                size="sm"
+                loading={rejecting}
+                onClick={() => rejectPatch(route('quotations.reject', quotation.uuid), { preserveScroll: true })}
+            >
+                Reject
+            </Button>
+        </div>
+    );
+}
+
 function ServiceCard({ occasion, service, canRequestQuotation }: { occasion: Occasion; service: Service; canRequestQuotation: boolean }) {
     const [requesting, setRequesting] = useState(false);
 
@@ -111,7 +132,10 @@ export default function Marketplace({ occasion, services, quotations, canRequest
                                     </p>
                                 )}
                             </div>
-                            <Badge variant={STATUS_VARIANTS[quotation.status] ?? 'neutral'}>{quotation.status}</Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge variant={STATUS_VARIANTS[quotation.status] ?? 'neutral'}>{quotation.status}</Badge>
+                                {canRequestQuotation && quotation.status === 'submitted' && <AcceptRejectButtons quotation={quotation} />}
+                            </div>
                         </li>
                     ))}
                 </ul>

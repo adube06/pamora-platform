@@ -15,4 +15,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/occasions/{occasion}/marketplace', [OccasionMarketplaceController::class, 'index'])->name('occasions.marketplace');
     Route::post('/occasions/{occasion}/quotations', [QuotationController::class, 'store'])->name('occasions.quotations.store');
     Route::patch('/quotations/{quotation}/submit', [QuotationController::class, 'submit'])->name('quotations.submit');
+    Route::patch('/quotations/{quotation}/accept', [QuotationController::class, 'accept'])->name('quotations.accept');
+    Route::patch('/quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
 });
