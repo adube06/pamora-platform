@@ -36,4 +36,8 @@ class AppRoutes {
   static String expenseCreate(String occasionId) => '/occasions/$occasionId/finance/expenses/new';
   static String financePledges(String occasionId) => '/occasions/$occasionId/finance/pledges';
   static String pledgeCreate(String occasionId) => '/occasions/$occasionId/finance/pledges/new';
+
+  static String members(String occasionId) => '/occasions/$occasionId/guests/members';
+  static String inviteMember(String occasionId) => '/occasions/$occasionId/guests/invite';
+  static String rsvp(String occasionId) => '/occasions/$occasionId/guests/rsvp';
 }

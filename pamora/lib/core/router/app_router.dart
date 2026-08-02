@@ -23,6 +23,9 @@ import '../../features/occasions/presentation/occasion_create_screen.dart';
 import '../../features/occasions/presentation/occasion_detail_screen.dart';
 import '../../features/occasions/presentation/occasion_edit_screen.dart';
 import '../../features/occasions/presentation/occasion_list_screen.dart';
+import '../../features/people/presentation/invite_member_screen.dart';
+import '../../features/people/presentation/members_list_screen.dart';
+import '../../features/people/presentation/rsvp_screen.dart';
 import '../../features/planning/presentation/checklist_create_screen.dart';
 import '../../features/planning/presentation/checklist_list_screen.dart';
 import '../../features/planning/presentation/milestone_create_screen.dart';
@@ -195,6 +198,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/occasions/:id/finance/pledges/new',
         builder: (context, state) => PledgeCreateScreen(occasionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/occasions/:id/guests/members',
+        builder: (context, state) => MembersListScreen(occasionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/occasions/:id/guests/invite',
+        builder: (context, state) => InviteMemberScreen(occasionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/occasions/:id/guests/rsvp',
+        builder: (context, state) => RsvpScreen(occasionId: state.pathParameters['id']!),
       ),
     ],
   );

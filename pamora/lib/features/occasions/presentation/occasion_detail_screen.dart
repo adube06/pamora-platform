@@ -5,6 +5,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/theme/spacing.dart';
 import '../../finance/presentation/finance_tab.dart';
+import '../../people/presentation/people_tab.dart';
 import '../../planning/presentation/planning_tab.dart';
 import '../application/occasions_provider.dart';
 import 'occasion_overview_tab.dart';
@@ -37,12 +38,14 @@ class OccasionDetailScreen extends ConsumerWidget {
       ),
       data: (occasion) {
         return DefaultTabController(
-          length: 3,
+          length: 4,
           child: Scaffold(
             appBar: AppBar(
               title: Text(occasion.title, maxLines: 1, overflow: TextOverflow.ellipsis),
               bottom: const TabBar(
-                tabs: [Tab(text: 'Overview'), Tab(text: 'Planning'), Tab(text: 'Finance')],
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [Tab(text: 'Overview'), Tab(text: 'Planning'), Tab(text: 'Finance'), Tab(text: 'Guests')],
               ),
             ),
             body: TabBarView(
@@ -50,6 +53,7 @@ class OccasionDetailScreen extends ConsumerWidget {
                 OccasionOverviewTab(occasion: occasion),
                 PlanningTab(occasionId: occasion.slug),
                 FinanceTab(occasionId: occasion.slug),
+                PeopleTab(occasionId: occasion.slug),
               ],
             ),
           ),
