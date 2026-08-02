@@ -58,7 +58,7 @@ class PlanningRepository {
     });
   }
 
-  // Checklists (create-only per backend)
+  // Checklists
   Future<List<Checklist>> checklists(String occasionId) {
     return guarded(() async {
       final response = await _dio.get('/occasions/$occasionId/checklists');
