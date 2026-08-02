@@ -4,10 +4,12 @@ use App\Domains\Finance\Presentation\Http\Controllers\Api\BudgetController;
 use App\Domains\Finance\Presentation\Http\Controllers\Api\BudgetItemController;
 use App\Domains\Finance\Presentation\Http\Controllers\Api\ContributionController;
 use App\Domains\Finance\Presentation\Http\Controllers\Api\ExpenseController;
+use App\Domains\Finance\Presentation\Http\Controllers\Api\FinanceController;
 use App\Domains\Finance\Presentation\Http\Controllers\Api\PledgeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/occasions/{occasion}/finance', [FinanceController::class, 'index']);
     Route::get('/occasions/{occasion}/contributions', [ContributionController::class, 'index']);
     Route::post('/occasions/{occasion}/contributions', [ContributionController::class, 'store']);
     Route::get('/occasions/{occasion}/budget', [BudgetController::class, 'show']);

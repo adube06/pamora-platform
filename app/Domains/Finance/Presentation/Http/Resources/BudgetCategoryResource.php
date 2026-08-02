@@ -20,6 +20,7 @@ class BudgetCategoryResource extends JsonResource
             'id' => $this->id,
             'uuid' => $this->uuid,
             'name' => $this->name,
+            'budget_items' => BudgetItemResource::collection($this->whenLoaded('budgetItems')),
         ];
     }
 }
