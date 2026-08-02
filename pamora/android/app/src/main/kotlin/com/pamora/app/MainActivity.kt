@@ -1,4 +1,4 @@
-package com.example.pamora
+package com.pamora.app
 
 import io.flutter.embedding.android.FlutterActivity
 
