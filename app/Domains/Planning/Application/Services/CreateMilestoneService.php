@@ -3,6 +3,7 @@
 namespace App\Domains\Planning\Application\Services;
 
 use App\Domains\Occasion\Domain\Models\Occasion;
+use App\Domains\Planning\Domain\Events\MilestoneCreated;
 use App\Domains\Planning\Domain\Models\Milestone;
 use App\Domains\Shared\Application\Concerns\GuardsAgainstArchivedOccasion;
 use App\Models\User;
@@ -27,6 +28,8 @@ class CreateMilestoneService
         if (! empty($data['task_ids'])) {
             $milestone->tasks()->sync($data['task_ids']);
         }
+
+        MilestoneCreated::dispatch($milestone, $actor);
 
         return $milestone;
     }

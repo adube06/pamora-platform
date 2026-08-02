@@ -20,39 +20,34 @@ use App\Domains\Planning\Presentation\Http\Requests\ReopenTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\StoreTaskRequest;
 use App\Domains\Planning\Presentation\Http\Requests\UpdateTaskRequest;
 use App\Domains\Planning\Presentation\Http\Resources\TaskResource;
+use App\Domains\Shared\Presentation\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController
 {
     public function index(Request $request, Occasion $occasion): JsonResponse
     {
-        $request->user()->can('view', $occasion) || abort(403);
+        Gate::authorize('view', $occasion);
 
-        return response()->json([
-            'success' => true,
-            'data' => TaskResource::collection($occasion->tasks()->latest()->get()),
-        ]);
+        return ApiResponse::success(
+            TaskResource::collection($occasion->tasks()->with('dependencies')->latest()->get())
+        );
     }
 
     public function store(StoreTaskRequest $request, Occasion $occasion, CreateTaskService $service): JsonResponse
     {
         $task = $service->handle($occasion, $request->validated(), $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task),
-        ], 201);
+        return ApiResponse::success(new TaskResource($task), 201);
     }
 
     public function update(UpdateTaskRequest $request, Task $task, UpdateTaskService $service): JsonResponse
     {
         $task = $service->handle($task, $request->validated(), $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task),
-        ]);
+        return ApiResponse::success(new TaskResource($task));
     }
 
     public function assign(AssignTaskRequest $request, Task $task, AssignTaskService $service): JsonResponse
@@ -61,30 +56,21 @@ class TaskController
 
         $task = $service->handle($task, $assignee, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task),
-        ]);
+        return ApiResponse::success(new TaskResource($task));
     }
 
     public function complete(CompleteTaskRequest $request, Task $task, CompleteTaskService $service): JsonResponse
     {
         $task = $service->handle($task, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task),
-        ]);
+        return ApiResponse::success(new TaskResource($task));
     }
 
     public function reopen(ReopenTaskRequest $request, Task $task, ReopenTaskService $service): JsonResponse
     {
         $task = $service->handle($task, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task),
-        ]);
+        return ApiResponse::success(new TaskResource($task));
     }
 
     public function addDependency(AddTaskDependencyRequest $request, Task $task, AddTaskDependencyService $service): JsonResponse
@@ -93,19 +79,13 @@ class TaskController
 
         $service->handle($task, $dependsOnTask, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task->fresh(['dependencies'])),
-        ], 201);
+        return ApiResponse::success(new TaskResource($task->fresh(['dependencies'])), 201);
     }
 
     public function removeDependency(RemoveTaskDependencyRequest $request, Task $task, Task $dependency, RemoveTaskDependencyService $service): JsonResponse
     {
         $service->handle($task, $dependency, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new TaskResource($task->fresh(['dependencies'])),
-        ]);
+        return ApiResponse::success(new TaskResource($task->fresh(['dependencies'])));
     }
 }

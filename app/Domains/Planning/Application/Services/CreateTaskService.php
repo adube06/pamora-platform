@@ -20,12 +20,16 @@ class CreateTaskService
     {
         $this->ensureOccasionAcceptsActivity($occasion);
 
+        // Refresh after create(): priority is optional and left to its
+        // database column default when omitted — the in-memory model from
+        // create() won't reflect that until reloaded (same class of bug
+        // Occasion's CreateOccasionService had for `visibility`).
         $task = Task::create([
             ...$data,
             'occasion_id' => $occasion->id,
             'status' => TaskStatus::Open,
             'created_by' => $actor->id,
-        ]);
+        ])->fresh();
 
         TaskCreated::dispatch($task, $actor);
 

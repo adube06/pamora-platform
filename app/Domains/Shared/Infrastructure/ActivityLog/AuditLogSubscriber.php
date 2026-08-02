@@ -54,6 +54,7 @@ use App\Domains\People\Domain\Events\RsvpReopened;
 use App\Domains\People\Domain\Events\RsvpSubmitted;
 use App\Domains\Planning\Domain\Events\ChecklistCreated;
 use App\Domains\Planning\Domain\Events\MilestoneCompleted;
+use App\Domains\Planning\Domain\Events\MilestoneCreated;
 use App\Domains\Planning\Domain\Events\TaskAssigned;
 use App\Domains\Planning\Domain\Events\TaskCompleted;
 use App\Domains\Planning\Domain\Events\TaskCreated;
@@ -414,6 +415,18 @@ class AuditLogSubscriber
             'subject_id' => $event->checklist->id,
             'action' => 'planning.checklist_created',
             'description' => "{$event->actor->name} created checklist \"{$event->checklist->name}\".",
+        ]);
+    }
+
+    public function handleMilestoneCreated(MilestoneCreated $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => $event->milestone->occasion_id,
+            'user_id' => $event->actor->id,
+            'subject_type' => 'Milestone',
+            'subject_id' => $event->milestone->id,
+            'action' => 'planning.milestone_created',
+            'description' => "{$event->actor->name} created milestone \"{$event->milestone->name}\".",
         ]);
     }
 
@@ -846,6 +859,7 @@ class AuditLogSubscriber
         $events->listen(TaskDependencyAdded::class, [self::class, 'handleTaskDependencyAdded']);
         $events->listen(TaskDependencyRemoved::class, [self::class, 'handleTaskDependencyRemoved']);
         $events->listen(ChecklistCreated::class, [self::class, 'handleChecklistCreated']);
+        $events->listen(MilestoneCreated::class, [self::class, 'handleMilestoneCreated']);
         $events->listen(MilestoneCompleted::class, [self::class, 'handleMilestoneCompleted']);
         $events->listen(TimelineEventScheduled::class, [self::class, 'handleTimelineEventScheduled']);
         $events->listen(AnnouncementPublished::class, [self::class, 'handleAnnouncementPublished']);
