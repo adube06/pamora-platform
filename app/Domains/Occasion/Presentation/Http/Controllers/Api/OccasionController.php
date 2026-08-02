@@ -15,8 +15,10 @@ use App\Domains\Occasion\Presentation\Http\Requests\TransferOwnershipRequest;
 use App\Domains\Occasion\Presentation\Http\Requests\UpdateOccasionRequest;
 use App\Domains\Occasion\Presentation\Http\Resources\OccasionResource;
 use App\Domains\People\Domain\Models\OccasionMember;
+use App\Domains\Shared\Presentation\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class OccasionController
 {
@@ -27,60 +29,42 @@ class OccasionController
             ->latest()
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => OccasionResource::collection($occasions),
-        ]);
+        return ApiResponse::success(OccasionResource::collection($occasions));
     }
 
     public function store(StoreOccasionRequest $request, CreateOccasionService $service): JsonResponse
     {
         $occasion = $service->handle($request->validated(), $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion),
-        ], 201);
+        return ApiResponse::success(new OccasionResource($occasion), 201);
     }
 
     public function show(Request $request, Occasion $occasion): JsonResponse
     {
-        $request->user()->can('view', $occasion) || abort(403);
+        Gate::authorize('view', $occasion);
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion),
-        ]);
+        return ApiResponse::success(new OccasionResource($occasion));
     }
 
     public function update(UpdateOccasionRequest $request, Occasion $occasion, UpdateOccasionService $service): JsonResponse
     {
         $occasion = $service->handle($occasion, $request->validated(), $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion->fresh()),
-        ]);
+        return ApiResponse::success(new OccasionResource($occasion->fresh()));
     }
 
     public function archive(ArchiveOccasionRequest $request, Occasion $occasion, ArchiveOccasionService $service): JsonResponse
     {
         $occasion = $service->handle($occasion, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion->fresh()),
-        ]);
+        return ApiResponse::success(new OccasionResource($occasion->fresh()));
     }
 
     public function cancel(CancelOccasionRequest $request, Occasion $occasion, CancelOccasionService $service): JsonResponse
     {
         $occasion = $service->handle($occasion, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion->fresh()),
-        ]);
+        return ApiResponse::success(new OccasionResource($occasion->fresh()));
     }
 
     public function transferOwnership(TransferOwnershipRequest $request, Occasion $occasion, TransferOwnershipService $service): JsonResponse
@@ -89,9 +73,6 @@ class OccasionController
 
         $occasion = $service->handle($occasion, $newHostMember, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => new OccasionResource($occasion->fresh()),
-        ]);
+        return ApiResponse::success(new OccasionResource($occasion->fresh()));
     }
 }

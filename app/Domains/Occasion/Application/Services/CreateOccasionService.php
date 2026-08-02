@@ -22,13 +22,16 @@ class CreateOccasionService
     public function handle(array $data, User $host): Occasion
     {
         return DB::transaction(function () use ($data, $host) {
+            // Refresh after create(): columns left out of $data (e.g. visibility)
+            // are only correct in the database via their column default — the
+            // in-memory model create() returns doesn't reflect that until reloaded.
             $occasion = Occasion::create([
                 ...$data,
                 'host_id' => $host->id,
                 'slug' => $this->uniqueSlug($data['title']),
                 'status' => OccasionStatus::Draft,
                 'created_by' => $host->id,
-            ]);
+            ])->fresh();
 
             // Cross-domain orchestration happens here, at the Application
             // layer, through People's own Application Service — Occasion
