@@ -19,12 +19,17 @@ class PublishAnnouncementService
     {
         $this->ensureOccasionAcceptsActivity($occasion);
 
+        // Refresh after create(): audience/status are left to their database
+        // column defaults here — the in-memory model from create() won't
+        // reflect them until reloaded (same bug class as Occasion's
+        // CreateOccasionService, silent here rather than fatal since these
+        // columns aren't enum-cast — audience/status would just read null).
         $announcement = Announcement::create([
             ...$data,
             'occasion_id' => $occasion->id,
             'published_at' => now(),
             'created_by' => $actor->id,
-        ]);
+        ])->fresh();
 
         AnnouncementPublished::dispatch($announcement, $actor);
 

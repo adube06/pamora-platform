@@ -7,6 +7,7 @@ use App\Domains\Communication\Presentation\Http\Requests\StoreAnnouncementReques
 use App\Domains\Occasion\Domain\Models\Occasion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,7 +15,7 @@ class CommunicationController
 {
     public function index(Request $request, Occasion $occasion): Response
     {
-        $request->user()->can('view', $occasion) || abort(403);
+        Gate::authorize('view', $occasion);
 
         return Inertia::render('Occasions/Communication', [
             'occasion' => $occasion,
