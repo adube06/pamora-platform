@@ -8,6 +8,8 @@ use App\Domains\People\Application\Services\SubmitRsvpService;
 use App\Domains\People\Domain\Models\OccasionMember;
 use App\Domains\People\Presentation\Http\Requests\ReopenRsvpRequest;
 use App\Domains\People\Presentation\Http\Requests\SubmitRsvpRequest;
+use App\Domains\People\Presentation\Http\Resources\OccasionMemberResource;
+use App\Domains\Shared\Presentation\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class RsvpController
@@ -16,15 +18,15 @@ class RsvpController
     {
         $member = $occasion->memberFor($request->user());
 
-        $service->handle($member, $request->validated());
+        $member = $service->handle($member, $request->validated());
 
-        return response()->json(['success' => true, 'data' => $member->fresh()]);
+        return ApiResponse::success(new OccasionMemberResource($member->fresh()->load('user')));
     }
 
     public function reopen(ReopenRsvpRequest $request, OccasionMember $occasionMember, ReopenRsvpService $service): JsonResponse
     {
-        $service->handle($occasionMember, $request->user());
+        $occasionMember = $service->handle($occasionMember, $request->user());
 
-        return response()->json(['success' => true, 'data' => $occasionMember->fresh()]);
+        return ApiResponse::success(new OccasionMemberResource($occasionMember->fresh()->load('user')));
     }
 }

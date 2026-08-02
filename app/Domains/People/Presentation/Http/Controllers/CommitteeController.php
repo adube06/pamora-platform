@@ -17,6 +17,7 @@ use App\Domains\People\Presentation\Http\Requests\RemoveMemberRequest;
 use App\Domains\People\Presentation\Http\Requests\UpdateMemberRoleRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +25,7 @@ class CommitteeController
 {
     public function index(Request $request, Occasion $occasion): Response
     {
-        $request->user()->can('view', $occasion) || abort(403);
+        Gate::authorize('view', $occasion);
 
         return Inertia::render('Occasions/Committee', [
             'occasion' => $occasion,

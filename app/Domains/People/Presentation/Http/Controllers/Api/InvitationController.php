@@ -8,6 +8,7 @@ use App\Domains\People\Application\Services\DeclineInvitationService;
 use App\Domains\People\Application\Services\InviteMemberService;
 use App\Domains\People\Domain\Models\Invitation;
 use App\Domains\People\Presentation\Http\Requests\InviteMemberRequest;
+use App\Domains\Shared\Presentation\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,14 +18,13 @@ class InvitationController
     {
         $invitation = $service->handle($occasion, $request->validated(), $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'token' => $invitation->token,
-                'email' => $invitation->email,
-                'status' => $invitation->status->value,
-                'expires_at' => $invitation->expires_at->toIso8601String(),
-            ],
+        // The raw token is only ever returned here, directly to the inviter —
+        // never in a list any occasion member can read (see InvitationResource).
+        return ApiResponse::success([
+            'token' => $invitation->token,
+            'email' => $invitation->email,
+            'status' => $invitation->status->value,
+            'expires_at' => $invitation->expires_at->toIso8601String(),
         ], 201);
     }
 
@@ -34,13 +34,10 @@ class InvitationController
 
         $member = $service->handle($invitation, $request->user());
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $member->uuid,
-                'occasion_id' => $invitation->occasion->uuid,
-                'status' => $member->status->value,
-            ],
+        return ApiResponse::success([
+            'id' => $member->uuid,
+            'occasion_id' => $invitation->occasion->uuid,
+            'status' => $member->status->value,
         ]);
     }
 
@@ -50,9 +47,6 @@ class InvitationController
 
         $invitation = $service->handle($invitation);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['status' => $invitation->status->value],
-        ]);
+        return ApiResponse::success(['status' => $invitation->status->value]);
     }
 }
