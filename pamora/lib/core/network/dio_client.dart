@@ -42,17 +42,20 @@ Future<T> guarded<T>(Future<T> Function() action) async {
   }
 }
 
-/// Maps a [DioException] onto our own [ApiException], pulling Laravel's
-/// 422 `{message, errors}` shape into per-field errors where present.
+/// Maps a [DioException] onto our own [ApiException], pulling the API's
+/// `{success: false, error: {code, message, fields}}` envelope
+/// (pamora-foundation/04-engineering/07-api-specification.md) into a
+/// user-facing message plus per-field validation errors where present.
 ApiException mapDioError(DioException error) {
   final response = error.response;
   if (response != null && response.data is Map) {
     final body = response.data as Map;
-    final message = body['message']?.toString() ?? 'Something went wrong. Please try again.';
-    final rawErrors = body['errors'];
+    final errorBody = body['error'] is Map ? body['error'] as Map : null;
+    final message = errorBody?['message']?.toString() ?? 'Something went wrong. Please try again.';
+    final rawFields = errorBody?['fields'];
     final fieldErrors = <String, List<String>>{};
-    if (rawErrors is Map) {
-      rawErrors.forEach((key, value) {
+    if (rawFields is Map) {
+      rawFields.forEach((key, value) {
         if (value is List) {
           fieldErrors[key.toString()] = value.map((e) => e.toString()).toList();
         }
