@@ -17,6 +17,7 @@ use App\Domains\Finance\Domain\Models\Expense;
 use App\Domains\Identity\Domain\Events\SessionRevoked;
 use App\Domains\Identity\Domain\Events\UserRegistered;
 use App\Domains\Identity\Domain\Events\UserSignedIn;
+use App\Domains\Identity\Domain\Events\UserSignedOut;
 use App\Domains\Marketplace\Domain\Events\AvailabilityBlockCreated;
 use App\Domains\Marketplace\Domain\Events\AvailabilityBlockRemoved;
 use App\Domains\Marketplace\Domain\Events\BookingCompleted;
@@ -95,6 +96,18 @@ class AuditLogSubscriber
             'subject_id' => $event->user->id,
             'action' => 'identity.user_signed_in',
             'description' => "{$event->user->name} signed in.",
+        ]);
+    }
+
+    public function handleUserSignedOut(UserSignedOut $event): void
+    {
+        ActivityLog::create([
+            'occasion_id' => null,
+            'user_id' => $event->user->id,
+            'subject_type' => 'User',
+            'subject_id' => $event->user->id,
+            'action' => 'identity.user_signed_out',
+            'description' => "{$event->user->name} signed out.",
         ]);
     }
 
@@ -808,6 +821,7 @@ class AuditLogSubscriber
         $events->listen(AvailabilityBlockRemoved::class, [self::class, 'handleAvailabilityBlockRemoved']);
         $events->listen(UserRegistered::class, [self::class, 'handleUserRegistered']);
         $events->listen(UserSignedIn::class, [self::class, 'handleUserSignedIn']);
+        $events->listen(UserSignedOut::class, [self::class, 'handleUserSignedOut']);
         $events->listen(SessionRevoked::class, [self::class, 'handleSessionRevoked']);
         $events->listen(Verified::class, [self::class, 'handleVerified']);
         $events->listen(PasswordReset::class, [self::class, 'handlePasswordReset']);

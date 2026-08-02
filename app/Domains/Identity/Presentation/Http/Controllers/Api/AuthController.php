@@ -4,6 +4,7 @@ namespace App\Domains\Identity\Presentation\Http\Controllers\Api;
 
 use App\Domains\Identity\Application\Services\AuthenticateUserService;
 use App\Domains\Identity\Application\Services\ForgotPasswordService;
+use App\Domains\Identity\Application\Services\LogoutUserService;
 use App\Domains\Identity\Application\Services\RegisterUserService;
 use App\Domains\Identity\Application\Services\ResetPasswordService;
 use App\Domains\Identity\Presentation\Http\Requests\ForgotPasswordRequest;
@@ -32,7 +33,7 @@ class AuthController
 
     public function login(LoginRequest $request, AuthenticateUserService $service): JsonResponse
     {
-        $user = $service->handle($request->validated());
+        $user = $service->handle($request->validated(), persistSession: false);
 
         $token = $user->createToken('mobile')->plainTextToken;
 
@@ -45,9 +46,9 @@ class AuthController
         ]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request, LogoutUserService $service): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $service->handleApiLogout($request->user());
 
         return response()->json(['success' => true, 'data' => null]);
     }

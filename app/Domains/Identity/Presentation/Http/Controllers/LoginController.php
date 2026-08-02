@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Presentation\Http\Controllers;
 
 use App\Domains\Identity\Application\Services\AuthenticateUserService;
+use App\Domains\Identity\Application\Services\LogoutUserService;
 use App\Domains\Identity\Presentation\Http\Requests\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,8 +32,10 @@ class LoginController
         return redirect()->intended(route('occasions.index'));
     }
 
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, LogoutUserService $service): RedirectResponse
     {
+        $service->handleWebLogout($request->user());
+
         auth()->guard('web')->logout();
 
         $request->session()->invalidate();
